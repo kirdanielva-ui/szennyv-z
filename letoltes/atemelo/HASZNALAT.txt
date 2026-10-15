@@ -3,18 +3,24 @@
 1. A teljes ZIP-fájlt csomagold ki egy mappába.
 2. Az atemelo mappában nyisd meg az index.html fájlt Chrome, Edge vagy Firefox böngészővel.
 3. Add meg a napi szennyvízmennyiséget, a műszakok kezdetét, hosszát és létszámát.
-4. Válaszd ki a Flygt típuscsaládot, és add meg a pontos munkaponti vízhozamot.
-5. Állítsd be az akna és a kapcsolás tervezői adatait. Az eredmény automatikusan frissül.
+4. Add meg a befolyó és a nyomócső végpontjának mBf magasságát, a nyomócső belső
+   átmérőjét és hosszát. A program származtatja az akna fenékszintjét.
+5. Válaszd ki a Flygt típust és az üzemképes/hidegtartalék gépek számát.
+   Automatikus munkaponthoz pontos gyártói Q–H pontsor és kivitelazonosító kell.
+   Enélkül fokozatonként megadhatod az összes Q-t; a program a szükséges H-t számítja.
+   A hidegtartalék nem indul automatikusan. A több üzemképes gép váltott és
+   párhuzamos üzemben is modellezhető, az egyidejű gépszám megadásával.
 6. A Projekt mentése gombbal JSON-fájlba menthetsz; ezt később visszatöltheted.
    Biztos megőrzéshez használd ezt a mentést, mert a helyi böngészőtároló kezelése
    fájlból nyitott oldalaknál böngészőnként eltérhet.
 7. A Nyomtatás / PDF gombbal jelentést készíthetsz.
 
 Nincs telepítés, szerver vagy internetkapcsolat a használathoz. A docs mappát
-tartsd az index.html mellett: ebben van a két hivatkozott forrás-PDF.
+tartsd az index.html mellett: ebben van a három hivatkozott forrás-PDF.
 
 Előméretező változat: a munkapont és a minimális bemerülés a pontos kivitel
-adatlapjából igazolandó. A mellékelt 2020-as FCSM-részlet nem közöl számszerű
-tartózkodásiidő-korlátot; a projektre egyeztetett értéket kell megadni.
+adatlapjából igazolandó. Az MI-10-167/3–87 a hálózat és a szívótér együttes
+idejére 5–6 órát ad. A kezdő érték 300 perc; a hálózati előzményt külön add meg.
+Az irányelv mai alkalmazhatóságát egyeztetni kell.
 A FIFO-vízkor ideális modell, a kiviteli tervezést és üzemeltetői egyeztetést
 nem helyettesíti.

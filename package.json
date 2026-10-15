@@ -1,6 +1,6 @@
 {
   "name": "szennyviz-atemelo-meretezo",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "FCSM-forrásokkal dokumentált Flygt N szennyvízátemelő előméretező",
@@ -9,6 +9,6 @@
     "portable": "python3 scripts/build_portable.py",
     "start": "node server.js",
     "test": "node --test",
-    "check": "node --check server.js && node --check src/app.js && node --check src/calculations.js && node --check src/pumps.js"
+    "check": "node --check server.js && node --check src/app.js && node --check src/calculations.js && node --check src/hydraulics.js && node --check src/pumps.js"
   }
 }
