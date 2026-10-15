@@ -99,15 +99,15 @@ test('Tömegmérleg, mBf szintek és napi összmennyiség',()=>{
  const r=calculate(params()),s=r.simulation,g=r.geometry;near(s.inflow,36);assert.ok(Math.abs(s.balanceError)<1e-6);assert.ok(s.minLevel>=g.floorElevation+g.stop-1e-7);assert.ok(s.maxLevel<=g.topElevation+1e-7);
 });
 test('Éjszakai befolyásmentes idő meghaladja az MI 5 órás keretét',()=>{
- const r=calculate(params({shiftCount:1}));assert.ok(r.simulation.systemFifoMaxMinutes>16*60);assert.equal(check(r,'residence').status,'fail');
+ const r=calculate(params({shiftCount:1,residenceLimit:300}));assert.ok(r.simulation.systemFifoMaxMinutes>16*60);assert.equal(check(r,'residence').status,'fail');
 });
 test('Átlagos és FIFO-idő a teljes szívóteret és a telt nyomócsövet figyeli',()=>{
  const r=calculate(uniform({manualFlows:[0.5]})),g=r.geometry,s=r.simulation;
  near(s.hydraulicMinutes,(g.dead+g.active)/0.5*60,0.01);near(s.systemFifoMaxMinutes,(g.dead+g.active+r.hydraulics.pipeVolume)/0.5*60,1);
 });
 test('Az ismeretlen hálózati előzmény nem nulla és nem ad sikeres teljes időellenőrzést',()=>{
- const r=calculate(uniform({daily:120,pipeLength:10}));assert.equal(check(r,'residence').status,'pending');assert.equal(r.simulation.totalFifoMinutes,null);
- const known=calculate(uniform({daily:120,pipeLength:10,upstreamMinutes:20}));near(known.simulation.totalFifoMinutes,known.simulation.systemFifoMaxMinutes+20);assert.equal(check(known,'residence').status,'pass');
+ const r=calculate(uniform({daily:120,pipeLength:10,residenceLimit:300}));assert.equal(check(r,'residence').status,'pending');assert.equal(r.simulation.totalFifoMinutes,null);
+ const known=calculate(uniform({daily:120,pipeLength:10,residenceLimit:300,upstreamMinutes:20}));near(known.simulation.totalFifoMinutes,known.simulation.systemFifoMaxMinutes+20);assert.equal(check(known,'residence').status,'pass');
 });
 test('A megmaradó kezdeti víz miatt a modell nem igazolhatja az időkorlátot',()=>{
  const r=calculate(params({daily:0.01,stopLevel:2,diameter:4,residenceLimit:10080}));assert.ok(r.simulation.initialAtObservation>0);assert.equal(check(r,'residence').status,'pending');
@@ -119,7 +119,7 @@ test('MI hálózati 150 mm minimum és 0,3–5 m/s ellenőrzése',()=>{
  const small=calculate(params({pipeDiameter:100}));assert.equal(check(small,'pipe-diameter').status,'fail');const slow=calculate(params());assert.equal(check(slow,'velocity').status,'fail');
 });
 test('FCSM lakóházi minimális tartalék nem kerül automatikusan telephelyre',()=>{
- const house=calculate(params({application:'house',daily:0.6,manualFlows:[2],reserveHours:0}));assert.ok(house.geometry.active>=0.2);near(house.geometry.targetReserve,0.6);assert.ok(house.geometry.reserve>=0.6);
+ const house=calculate(params({application:'house',fcsmSingleDwelling:'yes',daily:0.6,manualFlows:[2],reserveHours:0}));assert.ok(house.geometry.active>=0.2);near(house.geometry.targetReserve,0.6);assert.ok(house.geometry.reserve>=0.6);
  const site=calculate(params({daily:0.6,manualFlows:[2],reserveHours:0,minDrawdown:0.01,minRunSeconds:0}));assert.ok(site.geometry.active<0.2);near(site.geometry.targetReserve,0);
 });
 test('Elrendezési minimum, mélységi korlát és automatikus átmérőválasztás',()=>{

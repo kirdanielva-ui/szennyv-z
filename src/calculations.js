@@ -11,7 +11,8 @@ export const defaults={
   roughnessMm:0.25,minorLossK:3,outletMode:'free',backpressureHead:0,
   diameter:'auto',minDiameter:1.2,stopLevel:0.4,maxDepthBelowInlet:3,
   maxDrawdown:0.8,minDrawdown:0.15,alarmGap:0.15,inletClearance:0.15,reserveHours:2,
-  residenceLimit:300,upstreamMinutes:'',
+  residenceMinimum:0,residenceLimit:'',upstreamMinutes:'',groundElevation:'',fcsmSingleDwelling:'no',
+  projectVelocityMin:'',projectVelocityMax:'',selectionMargin:10,selectionDrainage:'no',
 };
 function number(value,name,min,max){
   if(value===''||value===null||value===undefined||!Number.isFinite(Number(value)))throw new Error(`${name}: adj meg egy számot.`);
@@ -27,8 +28,9 @@ export function migrateProject(data){
     p.manualFlows=[old.pumpFlow??18,'','','','','','',''];
     for(const key of ['inletElevation','outletElevation','pipeDiameter','pipeLength'])p[key]='';
     note='Korábbi projekt: a relatív szintekből mBf magasság nem határozható meg. Az új magasságokat és vezetékadatokat ezért üresen hagytuk: add meg őket. A megszüntetett folyamatos hányad helyett a teljes napi mennyiséget a profil osztja el. A régi kétgépes váltott üzem két üzemképes, legfeljebb egyidejűleg egy működő gép maradt.';
-    if(old.residenceLimit==='')p.residenceLimit=300;
+    if(old.residenceLimit==='')p.residenceLimit='';
   }
+  if(old.application==='house'&&!Object.hasOwn(old,'fcsmSingleDwelling')){p.fcsmSingleDwelling='yes';note+=' A régi lakóházi projekt egylakásos FCSM-esetét megtartottuk; általános lakóépülethez válaszd a tervezői tárolást.';}
   return {parameters:p,note};
 }
 export function validate(input){
@@ -43,12 +45,17 @@ export function validate(input){
     ['outletElevation','Végponti mBf szint',-100,3000],['pipeDiameter','Nyomócső belső átmérő',15,2000],
     ['pipeLength','Nyomócsőhossz',0,100000],['roughnessMm','Üzemi érdesség',0,10],
     ['minorLossK','Helyi veszteségtényezők összege',0,1000],['backpressureHead','Ellennyomás',0,1000],
-    ['residenceLimit','Tartózkodásiidő-korlát',1,10080],
+    ['residenceMinimum','Minimum tartózkodási idő',0,10080],['selectionMargin','Előválasztási kapacitástöbblet',0,200],
   ])p[key]=number(p[key],name,min,max);
   for(const [key,name,min,max] of [['shiftCount','Műszakszám',1,3],['workingCount','Üzemképes szivattyúk száma',1,8],['standbyCount','Hidegtartalékok száma',0,8],['maxParallel','Max. egyidejű gépszám',1,p.workingCount]]){
     p[key]=number(p[key],name,min,max);if(!Number.isInteger(p[key]))throw new Error(`${name}: egész szám szükséges.`);
   }
   for(const [key,name,max] of [['utilityStartsLimit','Áramszolgáltatói kapcsolásszám',100],['manufacturerStartsLimit','Pontos gyártói kapcsolásszám',100],['upstreamMinutes','Befolyás előtti hálózati idő',10080]])if(p[key]!=='')p[key]=number(p[key],name,0,max);
+  for(const [key,name,min,max] of [['residenceLimit','Felső tartózkodásiidő-keret',0,10080],['groundElevation','Terepszint',-100,3000],['projectVelocityMin','Tervezői minimum sebesség',0,20],['projectVelocityMax','Tervezői maximum sebesség',0,20]])if(p[key]!=='')p[key]=number(p[key],name,min,max);
+  if(p.residenceLimit!==''&&p.residenceMinimum>p.residenceLimit)throw new Error('A minimum tartózkodási idő nem haladhatja meg a felső keretet.');
+  if(p.projectVelocityMin!==''&&p.projectVelocityMax!==''&&p.projectVelocityMin>p.projectVelocityMax)throw new Error('A minimum sebesség nem haladhatja meg a maximumot.');
+  for(const key of ['fcsmSingleDwelling','selectionDrainage'])if(!['yes','no'].includes(p[key]))throw new Error('Ismeretlen választási beállítás.');
+  if(p.groundElevation!==''&&p.groundElevation<p.inletElevation)throw new Error('A terepszint nem lehet a befolyócső fenékszintje alatt.');
   if(p.utilityStartsLimit===0)throw new Error('Az áramszolgáltatói kapcsolásszám legyen pozitív vagy hagyd üresen.');
   if(p.manufacturerStartsLimit===0)throw new Error('A pontos gyártói kapcsolásszám legyen pozitív vagy hagyd üresen.');
   if(!['workplace','house'].includes(p.application))throw new Error('Ismeretlen felhasználási mód.');
@@ -81,7 +88,7 @@ export function validate(input){
 }
 export function buildProfile(p){
   const weights=Array.from({length:96},(_,i)=>{
-    if(p.application==='house')return 1;
+    if(p.application==='house'&&p.profile!=='custom')return 1;
     if(p.profile==='custom')return p.hourly[Math.floor(i/4)];
     return p.shifts.reduce((sum,s)=>{
       let overlap=0;for(const d of [-24,0,24])overlap+=Math.max(0,Math.min((i+1)/4,s.start+s.hours+d)-Math.max(i/4,s.start+d));
@@ -95,7 +102,7 @@ export function buildProfile(p){
 export function geometry(p,pump,points=null){
   const limits=[p.startsLimit,pump.maxStarts,p.utilityStartsLimit,p.manufacturerStartsLimit].filter(v=>typeof v==='number'&&v>0);
   const limit=Math.min(...limits);
-  const targetReserve=p.daily*(p.application==='house'?24:p.reserveHours)/24;
+  const targetReserve=p.daily*(p.application==='house'&&p.fcsmSingleDwelling==='yes'?24:p.reserveHours)/24;
   const candidate=diameter=>{
     const area=Math.PI*diameter**2/4,reserve=Math.max(targetReserve,area*p.alarmGap);
     const topElevation=p.inletElevation-p.inletClearance-reserve/area;
@@ -103,7 +110,7 @@ export function geometry(p,pump,points=null){
     // MI (28) gives 0.9*Q[l/s]/Z = Q[m³/h]/(4Z). Conservatively use
     // full station flow for EACH stage; this extension is not an MI multipump rule.
     const byStarts=0.9*(maxFlow/3.6)/limit,byRun=maxFlow*p.minRunSeconds/3600;
-    const perStage=Math.max(byStarts,byRun,area*p.minDrawdown,p.application==='house'?0.2:0);
+    const perStage=Math.max(byStarts,byRun,area*p.minDrawdown,p.application==='house'&&p.fcsmSingleDwelling==='yes'?0.2:0);
     const active=perStage*p.maxParallel,drawdown=active/area,start=p.stopLevel+drawdown;
     const reserveTop=start+reserve/area,inletDepth=reserveTop+p.inletClearance,floorElevation=p.inletElevation-inletDepth;
     const startLevels=Array.from({length:p.maxParallel},(_,i)=>p.stopLevel+(i+1)*perStage/area);
@@ -133,7 +140,7 @@ export function simulate(p,g,profile,flowAt,pipeVolume,{stepSeconds=60}={}){
   const wet=fifoQueue(g.dead),pipe=fifoQueue(pipeVolume);
   const starts=Array.from({length:p.workingCount},()=>[]),observedStarts=Array(p.workingCount).fill(0),runningHours=Array(p.workingCount).fill(0);
   let t=0,volume=g.dead,running=[],lead=0,initialVolume=volume,initialAtObservation=g.dead+pipeVolume;
-  let inflow=0,pumped=0,overflow=0,integral=0,wetMaxAge=0,systemMaxAge=0,maxObservedVolume=volume,minObservedVolume=Infinity,events=0;
+  let inflow=0,pumped=0,overflow=0,integral=0,wetMaxAge=0,systemMaxAge=0,systemMinAge=Infinity,maxObservedVolume=volume,minObservedVolume=Infinity,events=0;
   let offSince=0,maxOff=0;const series=[];
   while(t<end-1e-9){
     if(++events>400000)throw new Error('Túl sok kapcsolási esemény. Növeld a kapcsolási térfogatot.');
@@ -154,7 +161,7 @@ export function simulate(p,g,profile,flowAt,pipeVolume,{stepSeconds=60}={}){
     const pumpedParts=wet.take(remove);
     for(const part of pumpedParts){if(observed)wetMaxAge=Math.max(wetMaxAge,t+dt-part.t);if(pipeVolume>0)pipe.add(part);}
     const delivered=pipeVolume>0?pipe.take(remove):pumpedParts;
-    if(observed)for(const part of delivered)systemMaxAge=Math.max(systemMaxAge,t+dt-part.t);
+    if(observed)for(const part of delivered){systemMaxAge=Math.max(systemMaxAge,t+dt-part.t);if(!part.initial)systemMinAge=Math.min(systemMinAge,t+dt-part.t);}
     volume=Math.max(0,volume+add-remove);const spill=Math.max(0,volume-g.belowInlet);
     if(spill>0){wet.take(spill);volume-=spill;}
     if(observed){
@@ -174,10 +181,18 @@ export function simulate(p,g,profile,flowAt,pipeVolume,{stepSeconds=60}={}){
   const avgVolume=integral/(24*observationDays);
   return {series,observationDays,warmupDays,rollingStarts,observedStarts,runningHours,avgVolume,
     hydraulicMinutes:avgVolume/(p.daily/24)*60,pipeHydraulicMinutes:pipeVolume/(p.daily/24)*60,
+    systemFifoMinMinutes:Number.isFinite(systemMinAge)?systemMinAge*60:null,
     fifoMaxMinutes:wetMaxAge*60,systemFifoMaxMinutes:systemMaxAge*60,totalFifoMinutes:p.upstreamMinutes===''?null:systemMaxAge*60+p.upstreamMinutes,
     maxOffMinutes:maxOff*60,initialAtObservation,inflow,pumped,overflow,initialVolume,finalVolume:volume,
     maxLevel:g.floorElevation+maxObservedVolume/g.area,minLevel:g.floorElevation+minObservedVolume/g.area,
     balanceError:initialVolume+inflow-pumped-overflow-volume};
+}
+// Keep a rounded display from hiding a genuine MI boundary violation.
+export function formatVelocity(value){
+  const rounded=Number(value.toFixed(4));
+  const hidesLower=value<0.3-1e-9&&rounded>=0.3;
+  const hidesUpper=value>5+1e-9&&rounded<=5;
+  return (hidesLower||hidesUpper?value.toPrecision(10):value.toFixed(4)).replace('.',',');
 }
 export function calculate(input,simulationOptions={}){
   const p=validate(input),pump=pumps.find(x=>x.id===p.pumpId),profile=buildProfile(p);
@@ -191,7 +206,8 @@ export function calculate(input,simulationOptions={}){
   const operating=Array.from({length:p.maxParallel},(_,i)=>{
     const count=i+1,waterElevation=g.floorElevation+(g.stop+g.startLevels[i])/2;
     const nominal=p.flowMode==='curve'?operatingPoint(p,points,count,waterElevation):{count,flow:p.manualFlows[i],perPump:p.manualFlows[i]/count,waterElevation,...systemHead(p,p.manualFlows[i],waterElevation)};
-    return {...nominal,flowLow:flowAt(count,g.floorElevation+g.stop),flowHigh:flowAt(count,g.topElevation)};
+    const flowLow=flowAt(count,g.floorElevation+g.stop),flowHigh=flowAt(count,g.topElevation);
+    return {...nominal,flowLow,flowHigh,velocityLow:systemHead(p,flowLow,g.floorElevation+g.stop).velocity,velocityHigh:systemHead(p,flowHigh,g.topElevation).velocity};
   });
   const pipeVolume=systemHead(p,0,p.inletElevation).pipeVolume,sim=simulate(p,g,profile,flowAt,pipeVolume,simulationOptions),checks=[];
   const add=(id,status,title,detail)=>checks.push({id,status,title,detail});
@@ -199,15 +215,21 @@ export function calculate(input,simulationOptions={}){
   add('overflow',sim.overflow<1e-7?'pass':'fail','Visszaduzzasztás a modellben',sim.overflow<1e-7?'A szimuláció nem érte el a befolyó fenékszintjét.':'A víz elérte a befolyó szintjét; a túltöltés visszaduzzasztást vagy elöntést jelenthet.');
   add('capacity',operating.at(-1).flowLow>Math.max(...profile)?'pass':'fail','Kapacitás a csúcshozamhoz','MI 4.1.1.: az összes rendelkezésre álló kapacitás a legalsó üzemi vízszintnél is haladja meg a felvett csúcshozamot. Hidegtartalék nélkül számolva.');
   add('starts',Math.max(...sim.rollingStarts)<=g.limit?'pass':'fail','Kapcsolásszám gépenként',`Alkalmazott korlát: ${g.limit}/h; a tervezői, prospektus- és megadott áramszolgáltatói érték minimuma. MI 21. oldal: a gyakorlati tartomány 4–16/h, nem minden gépre kötelező rögzített korlát.`);
-  if(pump.maxStarts===null&&p.manufacturerStartsLimit==='')add('manufacturer-starts','pending','A típus gyártói indítási korlátja hiányzik','A táblázatos görbegyűjtemény nem ad ehhez indítási korlátot. Az N-sorozat 30/15 indítás/h adata nem vihető át erre a típusra. A számítás a megadott tervezői/villamos értékre készül, a pontos gyártói maximum külön megadandó.');
+  if(pump.maxStarts===null&&p.manufacturerStartsLimit==='')add('manufacturer-starts','pending','A típus gyártói indítási korlátja hiányzik','A mellékletek nem adnak ehhez a típushoz indítási korlátot. Az N-sorozat 30/15 indítás/h adata nem vihető át erre a típusra. A számítás a megadott tervezői/villamos értékre készül, a pontos gyártói maximum külön megadandó.');
   if(p.utilityStartsLimit==='')add('utility','pending','Áramszolgáltatói és pontos motorkorlát','Az áramszolgáltató/kapcsolóberendezés korlátja nincs megadva. A prospektus helyett a pontos kivitel és indítási mód adatai irányadók.');
   const knownAge=sim.systemFifoMaxMinutes;
-  if(sim.initialAtObservation>1e-7)add('residence','pending','Tartózkodási idő: nem beállt modell','A bemelegítés végére a kezdeti víz nem cserélődött ki teljesen; hosszabb vizsgálat szükséges.');
-  else if(knownAge>p.residenceLimit||(sim.totalFifoMinutes!==null&&sim.totalFifoMinutes>p.residenceLimit))add('residence','fail','MI-időkeret túllépése a FIFO-modellben','MI 4.1.1.: a hálózat és a szívótér együtt 5–6 óra. Az alapértelmezett 300 perc az alsó, konzervatív érték. A modell túllépi a felvett keretet; frissen tartás vagy más kialakítás vizsgálandó.');
+  if(p.residenceLimit==='')add('residence','pending','Felső tartózkodásiidő-keret nincs megadva','A FIFO-idő számított eredmény; felső keret nélkül nincs időkorlát-megfelelőség. MI 4.1.1., 21. oldal: a hálózat és a szívótér együtt 5–6 óra; túllépésnél frissen tartás vizsgálandó.');
+  else if(sim.initialAtObservation>1e-7)add('residence','pending','Tartózkodási idő: nem beállt modell','A bemelegítés végére a kezdeti víz nem cserélődött ki teljesen; hosszabb vizsgálat szükséges.');
+  else if(knownAge>p.residenceLimit||(sim.totalFifoMinutes!==null&&sim.totalFifoMinutes>p.residenceLimit))add('residence','fail','A felvett felső időkeret túllépése',`A megadott felső keret ${p.residenceLimit} perc. MI 4.1.1.: a hálózat és a szívótér együtt 5–6 óra; frissen tartás vagy más kialakítás vizsgálandó.`);
   else if(p.upstreamMinutes==='')add('residence','pending','Tartózkodási idő: hiányzó előzmény','A szívótér és a telt nyomócső modellezett ideje a kereten belül van, de a beérkezés előtti hálózati idő nélkül az összes idő nem igazolható.');
-  else add('residence','pass','MI-időkeret a felvett FIFO-modellben','A hálózati idő és az akna + telt nyomócső FIFO-kora együtt a tervezői kereten belül van. A valós keveredés, holtterek és a 1987-es irányelv mai alkalmazhatósága külön ellenőrzendő.');
-  const velocities=operating.flatMap(o=>[systemHead(p,o.flowLow,g.floorElevation+g.stop).velocity,systemHead(p,o.flowHigh,g.topElevation).velocity]);
-  add('velocity',Math.min(...velocities)>=0.3&&Math.max(...velocities)<=5?'pass':'fail','MI nyomócsősebesség: 0,3–5 m/s','MI 4.2., 23. oldal: működés közbeni sebességtartomány minden felvett fokozatra. Állásidőben a sebesség nulla.');
+  else add('residence','pass','A felvett felső időkeret a FIFO-modellben','A megadott hálózati idő és az akna + telt nyomócső FIFO-kora együtt a tervezői kereten belül van. Ez önmagában nem igazolja az MI alkalmazhatóságát vagy teljesítését.');
+  const minimumAge=sim.systemFifoMinMinutes===null?null:sim.systemFifoMinMinutes+(p.upstreamMinutes===''?0:p.upstreamMinutes);
+  add('residence-minimum',p.residenceMinimum===0?'pass':sim.initialAtObservation>1e-7||minimumAge===null?'pending':minimumAge>=p.residenceMinimum-1e-9?'pass':p.upstreamMinutes===''?'pending':'fail',`Tervezői minimum tartózkodás: ${p.residenceMinimum} perc`,p.residenceMinimum===0?'Nincs alsó időkövetelmény. Az MI-ben szereplő 5–6 óra felső időkeret, nem minimum.':`A kifolyó víz legkisebb megfigyelt FIFO-korát vizsgáljuk, a megadott hálózati előzménnyel. Ismeretlen előzményből nem állapítunk meg alsó határ alatti hibát. A felső keret külön ellenőrzés.`);
+  const velocityRange={min:Math.min(...operating.map(o=>o.velocityLow)),max:Math.max(...operating.map(o=>o.velocityHigh))};
+  const speedText=formatVelocity;
+  const failedStages=operating.filter(o=>o.velocityLow<0.3-1e-9||o.velocityHigh>5+1e-9);
+  add('velocity',failedStages.length?'fail':'pass','MI nyomócsősebesség: 0,3–5 m/s',`Összes üzemi fokozat tartománya: ${speedText(velocityRange.min)}–${speedText(velocityRange.max)} m/s. ${failedStages.length?'Határon kívül: '+failedStages.map(o=>`${o.count} gép (${speedText(o.velocityLow)}–${speedText(o.velocityHigh)} m/s)`).join('; ')+'. ':''}MI 4.2., 23. oldal: minden felvett fokozat, a leállítás és az utolsó indítás közötti vízszinteken; a középvízszinti érték önmagában nem elég. Állásidőben a sebesség nulla, ezt nem vizsgáljuk a minimumhoz.`);
+  if(p.projectVelocityMin!==''||p.projectVelocityMax!=='')add('project-velocity',(p.projectVelocityMin===''||velocityRange.min>=p.projectVelocityMin-1e-9)&&(p.projectVelocityMax===''||velocityRange.max<=p.projectVelocityMax+1e-9)?'pass':'fail','Külön tervezői sebességkövetelmény',`Felvett alsó / felső határ: ${p.projectVelocityMin===''?'nincs':p.projectVelocityMin} / ${p.projectVelocityMax===''?'nincs':p.projectVelocityMax} m/s. Az MI külön 0,3–5 m/s ellenőrzését ez nem módosítja. Az 5 m/s feletti sebesség fizikailag lehetséges, az idézett MI-határt viszont túllépi.`);
   if(p.application==='workplace')add('pipe-diameter',p.pipeDiameter>=150?'pass':'fail','MI hálózati nyomócső: legalább 150 mm','MI 4.2. hálózati előírás. Az FCSM lakossági bekötési szabálya eltérő esetkör; a konkrét telephelyre való alkalmazás egyeztetendő.');
   if(p.flowMode==='manual')add('duty','pending','Kézzel megadott fokozati vízhozamok','Ezekhez szükséges H-t és rendszerjelleggörbét számolunk. Automatikus munkapont csak pontos Q–H görbével adható; több gépnél sem feltételezünk N×Q szállítást.');
   else add('duty','pass','Q–H és rendszerjelleggörbe metszése','A megadott monoton Q–H görbe interpolációja és Colebrook–White veszteségszámítás. Azonos gépek közös nyomóvezetéken; az eltérő ágveszteségek nincsenek modellezve. A görbe eredetét a felhasználó igazolja.');
@@ -216,11 +238,12 @@ export function calculate(input,simulationOptions={}){
   if(operating.some(o=>o.transition))add('transition','pending','Átmeneti Reynolds-tartomány','Re 2300–4000 között a lamináris és Colebrook-becslés közül a nagyobb ellenállást vesszük. Részletesebb ellenőrzés szükséges.');
   if(p.outletElevation+p.backpressureHead<=g.topElevation)add('siphon','pending','Gravitációs vagy szifonhatás lehetősége','A végpont piezometrikus szintje nem magasabb a felső üzemi vízszintnél. Hosszelvény és légtelenítés külön vizsgálandó; szivattyú nélküli szifonáramlást nem modellezünk.');
   add('installation','pending','Minimális bemerülés és beépíthetőség','A leállítási vízmélységet és az elrendezési minimumátmérőt a pontos kivitel rajza és hűtési követelménye igazolja. A gépészet kiszorított térfogatát nem vonjuk le.');
-  if(p.application==='house')add('fcsm',g.active>=0.2&&g.reserve>=p.daily?'pass':'fail','FCSM: egylakásos, 4 fős eset','A 2020-as részlet: min. 0,2 m³ üzemi tér és 1 napi kibocsátásnyi biztonsági tér a befolyó alatt.');
+  if(p.application==='house'&&p.fcsmSingleDwelling==='yes')add('fcsm',g.active>=0.2&&g.reserve>=p.daily?'pass':'fail','FCSM: egylakásos, 4 fős eset','A 2020-as részlet: min. 0,2 m³ üzemi tér és 1 napi kibocsátásnyi biztonsági tér a befolyó alatt.');
+  if(p.application==='house'&&p.fcsmSingleDwelling!=='yes')add('fcsm','pending','Lakóépület: üzemeltetői tárolási követelmény','Általános lakóépület, a megadott napi mennyiséggel és profillal. Az egylakásos, 4 fős esetre megadott 0,2 m³ és egynapi tartalék nem általánosítható automatikusan; a megfelelő FCSM-feltétel külön igazolandó.');
   const chartMax=points?points.at(-1).q*p.maxParallel:Math.max(...p.manualFlows)*1.3;
   const systemCurve=Array.from({length:81},(_,i)=>{const flow=chartMax*i/80;return {flow,head:systemHead(p,flow,operating[0].waterElevation).head};});
   const chartOperating=points?Array.from({length:p.maxParallel},(_,i)=>operatingPoint(p,points,i+1,operating[0].waterElevation)):[];
   const curveProvenance=p.flowMode!=='curve'?null:p.curveSource==='catalogue'?catalogueCurve(p.pumpId).provenance:{verification:'user-entered',model:pump.name,label:p.curveLabel,originalCatalogueVerified:false,method:'user-supplied numeric points; piecewise-linear interpolation'};
-  return {parameters:p,pump,profile,geometry:g,simulation:sim,checks,hydraulics:{operating,pipeVolume,points,systemCurve,curveProvenance,
+  return {parameters:p,pump,profile,geometry:g,simulation:sim,checks,hydraulics:{operating,velocityRange,pipeVolume,points,systemCurve,curveProvenance,
     chartOperating,pumpCurves:points?Array.from({length:p.maxParallel},(_,i)=>points.map(point=>({flow:point.q*(i+1),head:pumpHead(points,point.q)}))):[],referenceElevation:operating[0].waterElevation}};
 }

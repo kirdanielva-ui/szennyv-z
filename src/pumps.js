@@ -17,7 +17,8 @@ const nPumps = [
   ['3356', '45–140', '350', 15, 10],
   ['3400', '40–310', '400', 15, 10],
   ['3531', '40–680', '500', 15, 10],
-].map(([id,power,discharge,maxStarts,page])=>({id,name:`Flygt N ${id}`,family:'N 3000',group:'n',power,discharge,maxStarts,page,curve:null}));
+  ['3800', '225–550', '800', null, null],
+].map(([id,power,discharge,maxStarts,page])=>({id,name:`Flygt N ${id}`,family:'N 3000',group:'n',power,discharge,maxStarts,page,curve:null,rangePage:6+['3069','3085','3102','3127','3153','3171','3202','3301','3315','3231','3306','3312','3356','3400','3531','3800'].indexOf(id),rangeSource:'flygt-n-3000-tartomanyok.pdf',rangeVerification:'approximate-envelope-not-for-sizing'}));
 
 const tablePumps=catalogueTables.map(table=>({
   id:table.id,name:`Flygt ${table.model}`,family:table.family,group:'catalogue',

@@ -13,7 +13,7 @@
   <header class="topbar">
     <a href="#" class="brand" aria-label="Átemelő kezdőlap"><span class="brand-mark" aria-hidden="true">≋</span><span>átemelő<span class="brand-caption">MÉRETEZŐ MŰHELY</span></span></a>
     <nav aria-label="Oldalmenü"><a href="#calculator">Méretezés</a><a href="#method">Számítási háttér</a><a href="#sources">Források</a></nav>
-    <span class="version">ELŐMÉRETEZŐ <span>v0.3</span></span>
+    <span class="version">ELŐMÉRETEZŐ <span>v0.4</span></span>
   </header>
   <main>
     <section class="intro">
@@ -26,29 +26,50 @@
         <section class="panel">
           <div class="panel-heading"><span class="step">01</span><h2>Terhelés és műszakrend</h2></div>
           <label>Projekt neve<input name="project" type="text" maxlength="120"></label>
-          <label>Felhasználás<select name="application"><option value="workplace">Műszakos telephely</option><option value="house">Egylakásos lakóépület · 4 fő</option></select></label>
+          <label>Felhasználás<select name="application"><option value="workplace">Műszakos telephely</option><option value="house">Lakóépület</option></select></label>
           <label>Napi szennyvízmennyiség<div class="unit-field"><input name="daily" type="number" min="0.01" max="100000" step="0.1"><span>m³/nap</span></div></label>
           <p class="hint">A napi összmennyiség már tartalmazza a dolgozói és technológiai szennyvizet. A létszám ennek időbeli elosztását súlyozza.</p>
           <div id="workplace-options">
-            <label>Befolyási profil<select name="profile"><option value="shift">Műszakok létszáma alapján</option><option value="custom">Egyedi óránkénti súlyok</option></select></label>
+            <label>Befolyási profil<select name="profile"><option value="shift">Műszakok / lakóépületnél egyenletes nap</option><option value="custom">Egyedi óránkénti súlyok</option></select></label>
             <div id="shift-options"><label>Műszakok száma<select name="shiftCount"><option value="1">1 műszak</option><option value="2">2 műszak</option><option value="3">3 műszak</option></select></label>
               <div class="shift-head"><span>Műszak</span><span>Kezdés</span><span>Hossz, óra</span><span>Létszám, fő</span></div><div id="shift-rows"></div>
               <p class="hint">Éjfélen átnyúló és átfedő műszakok is megadhatók. Műszakon belül egyenletes befolyást feltételezünk.</p>
             </div>
             <div id="custom-profile" hidden><p class="hint">Relatív súlyok: a program a teljes napi összmennyiségre normálja őket. A 0 befolyásmentes órát jelent .</p><div id="hourly-fields" class="hourly-grid"></div></div>
           </div>
-          <p id="house-note" class="hint" hidden>A 4 fős egylakásos esetben 24 órás egyenletes profillal számolunk. A napi mennyiség a megadott érték marad.</p>
+          <p id="house-note" class="hint" hidden>Lakóépület: a megadott napi mennyiséggel számolunk. Egyenletes napi vagy egyedi órás profil választható; nincs feltételezett létszám.</p>
+          <label id="fcsm-case" hidden>Tárolási követelmény<select name="fcsmSingleDwelling"><option value="no">Tervezői / üzemeltetői tárolási igény</option><option value="yes">FCSM külön eset: egylakásos épület, 4 fő</option></select></label>
         </section>
 
         <section class="panel">
-          <div class="panel-heading"><span class="step">02</span><h2>Szivattyúk és munkapont</h2><span class="small-tag">XYLEM / FLYGT</span></div>
-          <label>Szivattyútípus / típuscsalád<select name="pumpId" id="pump-select"></select></label>
-          <div id="pump-info" class="pump-info"></div>
-          <div id="catalogue-info" class="catalogue-info"></div>
+          <div class="panel-heading"><span class="step">02</span><h2>Magasságok és nyomóvezeték</h2></div>
+          <label>Terepszint (opcionális)<div class="unit-field"><input name="groundElevation" type="number" min="-100" max="3000" step="0.01" placeholder="Az ábrához"><span>mBf</span></div></label>
+          <label>Befolyócső fenékszintje<div class="unit-field"><input name="inletElevation" type="number" min="-100" max="3000" step="0.01"><span>mBf</span></div></label>
+          <label>Nyomócső végponti szintje<div class="unit-field"><input name="outletElevation" type="number" min="-100" max="3000" step="0.01"><span>mBf</span></div></label>
+          <label>Végpont értelmezése<select name="outletMode"><option value="free">Szabad kifolyás · csőtengely szintje</option><option value="reservoir">Befogadó vízszint / nyomott csatlakozás</option></select></label>
+          <div class="field-row"><label>Belső csőátmérő<div class="unit-field"><input name="pipeDiameter" type="number" min="15" max="2000" step="1"><span>mm</span></div></label><label>Nyomóvezeték hossza<div class="unit-field"><input name="pipeLength" type="number" min="0" max="100000" step="1"><span>m</span></div></label></div>
+          <p class="hint">Valódi belső átmérőt adj meg, ne külső méretet vagy pusztán DN-t. A modell telt, állandó átmérőjű közös nyomóvezetéket feltételez, azonos párhuzamos gépekkel.</p>
+          <details><summary>Érdesség, szerelvények és ellennyomás</summary><div class="detail-fields">
+            <div class="field-row"><label>Üzemi érdesség k<div class="unit-field"><input name="roughnessMm" type="number" min="0" max="10" step="0.01"><span>mm</span></div></label><label>Összes helyi veszteség Σζ<div class="unit-field"><input name="minorLossK" type="number" min="0" max="1000" step="0.1"><span>–</span></div></label></div>
+            <label>Végponti túlnyomás vízoszlopban<div class="unit-field"><input name="backpressureHead" type="number" min="0" max="1000" step="0.1"><span>m</span></div></label>
+            <p class="hint">A Σζ tartalmazza a szerelvények és idomok veszteségét a közös cső sebességére vonatkoztatva. A 3 példaérték. Szabad kifolyásnál a kilépési sebességmagasságot külön hozzáadjuk; befogadó vízszintnél a kilépési veszteséget a Σζ-ban kell felvenni. Az eltérő gépházi ágak külön méretezést igényelnek.</p>
+          </div></details>
+          <details><summary>Külön tervezői sebességkövetelmény</summary><div class="detail-fields"><div class="field-row"><label>Minimum<div class="unit-field"><input name="projectVelocityMin" type="number" min="0" max="20" step="0.05" placeholder="Nincs külön"><span>m/s</span></div></label><label>Maximum<div class="unit-field"><input name="projectVelocityMax" type="number" min="0" max="20" step="0.1" placeholder="Nincs külön"><span>m/s</span></div></label></div><p class="hint">Az MI 4.2. a mellékletben 0,3–5 m/s. Nagyobb sebesség fizikailag lehetséges, de ezt az MI-határt túllépi. A külön tervezői követelményt önállóan ellenőrizzük; nem írja felül az MI-pipát.</p></div></details>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading"><span class="step">03</span><h2>Szivattyúk és munkapont</h2><span class="small-tag">XYLEM / FLYGT</span></div>
+          <div class="selection-panel"><h3>Szivattyú-előválasztó</h3><p class="hint">A fenti vezetékadatok, a terhelés, a gépszám és a 04. pont aknakorlátai alapján. Rangsor: legkisebb összes névleges P₂ a teljes párhuzamos fokozaton.</p>
           <div class="field-row"><label>Üzemképes gépek<input name="workingCount" type="number" min="1" max="8" step="1"></label><label>Hidegtartalék gépek<input name="standbyCount" type="number" min="0" max="8" step="1"></label></div>
           <label>Egyidejűleg legfeljebb működő gépek<input name="maxParallel" type="number" min="1" max="8" step="1"></label>
           <p id="pump-arrangement" class="hint emphasis"></p>
           <p class="hint">Az üzemképes gépek ciklusonként váltják a vezető szerepet, és a kapcsolási szinteken lépcsőzetesen indulnak. A hidegtartalék automatikusan nem indul és nem ad kapacitást.</p>
+          <label>Kapacitástöbblet a csúcshozam felett<div class="unit-field"><input name="selectionMargin" type="number" min="0" max="200" step="1"><span>%</span></div></label>
+          <label>Vizsgált közeg / típusok<select name="selectionDrainage"><option value="no">Szennyvíz · SX/STA típusok kizárva</option><option value="yes">Szennyezettvíz-típusokkal együtt</option></select></label>
+          <button type="button" id="select-pumps" class="primary-button">Szivattyúk összehasonlítása</button><div id="selection-results" aria-live="polite"></div></div>
+          <label>Szivattyútípus / típuscsalád<select name="pumpId" id="pump-select"></select></label>
+          <div id="pump-info" class="pump-info"></div>
+          <div id="catalogue-info" class="catalogue-info"></div>
           <label>Munkapont meghatározása<select name="flowMode"><option value="manual">Kézi fokozati Q → szükséges H számítása</option><option value="curve">Automatikus Q–H görbemetszés</option></select></label>
           <div id="manual-flow-fields"></div>
           <div id="curve-fields" hidden>
@@ -66,32 +87,20 @@ Első pont: Q = 0. Legalább 3 pont kell."></textarea></label>
         </section>
 
         <section class="panel">
-          <div class="panel-heading"><span class="step">03</span><h2>Magasságok és nyomóvezeték</h2></div>
-          <label>Befolyócső fenékszintje<div class="unit-field"><input name="inletElevation" type="number" min="-100" max="3000" step="0.01"><span>mBf</span></div></label>
-          <label>Nyomócső végponti szintje<div class="unit-field"><input name="outletElevation" type="number" min="-100" max="3000" step="0.01"><span>mBf</span></div></label>
-          <label>Végpont értelmezése<select name="outletMode"><option value="free">Szabad kifolyás · csőtengely szintje</option><option value="reservoir">Befogadó vízszint / nyomott csatlakozás</option></select></label>
-          <div class="field-row"><label>Belső csőátmérő<div class="unit-field"><input name="pipeDiameter" type="number" min="15" max="2000" step="1"><span>mm</span></div></label><label>Nyomóvezeték hossza<div class="unit-field"><input name="pipeLength" type="number" min="0" max="100000" step="1"><span>m</span></div></label></div>
-          <p class="hint">Valódi belső átmérőt adj meg, ne külső méretet vagy pusztán DN-t. A modell telt, állandó átmérőjű közös nyomóvezetéket feltételez, azonos párhuzamos gépekkel.</p>
-          <details><summary>Érdesség, szerelvények és ellennyomás</summary><div class="detail-fields">
-            <div class="field-row"><label>Üzemi érdesség k<div class="unit-field"><input name="roughnessMm" type="number" min="0" max="10" step="0.01"><span>mm</span></div></label><label>Összes helyi veszteség Σζ<div class="unit-field"><input name="minorLossK" type="number" min="0" max="1000" step="0.1"><span>–</span></div></label></div>
-            <label>Végponti túlnyomás vízoszlopban<div class="unit-field"><input name="backpressureHead" type="number" min="0" max="1000" step="0.1"><span>m</span></div></label>
-            <p class="hint">A Σζ tartalmazza a szerelvények és idomok veszteségét a közös cső sebességére vonatkoztatva. A 3 példaérték. Szabad kifolyásnál a kilépési sebességmagasságot külön hozzáadjuk; befogadó vízszintnél a kilépési veszteséget a Σζ-ban kell felvenni. Az eltérő gépházi ágak külön méretezést igényelnek.</p>
-          </div></details>
-        </section>
-
-        <section class="panel">
           <div class="panel-heading"><span class="step">04</span><h2>Szívótér és időkeret</h2></div>
           <div class="field-row"><label>Belső aknaátmérő<select name="diameter"><option value="auto">Automatikus javaslat</option><option value="0.8">0,80 m</option><option value="1">1,00 m</option><option value="1.2">1,20 m</option><option value="1.5">1,50 m</option><option value="1.8">1,80 m</option><option value="2">2,00 m</option><option value="2.5">2,50 m</option><option value="3">3,00 m</option><option value="4">4,00 m</option></select></label><label>Elrendezési min. átmérő<div class="unit-field"><input name="minDiameter" type="number" min="0.5" max="10" step="0.1"><span>m</span></div></label></div>
           <div class="field-row"><label>Leállítási vízmélység<div class="unit-field"><input name="stopLevel" type="number" min="0.01" max="10" step="0.05"><span>m</span></div></label><label>Max. mélység befolyó alatt<div class="unit-field"><input name="maxDepthBelowInlet" type="number" min="0.2" max="20" step="0.1"><span>m</span></div></label></div>
-          <p class="hint emphasis">A leállítási vízmélység a szivattyú minimális bemerüléséből veendő fel. A fenékszintet a befolyó mBf szintjéből és a szükséges teljes tárolási mélységből vezetjük le; a terepszint és a fedlap magassága külön adat.</p>
+          <p class="hint emphasis">A leállítási vízmélység a szivattyú minimális bemerüléséből veendő fel. A fenékszintet a befolyó mBf szintjéből és a szükséges teljes tárolási mélységből vezetjük le; a megadott terepszintet az ábra jelöli. A fedlap kialakítása külön tervezési feladat.</p>
           <details><summary>Kapcsolási és biztonsági geometria</summary><div class="detail-fields">
             <div class="field-row"><label>Min. szintlépcső / fokozat<div class="unit-field"><input name="minDrawdown" type="number" min="0.01" max="2" step="0.05"><span>m</span></div></label><label>Max. teljes kapcsolási magasság<div class="unit-field"><input name="maxDrawdown" type="number" min="0.05" max="10" step="0.05"><span>m</span></div></label></div>
             <div class="field-row"><label>Riasztás az utolsó indítás fölött<div class="unit-field"><input name="alarmGap" type="number" min="0.01" max="2" step="0.05"><span>m</span></div></label><label>Tartalék a befolyó alatt<div class="unit-field"><input name="inletClearance" type="number" min="0.01" max="2" step="0.05"><span>m</span></div></label></div>
           </div></details>
           <label class="spaced">Biztonsági tárolási igény<div class="unit-field"><input name="reserveHours" type="number" min="0" max="168" step="0.5"><span>átlaghozam-óra</span></div></label>
           <p id="reserve-hint" class="hint"></p>
-          <label>Teljes tartózkodásiidő-keret<div class="unit-field"><input name="residenceLimit" type="number" min="1" max="10080" step="1"><span>perc</span></div></label>
-          <p class="hint">MI 4.1.1., 21. oldal: a hálózat és a szívótér együtt 5–6 óra. A kezdő 300 perc az alsó, konzervatív érték. Ha ez nem tartható, a dokumentum frissen tartást ír elő.</p>
+          <label>Minimum tartózkodási idő<div class="unit-field"><input name="residenceMinimum" type="number" min="0" max="10080" step="1"><span>perc</span></div></label>
+          <p class="hint">A 0 perc nem ír elő minimumot. Pozitív értéknél a kifolyó víz legkisebb megfigyelt FIFO-korát vizsgáljuk.</p>
+          <label>Felső tartózkodásiidő-keret (opcionális)<div class="unit-field"><input name="residenceLimit" type="number" min="0" max="10080" step="1" placeholder="Nincs megadva"><span>perc</span></div></label>
+          <p class="hint">Nincs előre kitöltött 300 perc. MI 4.1.1., 21. oldal: a hálózat és a szívótér együttes felső időkerete 5–6 óra; túllépésnél frissen tartás szükséges. Üres felső kerettel nincs igazolt időkorlát-megfelelőség.</p>
           <label>Befolyás előtti hálózati idő<div class="unit-field"><input name="upstreamMinutes" type="number" min="0" max="10080" step="1" placeholder="Nem ismert"><span>perc</span></div></label>
           <p class="hint emphasis">Az üres mező nem jelent nullát. A program az akna és a telt nyomóvezeték FIFO-vízkorát számolja; a beérkezés előtti időt ehhez hozzáadja. Eltérő vízkoroknál a megfelelő konzervatív hálózati előzményt add meg.</p>
         </section>
@@ -104,7 +113,7 @@ Első pont: Q = 0. Legalább 3 pont kell."></textarea></label>
         <div id="result-content">
           <div class="result-summary" id="result-summary"></div>
           <div class="metrics" id="metrics"></div>
-          <section class="panel well-panel"><div class="section-heading"><div><h3>Akna és kapcsolási szintek</h3><p>Szintek mBf-ben · az aknafenék számított eredmény.</p></div><span class="small-tag">HENGERES AKNA</span></div><div class="well-layout"><div id="well-diagram" class="well-diagram"></div><div id="level-table"></div></div><p class="hint">A biztonsági tér az utolsó üzemi indítási szint fölött helyezkedik el. A vészjelzés önálló érzékelőt igényel. A vázlat nem beépítési rajz; a fedlap és a befolyó feletti aknarész nincs méretezve.</p></section>
+          <section class="panel well-panel"><div class="section-heading"><div><h3>Akna és kapcsolási szintek</h3><p>Szintek mBf-ben · az aknafenék számított eredmény.</p></div><span class="small-tag">HENGERES AKNA</span></div><div class="well-layout"><div id="well-diagram" class="well-diagram"></div><div id="level-table"></div></div><p class="hint">A biztonsági tér az utolsó üzemi indítási szint fölött helyezkedik el. A vészjelzés önálló érzékelőt igényel. Bal oldalon fenéktől mért magasságok, jobb oldalon mBf szintek. A terep megadott mBf értékkel vagy külön jelölt vázlatként látható. Mobilon az ábra oldalra görgethető. A vázlat nem beépítési rajz.</p></section>
           <section class="panel"><div class="section-heading"><div><h3>Nyomóvezeték és szivattyú-munkapont</h3><p id="hydraulic-caption"></p></div><span class="small-tag">COLEBROOK–WHITE</span></div><div id="hydraulic-summary" class="hydraulic-summary"></div><div id="duty-table" class="table-scroll"></div><div class="chart-legend"><span><i class="teal"></i> Rendszergörbe</span><span><i class="blue"></i> Megadott Q–H görbe</span></div><div id="hydraulic-chart" class="chart"></div><p class="hint" id="hydraulic-note"></p></section>
           <section class="panel"><div class="section-heading"><div><h3>Napi üzem, egy pillantásra</h3><p>Az utolsó szimulált nap · legfeljebb 1 perces integráció, percenkénti adatsor</p></div></div><div class="chart-legend"><span><i class="teal"></i> Vízszint</span><span><i class="gray"></i> Indítási szint</span></div><div id="level-chart" class="chart"></div><div class="chart-legend"><span><i class="blue"></i> Befolyás</span><span class="unit-label">m³/h</span></div><div id="flow-chart" class="chart flow-chart"></div><div id="operation-stats" class="operation-stats"></div></section>
           <section class="panel"><div class="section-heading"><div><h3>Ellenőrzések és nyitott feltételek</h3><p>A zöld jelölés csak az adott számítási feltétel teljesülését mutatja.</p></div></div><div id="checks" class="checks"></div></section>
@@ -117,11 +126,12 @@ Első pont: Q = 0. Legalább 3 pont kell."></textarea></label>
       </section>
     </div>
 
-    <section class="sources-section" id="sources"><div class="section-heading"><div><span class="eyebrow">FORRÁSOK ÉS ALKALMAZHATÓSÁG</span><h2>Négy melléklet, követhető számítás</h2></div></div><div class="source-grid">
+    <section class="sources-section" id="sources"><div class="section-heading"><div><span class="eyebrow">FORRÁSOK ÉS ALKALMAZHATÓSÁG</span><h2>Öt melléklet, követhető számítás</h2></div></div><div class="source-grid">
       <article class="source-card"><span class="document-tag">MI-10-167/3–87 · 1987</span><h3>Közcsatornák. Hidraulikai méretezés</h3><p>A felhasználó által mellékelt műszaki irányelv</p><ul><li><strong>21. oldal, 4.1.1.:</strong> a hálózat és a szívótér együtt 5–6 óra; ha nem tartható, frissen tartás szükséges.</li><li><strong>(28) és (29):</strong> V = 0,9 Qsz / Z (Qsz L/s); T = 60/Z perc. Gyakorlati kapcsolásszám: 4–16/h; az összes korlát minimuma irányadó.</li><li><strong>3., 8–10. és 23. oldal:</strong> Colebrook–White, helyi veszteségek; hálózati nyomócső 0,3–5 m/s és min. 150 mm.</li><li>1987-es dokumentum: mai érvényessége és a konkrét projektre alkalmazása nincs igazolva.</li></ul><a href="/docs/mi-10-167-3-1987.pdf#page=21" target="_blank" rel="noopener">MI melléklet megnyitása ↗</a></article>
       <article class="source-card"><span class="document-tag">FCSM · 2020.09.24.</span><h3>Üzletszabályzat, VSZ-40/2020.</h3><p>4.0 kiadás · eredeti 22–27. oldal</p><ul><li><strong>22. oldal:</strong> egylakásos, 4 fős eset: min. 0,2 m³ üzemi tér és ezen felül min. 1 napi kibocsátásnyi biztonsági tér a befolyó alatt.</li><li><strong>24. oldal:</strong> ülepedés és berothadás csökkentése, külön vészvízszintjelzés.</li><li>Lakossági házi beemelőkre vonatkozik; nem írja felül automatikusan az MI hálózati szabályait. A részletben nincs számszerű időkorlát.</li></ul><a href="/docs/fcsm-2020.pdf" target="_blank" rel="noopener">FCSM melléklet megnyitása ↗</a></article>
       <article class="source-card"><span class="document-tag">XYLEM · FLYGT N · 50 HZ</span><h3>N-technology pump series</h3><p>896876 · dokumentumjelölés: 20240605</p><ul><li><strong>PDF 6. és 8. oldal:</strong> kis és közepes típuscsaládok, legfeljebb 30 indítás/h.</li><li><strong>PDF 10. oldal:</strong> nagy típuscsaládok, legfeljebb 15 indítás/h.</li><li>Nincs konkrét kivitelhez tartozó Q–H görbe, minimális bemerülés vagy teljes beépítési rajz. Ezeket külön gyártói adatokkal kell igazolni.</li></ul><a href="/docs/flygt-n-896876.pdf" target="_blank" rel="noopener">Flygt prospektus megnyitása ↗</a></article>
       <article class="source-card"><span class="document-tag">30 TÁBLÁZATOS GÖRBE · 50 HZ</span><h3>Flygt szivattyúgörbék</h3><p>Feltöltött, gyári táblázatokból újrarajzolt gyűjtemény · 41 oldal</p><ul><li><strong>30 modell, 289 Q–H pont:</strong> SX/SXV, DX, DXV, DXG, STA, DL és DLV családok. A numerikus táblázatokból közvetlenül átvett értékek; Q [L/s] × 3,6 = Q [m³/h].</li><li><strong>Másodlagos forrás:</strong> a pontok közt egyenes interpoláció. Az eredeti gyártói görbeoldalak és pontos járókerék-/motorváltozatok külön ellenőrizendők. Indítási korlátot és bemerülést nem ad.</li><li>Az N 3000, C, F és Concertor kivitelgörbéi hiányoznak; a program ezeket nem pótolja más család adataival.</li></ul><a href="/docs/flygt-szennyviz-szivattyugorbek.pdf" target="_blank" rel="noopener">Feltöltött görbegyűjtemény megnyitása ↗</a></article>
+      <article class="source-card"><span class="document-tag">N 3000 · 16 TÍPUSCSALÁD · 50 HZ</span><h3>N-sorozat: tájékoztató tartományok</h3><p>Új, feltöltött tartománygyűjtemény · 22 oldal</p><ul><li>3069–3800 családok: motor- és nyomócsonktartomány, családonként megnyitható ábra.</li><li>A dokumentum szerint a satírozott zónák kézi, közelítő értelmezések. Nem pontos gyári Q–H görbék, méretezésre és végleges kiválasztásra nem alkalmasak.</li><li>Az előválasztó nem képez belőlük görbepontokat. Az N-modellekhez pontos kivitelgörbe szükséges. A 3800 gyártói indítási maximumát ez a melléklet nem adja meg.</li></ul><a href="/docs/flygt-n-3000-tartomanyok.pdf" target="_blank" rel="noopener">N-sorozatú tartományok megnyitása ↗</a></article>
     </div></section>
     <footer><span>≋ ÁTEMELŐ / MÉRETEZŐ MŰHELY</span><p>Előméretezés a mellékelt dokumentumokkal. Kiviteli tervezéshez pontos gyártói adatok és üzemeltetői egyeztetés szükséges.</p></footer>
   </main>

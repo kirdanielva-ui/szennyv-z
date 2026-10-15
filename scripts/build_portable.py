@@ -10,7 +10,7 @@ APP.mkdir(parents=True, exist_ok=True)
 
 css = (ROOT / "styles.css").read_text(encoding="utf-8")
 modules = []
-for name in ("pump-catalogue.js", "pumps.js", "hydraulics.js", "calculations.js", "app.js"):
+for name in ("pump-catalogue.js", "pumps.js", "hydraulics.js", "calculations.js", "diagram.js", "selection.js", "app.js"):
     source = (ROOT / "src" / name).read_text(encoding="utf-8")
     source = re.sub(r"^import [^\n]+\n", "", source, flags=re.MULTILINE)
     source = re.sub(r"^export ", "", source, flags=re.MULTILINE)
@@ -31,7 +31,10 @@ instructions = """ÁTEMELŐ – HASZNÁLATI ÚTMUTATÓ
 3. Add meg a napi szennyvízmennyiséget, a műszakok kezdetét, hosszát és létszámát.
 4. Add meg a befolyó és a nyomócső végpontjának mBf magasságát, a nyomócső belső
    átmérőjét és hosszát. A program származtatja az akna fenékszintjét.
-5. Válaszd ki a Flygt típust és az üzemképes/hidegtartalék gépek számát.
+5. A Szivattyúk összehasonlítása gomb a számszerű görbés típusokat rangsorolja
+   a teljes párhuzamos fokozat névleges P₂-összege szerint (nem energiaoptimalizálás).
+   Az N-sorozat új tartományábrái tájékoztatók, nem munkaponti görbék.
+   Válaszd ki a Flygt típust és az üzemképes/hidegtartalék gépek számát.
    A 30 táblázatos típus kiválasztása automatikusan betölti a Q–H adatokat.
    Ezek a mellékelt, gyári táblázatokból újrarajzolt gyűjtemény számszerű pontjai;
    az eredeti gyártói kiviteladatokkal még összevetendők. Az N 3000, C, F és
@@ -45,18 +48,19 @@ instructions = """ÁTEMELŐ – HASZNÁLATI ÚTMUTATÓ
 7. A Nyomtatás / PDF gombbal jelentést készíthetsz.
 
 Nincs telepítés, szerver vagy internetkapcsolat a használathoz. A docs mappát
-tartsd az index.html mellett: ebben van a négy hivatkozott forrás-PDF.
+tartsd az index.html mellett: ebben van a öt hivatkozott forrás-PDF.
 
 Előméretező változat: a munkapont és a minimális bemerülés a pontos kivitel
 adatlapjából igazolandó. Az MI-10-167/3–87 a hálózat és a szívótér együttes
-idejére 5–6 órát ad. A kezdő érték 300 perc; a hálózati előzményt külön add meg.
+idejére 5–6 órát ad. A minimum idő alapértéke 0 perc, a felső keret üres. A hálózati előzményt külön add meg.
+Felső keret nélkül a program nem igazol időkorlát-megfelelőséget.
 Az irányelv mai alkalmazhatóságát egyeztetni kell.
 A FIFO-vízkor ideális modell, a kiviteli tervezést és üzemeltetői egyeztetést
 nem helyettesíti.
 """
 (APP / "HASZNALAT.txt").write_text(instructions, encoding="utf-8")
 files = [APP / "index.html", APP / "HASZNALAT.txt"]
-for name in ("fcsm-2020.pdf", "flygt-n-896876.pdf", "mi-10-167-3-1987.pdf", "flygt-szennyviz-szivattyugorbek.pdf"):
+for name in ("fcsm-2020.pdf", "flygt-n-896876.pdf", "mi-10-167-3-1987.pdf", "flygt-szennyviz-szivattyugorbek.pdf", "flygt-n-3000-tartomanyok.pdf"):
     target = APP / "docs" / name
     target.parent.mkdir(exist_ok=True)
     target.write_bytes((ROOT / "docs" / name).read_bytes())

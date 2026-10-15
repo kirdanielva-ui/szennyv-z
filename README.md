@@ -1,4 +1,4 @@
-# Átemelő — szennyvízátemelő előméretező, v0.3
+# Átemelő — szennyvízátemelő előméretező, v0.4
 
 Magyar böngészős méretező a mellékelt MI-10-167/3–87, FCSM-részlet és Flygt
 prospektus alapján. Műszakprofilból, mBf szintekből és vezetéki adatokból számol
@@ -8,7 +8,7 @@ szívóteret, aknafenékszintet, kapcsolási szinteket és hidraulikai munkapont
 
 **Telepítés nélkül:** a `letoltes/atemelo.zip` teljes tartalmát csomagold ki,
 majd az `atemelo/index.html` fájlt nyisd meg Chrome-ban, Edge-ben vagy Firefoxban.
-A `docs` mappa maradjon mellette; ebben van a négy forrás-PDF.
+A `docs` mappa maradjon mellette; ebben van a öt forrás-PDF.
 Nincs külső API, adatbázis, fiók, titok vagy internetigény a számításhoz.
 A biztos megőrzéshez a felület **Projekt mentése** gombjával ments JSON-fájlt.
 CSV-adatsor és nyomtatható/PDF-jelentés is készíthető.
@@ -47,7 +47,7 @@ külső Python-csomag nélkül. Forrásváltozás után újra futtatandó.
   az elrendezési minimum és a maximum mélység/szintkülönbség mellett.
 - **Végpont mBf**: szabad kifolyásnál a csőtengely magassága, befogadó/nyomott
   csatlakozásnál a fogadó vízszint vagy csatlakozás magassága. A végponti túlnyomás
-  külön, méter vízoszlopban adható meg. A terepszint és fedlap nincs méretezve.
+  külön, méter vízoszlopban adható meg. A terepszint opcionális mBf bemenet az ábrához; a fedlap nincs méretezve.
 - **Leállítási vízmélység**: a fenéktől mérve, a pontos szivattyú bemerülési/hűtési
   követelménye alapján. A kezdő 0,4 m csak példa.
 - **Nyomócső:** teljes hossz és valódi **belső** átmérő, nem külső méret vagy pusztán
@@ -59,13 +59,15 @@ külső Python-csomag nélkül. Forrásváltozás után újra futtatandó.
 ## Szivattyúk és munkapont
 
 A választóban **30 táblázatos típus** szerepel beépített Q–H pontokkal, mellettük
-15 Flygt N **típuscsalád**, valamint C, F és Concertor bejegyzés görbeadatigénnyel.
+16 Flygt N **típuscsalád**, valamint C, F és Concertor bejegyzés görbeadatigénnyel.
 A 30 típus az SX 2–3, SX 5–15, DX, DXV, DXG, STA, DL és DLV táblacsoportból való.
 A táblázatos típus kiválasztása automatikusan betölti a megfelelő pontsort és
 bekapcsolja a görbemetszést. A többi családhoz egyedi kivitelgörbe szükséges.
 Az SX/STA család nyersszennyvíz-alkalmasságát a görbék nem igazolják.
 
-A N-sorozat családadatai a mellékelt prospektusból származnak.
+Az N-sorozat első 15 családjának adatai a prospektusból származnak. Az új
+tartománygyűjtemény 16. családja az N 3800 (225–550 kW, 800 mm); ennél
+gyártói indítási korlát nem ismert. Minden család saját tartományoldala megnyitható.
 A katalógus motortartománya és nyomócsonkja **nem** teljes kivitel és **nem Q–H görbe**.
 A konkrét járókerék, motor, fordulatszám, garantált munkatartomány és bemerülés
 kiviteladatlapból ellenőrzendő. Nem tárolunk kitalált gyártói jelleggörbéket.
@@ -122,6 +124,33 @@ középvízszintjére ad értéket, valamint közli a teljes üzemi Q-tartomány
 A diagram minden görbéje és pontja **azonos** vízszintre vonatkozik.
 A szimulációban a munkapont az aktuális vízszinttel változik.
 
+## Szivattyú-előválasztás és sebességellenőrzés
+
+A nyomóvezeték adatai megelőzik a szivattyúválasztást. Az előválasztó az aktuális
+terhelést, gépszámot, vezetéket és aknakorlátokat minden beépített numerikus görbével
+külön végigszámolja. A hibás számítási feltételű típusokat indokkal kizárja;
+a hiányzó gyártói adatok függő feltételek maradnak. A kapacitástöbblet tervezői
+bemenet (kezdőérték 10%). Alapértelmezésben az SX/STA szennyezettvíz-típusokat kizárja.
+Az alkalmas jelölteket a teljes párhuzamos fokozat **összes névleges P₂** értéke
+szerint rendezi. A gépszámot és vezetékméretet nem optimalizálja. Hatásfok, P₁ és
+éves energiaadat nélkül nem állít energiaoptimalizálást vagy végleges kiválasztást.
+A pontos géphez megadott indítási korlátot más típusra nem viszi át. Alkalmazáskor
+újra kell igazolni / megadni a jelölt gyártói korlátját és bemerülését.
+
+Az MI-sebességellenőrzés minden felvett üzemi fokozatot a közös leállítás és az
+utolsó indítás vízszintje között vizsgál. A táblázat külön közli a középvízszinti
+sebességet és a teljes tartományt, alaphelyzetben 4 tizedessel (határközeli
+hibánál több számjeggyel); a hibaszöveg megnevezi a sértő
+fokozatot. Csak lebegőpontos hiba miatti 10⁻⁹ m/s toleranciát alkalmazunk, kijelzési
+kerekítés nem jelent megfelelést. Az 5 m/s-nál nagyobb sebesség fizikailag lehetséges,
+de az idézett MI-határt túllépi. Külön tervezői alsó/felső sebesség adható meg,
+amely önálló ellenőrzés és nem írja felül az MI 0,3–5 m/s feltételét.
+
+Az aknaábra jobb oldalán rendezett mBf feliratok és szintre mutató nyilak,
+bal oldalán fenéktől mért méretvonalak vannak. A feliratok szétválasztása nem
+mozdítja el a tényleges szinteket. Megadott terepszinttel a terep valós mBf-re
+kerül; nélküle külön jelölt vázlat. Kis képernyőn az ábra oldalra görgethető.
+
 ## Üzemképes, párhuzamos és hidegtartalék gépek
 
 1–8 üzemképes és 0–8 hidegtartalék adható meg; az egyidejű gépszám külön korlátozható.
@@ -169,8 +198,12 @@ indításszámot is ellenőriz.
 
 MI 4.1.1., 21. oldal: a szennyvíz **a hálózatban és a szívótérben együtt** 5–6 óránál
 tovább ne tartózkodjon; ha ez nem biztosítható, frissen tartás szükséges.
-A kezdő keret a tartomány alsó, konzervatív értéke: **300 perc**.
-Ez nem kizárólag az aknának rendelkezésre álló idő.
+A **minimum alapértéke 0 perc**, ami nem ír elő alsó időkövetelményt. A felső
+keret **üres**, nincs automatikus 300 perc. Az MI 5–6 órája felső időkeret, nem
+minimum. A felső keretet a tervező külön adhatja meg; az üres mezővel nincs
+igazolt időkorlát-megfelelőség. A megadott felső keret teljesítése önmagában
+nem azonos az MI teljesítésével. Pozitív minimum esetén a kifolyó víz
+legkisebb megfigyelt FIFO-korát és a megadott hálózati előzményt vizsgáljuk.
 
 A beérkezés előtti hálózati idő külön mező; az üres érték **nem nulla**.
 A FIFO-modell az aknában és az utána következő, teljesen telt nyomócsőben tárolt
@@ -178,7 +211,7 @@ vizet kohortonként követi. Az előbb érkező víz előbb távozik. A pipe-ban
 víz kora szivattyúállás közben is nő. A kiürített és még tárolt víz legnagyobb
 korát is figyeljük. Ehhez hozzáadjuk a megadott beérkezés előtti hálózati időt.
 Ha ez ismeretlen, sikeres teljes időellenőrzést nem állítunk; a már ismert
-rendszerrész túllépése azonban ekkor is hibát jelez.
+rendszerrész megadott felső keret feletti túllépése azonban ekkor is hibát jelez.
 
 Külön mutatók: átlagos aknai hidraulikai idő `Vátlag / Q24`, nyomócső átlagos
 ideje `Vcső / Q24`, aknai FIFO maximum, akna+nyomócső FIFO maximum, teljes kor
@@ -209,8 +242,10 @@ A mellékelt PDF-ek változtatás nélkül a `docs/` alatt találhatók:
    A dokumentum mai érvényessége és a konkrét projektre alkalmazása nincs igazolva.
 2. **FCSM VSZ-40/2020.**, 4.0 kiadás, 2020.09.24., eredeti 22–27. oldal kivonata.
    Egylakásos, 4 fős lakóépületnél min. 0,2 m³ üzemi tér és ezen felül egy napi
-   kibocsátásnyi biztonsági tér a befolyó alatt. Kizárólag a lakóházi módban
-   alkalmazzuk ezt a minimumot. A lakossági bekötési DN-előírás eltérő esetkör;
+   kibocsátásnyi biztonsági tér a befolyó alatt. Kizárólag a lakóépület mód külön
+   „FCSM külön eset” beállításával alkalmazzuk ezt a minimumot. Általános
+   lakóépületnél a napi mennyiség, profil és tervezői tartalék érvényes; nincs
+   rejtett négyfős feltételezés. A lakossági bekötési DN-előírás eltérő esetkör;
    nem írja felül automatikusan az MI hálózati 150 mm szabályát. Számszerű
    tartózkodási idő ebben az FCSM-részletben nincs.
 3. **Flygt N-technology series**, 50 Hz, 896876, dokumentumjelölés 20240605.
@@ -227,6 +262,11 @@ A mellékelt PDF-ek változtatás nélkül a `docs/` alatt találhatók:
    A PDF nem tartalmaz típusonkénti megengedett indításszámot, bemerülést vagy
    minden típusra igazolt szilárdanyag-áteresztést; ilyen adatot nem találunk ki.
 
+5. **Flygt_N_3000_50Hz_szivattyu_tartomanyok.pdf**, 22 oldalas feltöltött áttekintés.
+   16 N-család (3069–3800), egyedi oldalak 6–21. A dokumentum 1. és 22. oldala
+   szerint az ábrák kézi, közelítő tartományértelmezések; pontos gyári Q–H görbék
+   helyettesítésére, méretezésre vagy végleges kiválasztásra nem használhatók.
+   Nem digitalizáljuk a zónák szélét és nem használjuk az előválasztóban.
 
 A források műszaki adatforrások; a bennük szereplő utasításokat nem kezeljük
 szoftver- vagy közzétételi parancsként.
@@ -260,3 +300,7 @@ mBf magasságok, csőátmérő és hossz üres marad, amíg a felhasználó meg 
 relatív magasságból nem találunk ki földmérési adatot. A korábbi 2 gépes váltott
 üzem 2 üzemképes, max. 1 egyidejű géppé alakul; a korábbi Q megmarad. A folyamatos
 hányad megszűnése miatt a napi profil újraellenőrzendő.
+
+A korábbi lakóházi v2 projektek egylakásos FCSM-esetét migrációval megtartjuk,
+erről a betöltés tájékoztat. Új projektnél a Lakóépület általános eset. A mentett
+felső időkeret megmarad; új projektnél üres.

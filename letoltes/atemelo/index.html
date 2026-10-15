@@ -20,6 +20,9 @@ textarea{width:100%;resize:vertical;min-height:120px;padding:11px;border:1px sol
 @media(max-width:780px){.metrics{grid-template-columns:1fr 1fr}.metric:first-child{grid-column:1/-1}.source-grid{grid-template-columns:1fr}.hydraulic-summary{grid-template-columns:1fr 1fr}.hydraulic-summary>div:last-child{grid-column:1/-1}.operation-stats{grid-template-columns:1fr}.operation-stat{border-right:0;border-bottom:1px solid var(--line);padding-bottom:12px}.operation-stat:last-child{padding-bottom:0}.operation-stat strong{font-size:16px}.formula-row{flex-wrap:wrap}.formula-row strong{max-width:100%}.well-layout{grid-template-columns:1fr}.well-diagram svg{max-height:300px}}
 @media print{.source-grid{grid-template-columns:1fr}.source-card{break-inside:avoid}.hydraulic-summary{grid-template-columns:repeat(3,1fr)}.metrics{grid-template-columns:repeat(3,1fr)}.metric:first-child{grid-column:auto}.metric:first-child .metric-value{font-size:23px}.table-scroll{overflow:visible}.well-layout{grid-template-columns:1fr 1fr}textarea{font-size:9px;min-height:80px}}
 .catalogue-info{border:1px solid #dbe7d9;border-radius:8px;padding:13px;margin:0 0 18px;background:#f3f7ee;font-size:10px;line-height:1.7}.catalogue-info>strong{display:block;font-size:11px;margin-bottom:7px}.catalogue-info p{margin:7px 0;color:var(--muted)}.catalogue-info a{font-size:10px}.catalogue-info button{display:block;background:white;border:1px solid #b8cdb9;color:var(--teal);border-radius:5px;padding:7px 10px;font-size:10px;margin-top:10px}.catalogue-info .hint{margin:10px 0 0}textarea[readonly],input[readonly]{background:#f0f4ed;color:#5f7464}.source-grid{grid-template-columns:repeat(2,minmax(0,1fr))}@media(max-width:780px){.source-grid{grid-template-columns:1fr}}@media print{.source-grid{grid-template-columns:1fr}.catalogue-info{break-inside:avoid}.catalogue-info button{display:none}}
+/* Full-width technical section; labels remain readable on narrow screens. */
+.well-layout{grid-template-columns:minmax(0,1fr);gap:20px}.well-diagram{overflow-x:auto;max-width:100%}.well-diagram svg{display:block;width:100%;min-width:720px;max-height:none}.level-row{padding:8px 0}.selection-panel{padding:15px;background:#f0f6ed;border:1px solid #d7e4d2;border-radius:8px;margin-bottom:22px}.selection-panel h3{font-size:13px;margin-bottom:10px}.selection-panel>button{width:100%}.selection-panel button:disabled{opacity:.65;cursor:wait}#selection-results{font-size:11px;line-height:1.65;overflow-wrap:anywhere}#selection-results>p:first-child{margin-top:15px}#selection-results p{margin:10px 0}.selection-list{padding-left:20px}.selection-list li{padding:10px 0;border-bottom:1px solid #d5e1d2}.selection-list strong,.selection-list span{display:block}.selection-list span{font-size:10px;color:var(--muted);margin:5px 0}.selection-list button{margin-top:6px}.selection-panel details p{font-size:10px}.well-panel{min-width:0}.results,.inputs{min-width:0}
+@media print{.well-layout{grid-template-columns:1fr}.well-diagram{overflow:visible}.well-diagram svg{min-width:0;max-height:none}.selection-panel{display:none}.well-panel{break-inside:avoid}}
 
 </style>
 </head>
@@ -27,7 +30,7 @@ textarea{width:100%;resize:vertical;min-height:120px;padding:11px;border:1px sol
   <header class="topbar">
     <a href="#" class="brand" aria-label="Átemelő kezdőlap"><span class="brand-mark" aria-hidden="true">≋</span><span>átemelő<span class="brand-caption">MÉRETEZŐ MŰHELY</span></span></a>
     <nav aria-label="Oldalmenü"><a href="#calculator">Méretezés</a><a href="#method">Számítási háttér</a><a href="#sources">Források</a></nav>
-    <span class="version">ELŐMÉRETEZŐ <span>v0.3</span></span>
+    <span class="version">ELŐMÉRETEZŐ <span>v0.4</span></span>
   </header>
   <main>
     <section class="intro">
@@ -40,29 +43,50 @@ textarea{width:100%;resize:vertical;min-height:120px;padding:11px;border:1px sol
         <section class="panel">
           <div class="panel-heading"><span class="step">01</span><h2>Terhelés és műszakrend</h2></div>
           <label>Projekt neve<input name="project" type="text" maxlength="120"></label>
-          <label>Felhasználás<select name="application"><option value="workplace">Műszakos telephely</option><option value="house">Egylakásos lakóépület · 4 fő</option></select></label>
+          <label>Felhasználás<select name="application"><option value="workplace">Műszakos telephely</option><option value="house">Lakóépület</option></select></label>
           <label>Napi szennyvízmennyiség<div class="unit-field"><input name="daily" type="number" min="0.01" max="100000" step="0.1"><span>m³/nap</span></div></label>
           <p class="hint">A napi összmennyiség már tartalmazza a dolgozói és technológiai szennyvizet. A létszám ennek időbeli elosztását súlyozza.</p>
           <div id="workplace-options">
-            <label>Befolyási profil<select name="profile"><option value="shift">Műszakok létszáma alapján</option><option value="custom">Egyedi óránkénti súlyok</option></select></label>
+            <label>Befolyási profil<select name="profile"><option value="shift">Műszakok / lakóépületnél egyenletes nap</option><option value="custom">Egyedi óránkénti súlyok</option></select></label>
             <div id="shift-options"><label>Műszakok száma<select name="shiftCount"><option value="1">1 műszak</option><option value="2">2 műszak</option><option value="3">3 műszak</option></select></label>
               <div class="shift-head"><span>Műszak</span><span>Kezdés</span><span>Hossz, óra</span><span>Létszám, fő</span></div><div id="shift-rows"></div>
               <p class="hint">Éjfélen átnyúló és átfedő műszakok is megadhatók. Műszakon belül egyenletes befolyást feltételezünk.</p>
             </div>
             <div id="custom-profile" hidden><p class="hint">Relatív súlyok: a program a teljes napi összmennyiségre normálja őket. A 0 befolyásmentes órát jelent .</p><div id="hourly-fields" class="hourly-grid"></div></div>
           </div>
-          <p id="house-note" class="hint" hidden>A 4 fős egylakásos esetben 24 órás egyenletes profillal számolunk. A napi mennyiség a megadott érték marad.</p>
+          <p id="house-note" class="hint" hidden>Lakóépület: a megadott napi mennyiséggel számolunk. Egyenletes napi vagy egyedi órás profil választható; nincs feltételezett létszám.</p>
+          <label id="fcsm-case" hidden>Tárolási követelmény<select name="fcsmSingleDwelling"><option value="no">Tervezői / üzemeltetői tárolási igény</option><option value="yes">FCSM külön eset: egylakásos épület, 4 fő</option></select></label>
         </section>
 
         <section class="panel">
-          <div class="panel-heading"><span class="step">02</span><h2>Szivattyúk és munkapont</h2><span class="small-tag">XYLEM / FLYGT</span></div>
-          <label>Szivattyútípus / típuscsalád<select name="pumpId" id="pump-select"></select></label>
-          <div id="pump-info" class="pump-info"></div>
-          <div id="catalogue-info" class="catalogue-info"></div>
+          <div class="panel-heading"><span class="step">02</span><h2>Magasságok és nyomóvezeték</h2></div>
+          <label>Terepszint (opcionális)<div class="unit-field"><input name="groundElevation" type="number" min="-100" max="3000" step="0.01" placeholder="Az ábrához"><span>mBf</span></div></label>
+          <label>Befolyócső fenékszintje<div class="unit-field"><input name="inletElevation" type="number" min="-100" max="3000" step="0.01"><span>mBf</span></div></label>
+          <label>Nyomócső végponti szintje<div class="unit-field"><input name="outletElevation" type="number" min="-100" max="3000" step="0.01"><span>mBf</span></div></label>
+          <label>Végpont értelmezése<select name="outletMode"><option value="free">Szabad kifolyás · csőtengely szintje</option><option value="reservoir">Befogadó vízszint / nyomott csatlakozás</option></select></label>
+          <div class="field-row"><label>Belső csőátmérő<div class="unit-field"><input name="pipeDiameter" type="number" min="15" max="2000" step="1"><span>mm</span></div></label><label>Nyomóvezeték hossza<div class="unit-field"><input name="pipeLength" type="number" min="0" max="100000" step="1"><span>m</span></div></label></div>
+          <p class="hint">Valódi belső átmérőt adj meg, ne külső méretet vagy pusztán DN-t. A modell telt, állandó átmérőjű közös nyomóvezetéket feltételez, azonos párhuzamos gépekkel.</p>
+          <details><summary>Érdesség, szerelvények és ellennyomás</summary><div class="detail-fields">
+            <div class="field-row"><label>Üzemi érdesség k<div class="unit-field"><input name="roughnessMm" type="number" min="0" max="10" step="0.01"><span>mm</span></div></label><label>Összes helyi veszteség Σζ<div class="unit-field"><input name="minorLossK" type="number" min="0" max="1000" step="0.1"><span>–</span></div></label></div>
+            <label>Végponti túlnyomás vízoszlopban<div class="unit-field"><input name="backpressureHead" type="number" min="0" max="1000" step="0.1"><span>m</span></div></label>
+            <p class="hint">A Σζ tartalmazza a szerelvények és idomok veszteségét a közös cső sebességére vonatkoztatva. A 3 példaérték. Szabad kifolyásnál a kilépési sebességmagasságot külön hozzáadjuk; befogadó vízszintnél a kilépési veszteséget a Σζ-ban kell felvenni. Az eltérő gépházi ágak külön méretezést igényelnek.</p>
+          </div></details>
+          <details><summary>Külön tervezői sebességkövetelmény</summary><div class="detail-fields"><div class="field-row"><label>Minimum<div class="unit-field"><input name="projectVelocityMin" type="number" min="0" max="20" step="0.05" placeholder="Nincs külön"><span>m/s</span></div></label><label>Maximum<div class="unit-field"><input name="projectVelocityMax" type="number" min="0" max="20" step="0.1" placeholder="Nincs külön"><span>m/s</span></div></label></div><p class="hint">Az MI 4.2. a mellékletben 0,3–5 m/s. Nagyobb sebesség fizikailag lehetséges, de ezt az MI-határt túllépi. A külön tervezői követelményt önállóan ellenőrizzük; nem írja felül az MI-pipát.</p></div></details>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading"><span class="step">03</span><h2>Szivattyúk és munkapont</h2><span class="small-tag">XYLEM / FLYGT</span></div>
+          <div class="selection-panel"><h3>Szivattyú-előválasztó</h3><p class="hint">A fenti vezetékadatok, a terhelés, a gépszám és a 04. pont aknakorlátai alapján. Rangsor: legkisebb összes névleges P₂ a teljes párhuzamos fokozaton.</p>
           <div class="field-row"><label>Üzemképes gépek<input name="workingCount" type="number" min="1" max="8" step="1"></label><label>Hidegtartalék gépek<input name="standbyCount" type="number" min="0" max="8" step="1"></label></div>
           <label>Egyidejűleg legfeljebb működő gépek<input name="maxParallel" type="number" min="1" max="8" step="1"></label>
           <p id="pump-arrangement" class="hint emphasis"></p>
           <p class="hint">Az üzemképes gépek ciklusonként váltják a vezető szerepet, és a kapcsolási szinteken lépcsőzetesen indulnak. A hidegtartalék automatikusan nem indul és nem ad kapacitást.</p>
+          <label>Kapacitástöbblet a csúcshozam felett<div class="unit-field"><input name="selectionMargin" type="number" min="0" max="200" step="1"><span>%</span></div></label>
+          <label>Vizsgált közeg / típusok<select name="selectionDrainage"><option value="no">Szennyvíz · SX/STA típusok kizárva</option><option value="yes">Szennyezettvíz-típusokkal együtt</option></select></label>
+          <button type="button" id="select-pumps" class="primary-button">Szivattyúk összehasonlítása</button><div id="selection-results" aria-live="polite"></div></div>
+          <label>Szivattyútípus / típuscsalád<select name="pumpId" id="pump-select"></select></label>
+          <div id="pump-info" class="pump-info"></div>
+          <div id="catalogue-info" class="catalogue-info"></div>
           <label>Munkapont meghatározása<select name="flowMode"><option value="manual">Kézi fokozati Q → szükséges H számítása</option><option value="curve">Automatikus Q–H görbemetszés</option></select></label>
           <div id="manual-flow-fields"></div>
           <div id="curve-fields" hidden>
@@ -80,32 +104,20 @@ Első pont: Q = 0. Legalább 3 pont kell."></textarea></label>
         </section>
 
         <section class="panel">
-          <div class="panel-heading"><span class="step">03</span><h2>Magasságok és nyomóvezeték</h2></div>
-          <label>Befolyócső fenékszintje<div class="unit-field"><input name="inletElevation" type="number" min="-100" max="3000" step="0.01"><span>mBf</span></div></label>
-          <label>Nyomócső végponti szintje<div class="unit-field"><input name="outletElevation" type="number" min="-100" max="3000" step="0.01"><span>mBf</span></div></label>
-          <label>Végpont értelmezése<select name="outletMode"><option value="free">Szabad kifolyás · csőtengely szintje</option><option value="reservoir">Befogadó vízszint / nyomott csatlakozás</option></select></label>
-          <div class="field-row"><label>Belső csőátmérő<div class="unit-field"><input name="pipeDiameter" type="number" min="15" max="2000" step="1"><span>mm</span></div></label><label>Nyomóvezeték hossza<div class="unit-field"><input name="pipeLength" type="number" min="0" max="100000" step="1"><span>m</span></div></label></div>
-          <p class="hint">Valódi belső átmérőt adj meg, ne külső méretet vagy pusztán DN-t. A modell telt, állandó átmérőjű közös nyomóvezetéket feltételez, azonos párhuzamos gépekkel.</p>
-          <details><summary>Érdesség, szerelvények és ellennyomás</summary><div class="detail-fields">
-            <div class="field-row"><label>Üzemi érdesség k<div class="unit-field"><input name="roughnessMm" type="number" min="0" max="10" step="0.01"><span>mm</span></div></label><label>Összes helyi veszteség Σζ<div class="unit-field"><input name="minorLossK" type="number" min="0" max="1000" step="0.1"><span>–</span></div></label></div>
-            <label>Végponti túlnyomás vízoszlopban<div class="unit-field"><input name="backpressureHead" type="number" min="0" max="1000" step="0.1"><span>m</span></div></label>
-            <p class="hint">A Σζ tartalmazza a szerelvények és idomok veszteségét a közös cső sebességére vonatkoztatva. A 3 példaérték. Szabad kifolyásnál a kilépési sebességmagasságot külön hozzáadjuk; befogadó vízszintnél a kilépési veszteséget a Σζ-ban kell felvenni. Az eltérő gépházi ágak külön méretezést igényelnek.</p>
-          </div></details>
-        </section>
-
-        <section class="panel">
           <div class="panel-heading"><span class="step">04</span><h2>Szívótér és időkeret</h2></div>
           <div class="field-row"><label>Belső aknaátmérő<select name="diameter"><option value="auto">Automatikus javaslat</option><option value="0.8">0,80 m</option><option value="1">1,00 m</option><option value="1.2">1,20 m</option><option value="1.5">1,50 m</option><option value="1.8">1,80 m</option><option value="2">2,00 m</option><option value="2.5">2,50 m</option><option value="3">3,00 m</option><option value="4">4,00 m</option></select></label><label>Elrendezési min. átmérő<div class="unit-field"><input name="minDiameter" type="number" min="0.5" max="10" step="0.1"><span>m</span></div></label></div>
           <div class="field-row"><label>Leállítási vízmélység<div class="unit-field"><input name="stopLevel" type="number" min="0.01" max="10" step="0.05"><span>m</span></div></label><label>Max. mélység befolyó alatt<div class="unit-field"><input name="maxDepthBelowInlet" type="number" min="0.2" max="20" step="0.1"><span>m</span></div></label></div>
-          <p class="hint emphasis">A leállítási vízmélység a szivattyú minimális bemerüléséből veendő fel. A fenékszintet a befolyó mBf szintjéből és a szükséges teljes tárolási mélységből vezetjük le; a terepszint és a fedlap magassága külön adat.</p>
+          <p class="hint emphasis">A leállítási vízmélység a szivattyú minimális bemerüléséből veendő fel. A fenékszintet a befolyó mBf szintjéből és a szükséges teljes tárolási mélységből vezetjük le; a megadott terepszintet az ábra jelöli. A fedlap kialakítása külön tervezési feladat.</p>
           <details><summary>Kapcsolási és biztonsági geometria</summary><div class="detail-fields">
             <div class="field-row"><label>Min. szintlépcső / fokozat<div class="unit-field"><input name="minDrawdown" type="number" min="0.01" max="2" step="0.05"><span>m</span></div></label><label>Max. teljes kapcsolási magasság<div class="unit-field"><input name="maxDrawdown" type="number" min="0.05" max="10" step="0.05"><span>m</span></div></label></div>
             <div class="field-row"><label>Riasztás az utolsó indítás fölött<div class="unit-field"><input name="alarmGap" type="number" min="0.01" max="2" step="0.05"><span>m</span></div></label><label>Tartalék a befolyó alatt<div class="unit-field"><input name="inletClearance" type="number" min="0.01" max="2" step="0.05"><span>m</span></div></label></div>
           </div></details>
           <label class="spaced">Biztonsági tárolási igény<div class="unit-field"><input name="reserveHours" type="number" min="0" max="168" step="0.5"><span>átlaghozam-óra</span></div></label>
           <p id="reserve-hint" class="hint"></p>
-          <label>Teljes tartózkodásiidő-keret<div class="unit-field"><input name="residenceLimit" type="number" min="1" max="10080" step="1"><span>perc</span></div></label>
-          <p class="hint">MI 4.1.1., 21. oldal: a hálózat és a szívótér együtt 5–6 óra. A kezdő 300 perc az alsó, konzervatív érték. Ha ez nem tartható, a dokumentum frissen tartást ír elő.</p>
+          <label>Minimum tartózkodási idő<div class="unit-field"><input name="residenceMinimum" type="number" min="0" max="10080" step="1"><span>perc</span></div></label>
+          <p class="hint">A 0 perc nem ír elő minimumot. Pozitív értéknél a kifolyó víz legkisebb megfigyelt FIFO-korát vizsgáljuk.</p>
+          <label>Felső tartózkodásiidő-keret (opcionális)<div class="unit-field"><input name="residenceLimit" type="number" min="0" max="10080" step="1" placeholder="Nincs megadva"><span>perc</span></div></label>
+          <p class="hint">Nincs előre kitöltött 300 perc. MI 4.1.1., 21. oldal: a hálózat és a szívótér együttes felső időkerete 5–6 óra; túllépésnél frissen tartás szükséges. Üres felső kerettel nincs igazolt időkorlát-megfelelőség.</p>
           <label>Befolyás előtti hálózati idő<div class="unit-field"><input name="upstreamMinutes" type="number" min="0" max="10080" step="1" placeholder="Nem ismert"><span>perc</span></div></label>
           <p class="hint emphasis">Az üres mező nem jelent nullát. A program az akna és a telt nyomóvezeték FIFO-vízkorát számolja; a beérkezés előtti időt ehhez hozzáadja. Eltérő vízkoroknál a megfelelő konzervatív hálózati előzményt add meg.</p>
         </section>
@@ -118,7 +130,7 @@ Első pont: Q = 0. Legalább 3 pont kell."></textarea></label>
         <div id="result-content">
           <div class="result-summary" id="result-summary"></div>
           <div class="metrics" id="metrics"></div>
-          <section class="panel well-panel"><div class="section-heading"><div><h3>Akna és kapcsolási szintek</h3><p>Szintek mBf-ben · az aknafenék számított eredmény.</p></div><span class="small-tag">HENGERES AKNA</span></div><div class="well-layout"><div id="well-diagram" class="well-diagram"></div><div id="level-table"></div></div><p class="hint">A biztonsági tér az utolsó üzemi indítási szint fölött helyezkedik el. A vészjelzés önálló érzékelőt igényel. A vázlat nem beépítési rajz; a fedlap és a befolyó feletti aknarész nincs méretezve.</p></section>
+          <section class="panel well-panel"><div class="section-heading"><div><h3>Akna és kapcsolási szintek</h3><p>Szintek mBf-ben · az aknafenék számított eredmény.</p></div><span class="small-tag">HENGERES AKNA</span></div><div class="well-layout"><div id="well-diagram" class="well-diagram"></div><div id="level-table"></div></div><p class="hint">A biztonsági tér az utolsó üzemi indítási szint fölött helyezkedik el. A vészjelzés önálló érzékelőt igényel. Bal oldalon fenéktől mért magasságok, jobb oldalon mBf szintek. A terep megadott mBf értékkel vagy külön jelölt vázlatként látható. Mobilon az ábra oldalra görgethető. A vázlat nem beépítési rajz.</p></section>
           <section class="panel"><div class="section-heading"><div><h3>Nyomóvezeték és szivattyú-munkapont</h3><p id="hydraulic-caption"></p></div><span class="small-tag">COLEBROOK–WHITE</span></div><div id="hydraulic-summary" class="hydraulic-summary"></div><div id="duty-table" class="table-scroll"></div><div class="chart-legend"><span><i class="teal"></i> Rendszergörbe</span><span><i class="blue"></i> Megadott Q–H görbe</span></div><div id="hydraulic-chart" class="chart"></div><p class="hint" id="hydraulic-note"></p></section>
           <section class="panel"><div class="section-heading"><div><h3>Napi üzem, egy pillantásra</h3><p>Az utolsó szimulált nap · legfeljebb 1 perces integráció, percenkénti adatsor</p></div></div><div class="chart-legend"><span><i class="teal"></i> Vízszint</span><span><i class="gray"></i> Indítási szint</span></div><div id="level-chart" class="chart"></div><div class="chart-legend"><span><i class="blue"></i> Befolyás</span><span class="unit-label">m³/h</span></div><div id="flow-chart" class="chart flow-chart"></div><div id="operation-stats" class="operation-stats"></div></section>
           <section class="panel"><div class="section-heading"><div><h3>Ellenőrzések és nyitott feltételek</h3><p>A zöld jelölés csak az adott számítási feltétel teljesülését mutatja.</p></div></div><div id="checks" class="checks"></div></section>
@@ -131,11 +143,12 @@ Első pont: Q = 0. Legalább 3 pont kell."></textarea></label>
       </section>
     </div>
 
-    <section class="sources-section" id="sources"><div class="section-heading"><div><span class="eyebrow">FORRÁSOK ÉS ALKALMAZHATÓSÁG</span><h2>Négy melléklet, követhető számítás</h2></div></div><div class="source-grid">
+    <section class="sources-section" id="sources"><div class="section-heading"><div><span class="eyebrow">FORRÁSOK ÉS ALKALMAZHATÓSÁG</span><h2>Öt melléklet, követhető számítás</h2></div></div><div class="source-grid">
       <article class="source-card"><span class="document-tag">MI-10-167/3–87 · 1987</span><h3>Közcsatornák. Hidraulikai méretezés</h3><p>A felhasználó által mellékelt műszaki irányelv</p><ul><li><strong>21. oldal, 4.1.1.:</strong> a hálózat és a szívótér együtt 5–6 óra; ha nem tartható, frissen tartás szükséges.</li><li><strong>(28) és (29):</strong> V = 0,9 Qsz / Z (Qsz L/s); T = 60/Z perc. Gyakorlati kapcsolásszám: 4–16/h; az összes korlát minimuma irányadó.</li><li><strong>3., 8–10. és 23. oldal:</strong> Colebrook–White, helyi veszteségek; hálózati nyomócső 0,3–5 m/s és min. 150 mm.</li><li>1987-es dokumentum: mai érvényessége és a konkrét projektre alkalmazása nincs igazolva.</li></ul><a href="./docs/mi-10-167-3-1987.pdf#page=21" target="_blank" rel="noopener">MI melléklet megnyitása ↗</a></article>
       <article class="source-card"><span class="document-tag">FCSM · 2020.09.24.</span><h3>Üzletszabályzat, VSZ-40/2020.</h3><p>4.0 kiadás · eredeti 22–27. oldal</p><ul><li><strong>22. oldal:</strong> egylakásos, 4 fős eset: min. 0,2 m³ üzemi tér és ezen felül min. 1 napi kibocsátásnyi biztonsági tér a befolyó alatt.</li><li><strong>24. oldal:</strong> ülepedés és berothadás csökkentése, külön vészvízszintjelzés.</li><li>Lakossági házi beemelőkre vonatkozik; nem írja felül automatikusan az MI hálózati szabályait. A részletben nincs számszerű időkorlát.</li></ul><a href="./docs/fcsm-2020.pdf" target="_blank" rel="noopener">FCSM melléklet megnyitása ↗</a></article>
       <article class="source-card"><span class="document-tag">XYLEM · FLYGT N · 50 HZ</span><h3>N-technology pump series</h3><p>896876 · dokumentumjelölés: 20240605</p><ul><li><strong>PDF 6. és 8. oldal:</strong> kis és közepes típuscsaládok, legfeljebb 30 indítás/h.</li><li><strong>PDF 10. oldal:</strong> nagy típuscsaládok, legfeljebb 15 indítás/h.</li><li>Nincs konkrét kivitelhez tartozó Q–H görbe, minimális bemerülés vagy teljes beépítési rajz. Ezeket külön gyártói adatokkal kell igazolni.</li></ul><a href="./docs/flygt-n-896876.pdf" target="_blank" rel="noopener">Flygt prospektus megnyitása ↗</a></article>
       <article class="source-card"><span class="document-tag">30 TÁBLÁZATOS GÖRBE · 50 HZ</span><h3>Flygt szivattyúgörbék</h3><p>Feltöltött, gyári táblázatokból újrarajzolt gyűjtemény · 41 oldal</p><ul><li><strong>30 modell, 289 Q–H pont:</strong> SX/SXV, DX, DXV, DXG, STA, DL és DLV családok. A numerikus táblázatokból közvetlenül átvett értékek; Q [L/s] × 3,6 = Q [m³/h].</li><li><strong>Másodlagos forrás:</strong> a pontok közt egyenes interpoláció. Az eredeti gyártói görbeoldalak és pontos járókerék-/motorváltozatok külön ellenőrizendők. Indítási korlátot és bemerülést nem ad.</li><li>Az N 3000, C, F és Concertor kivitelgörbéi hiányoznak; a program ezeket nem pótolja más család adataival.</li></ul><a href="./docs/flygt-szennyviz-szivattyugorbek.pdf" target="_blank" rel="noopener">Feltöltött görbegyűjtemény megnyitása ↗</a></article>
+      <article class="source-card"><span class="document-tag">N 3000 · 16 TÍPUSCSALÁD · 50 HZ</span><h3>N-sorozat: tájékoztató tartományok</h3><p>Új, feltöltött tartománygyűjtemény · 22 oldal</p><ul><li>3069–3800 családok: motor- és nyomócsonktartomány, családonként megnyitható ábra.</li><li>A dokumentum szerint a satírozott zónák kézi, közelítő értelmezések. Nem pontos gyári Q–H görbék, méretezésre és végleges kiválasztásra nem alkalmasak.</li><li>Az előválasztó nem képez belőlük görbepontokat. Az N-modellekhez pontos kivitelgörbe szükséges. A 3800 gyártói indítási maximumát ez a melléklet nem adja meg.</li></ul><a href="./docs/flygt-n-3000-tartomanyok.pdf" target="_blank" rel="noopener">N-sorozatú tartományok megnyitása ↗</a></article>
     </div></section>
     <footer><span>≋ ÁTEMELŐ / MÉRETEZŐ MŰHELY</span><p>Előméretezés a mellékelt dokumentumokkal. Kiviteli tervezéshez pontos gyártói adatok és üzemeltetői egyeztetés szükséges.</p></footer>
   </main>
@@ -1112,7 +1125,8 @@ const nPumps = [
   ['3356', '45–140', '350', 15, 10],
   ['3400', '40–310', '400', 15, 10],
   ['3531', '40–680', '500', 15, 10],
-].map(([id,power,discharge,maxStarts,page])=>({id,name:`Flygt N ${id}`,family:'N 3000',group:'n',power,discharge,maxStarts,page,curve:null}));
+  ['3800', '225–550', '800', null, null],
+].map(([id,power,discharge,maxStarts,page])=>({id,name:`Flygt N ${id}`,family:'N 3000',group:'n',power,discharge,maxStarts,page,curve:null,rangePage:6+['3069','3085','3102','3127','3153','3171','3202','3301','3315','3231','3306','3312','3356','3400','3531','3800'].indexOf(id),rangeSource:'flygt-n-3000-tartomanyok.pdf',rangeVerification:'approximate-envelope-not-for-sizing'}));
 
 const tablePumps=catalogueTables.map(table=>({
   id:table.id,name:`Flygt ${table.model}`,family:table.family,group:'catalogue',
@@ -1202,7 +1216,8 @@ const defaults={
   roughnessMm:0.25,minorLossK:3,outletMode:'free',backpressureHead:0,
   diameter:'auto',minDiameter:1.2,stopLevel:0.4,maxDepthBelowInlet:3,
   maxDrawdown:0.8,minDrawdown:0.15,alarmGap:0.15,inletClearance:0.15,reserveHours:2,
-  residenceLimit:300,upstreamMinutes:'',
+  residenceMinimum:0,residenceLimit:'',upstreamMinutes:'',groundElevation:'',fcsmSingleDwelling:'no',
+  projectVelocityMin:'',projectVelocityMax:'',selectionMargin:10,selectionDrainage:'no',
 };
 function number(value,name,min,max){
   if(value===''||value===null||value===undefined||!Number.isFinite(Number(value)))throw new Error(`${name}: adj meg egy számot.`);
@@ -1218,8 +1233,9 @@ function migrateProject(data){
     p.manualFlows=[old.pumpFlow??18,'','','','','','',''];
     for(const key of ['inletElevation','outletElevation','pipeDiameter','pipeLength'])p[key]='';
     note='Korábbi projekt: a relatív szintekből mBf magasság nem határozható meg. Az új magasságokat és vezetékadatokat ezért üresen hagytuk: add meg őket. A megszüntetett folyamatos hányad helyett a teljes napi mennyiséget a profil osztja el. A régi kétgépes váltott üzem két üzemképes, legfeljebb egyidejűleg egy működő gép maradt.';
-    if(old.residenceLimit==='')p.residenceLimit=300;
+    if(old.residenceLimit==='')p.residenceLimit='';
   }
+  if(old.application==='house'&&!Object.hasOwn(old,'fcsmSingleDwelling')){p.fcsmSingleDwelling='yes';note+=' A régi lakóházi projekt egylakásos FCSM-esetét megtartottuk; általános lakóépülethez válaszd a tervezői tárolást.';}
   return {parameters:p,note};
 }
 function validate(input){
@@ -1234,12 +1250,17 @@ function validate(input){
     ['outletElevation','Végponti mBf szint',-100,3000],['pipeDiameter','Nyomócső belső átmérő',15,2000],
     ['pipeLength','Nyomócsőhossz',0,100000],['roughnessMm','Üzemi érdesség',0,10],
     ['minorLossK','Helyi veszteségtényezők összege',0,1000],['backpressureHead','Ellennyomás',0,1000],
-    ['residenceLimit','Tartózkodásiidő-korlát',1,10080],
+    ['residenceMinimum','Minimum tartózkodási idő',0,10080],['selectionMargin','Előválasztási kapacitástöbblet',0,200],
   ])p[key]=number(p[key],name,min,max);
   for(const [key,name,min,max] of [['shiftCount','Műszakszám',1,3],['workingCount','Üzemképes szivattyúk száma',1,8],['standbyCount','Hidegtartalékok száma',0,8],['maxParallel','Max. egyidejű gépszám',1,p.workingCount]]){
     p[key]=number(p[key],name,min,max);if(!Number.isInteger(p[key]))throw new Error(`${name}: egész szám szükséges.`);
   }
   for(const [key,name,max] of [['utilityStartsLimit','Áramszolgáltatói kapcsolásszám',100],['manufacturerStartsLimit','Pontos gyártói kapcsolásszám',100],['upstreamMinutes','Befolyás előtti hálózati idő',10080]])if(p[key]!=='')p[key]=number(p[key],name,0,max);
+  for(const [key,name,min,max] of [['residenceLimit','Felső tartózkodásiidő-keret',0,10080],['groundElevation','Terepszint',-100,3000],['projectVelocityMin','Tervezői minimum sebesség',0,20],['projectVelocityMax','Tervezői maximum sebesség',0,20]])if(p[key]!=='')p[key]=number(p[key],name,min,max);
+  if(p.residenceLimit!==''&&p.residenceMinimum>p.residenceLimit)throw new Error('A minimum tartózkodási idő nem haladhatja meg a felső keretet.');
+  if(p.projectVelocityMin!==''&&p.projectVelocityMax!==''&&p.projectVelocityMin>p.projectVelocityMax)throw new Error('A minimum sebesség nem haladhatja meg a maximumot.');
+  for(const key of ['fcsmSingleDwelling','selectionDrainage'])if(!['yes','no'].includes(p[key]))throw new Error('Ismeretlen választási beállítás.');
+  if(p.groundElevation!==''&&p.groundElevation<p.inletElevation)throw new Error('A terepszint nem lehet a befolyócső fenékszintje alatt.');
   if(p.utilityStartsLimit===0)throw new Error('Az áramszolgáltatói kapcsolásszám legyen pozitív vagy hagyd üresen.');
   if(p.manufacturerStartsLimit===0)throw new Error('A pontos gyártói kapcsolásszám legyen pozitív vagy hagyd üresen.');
   if(!['workplace','house'].includes(p.application))throw new Error('Ismeretlen felhasználási mód.');
@@ -1272,7 +1293,7 @@ function validate(input){
 }
 function buildProfile(p){
   const weights=Array.from({length:96},(_,i)=>{
-    if(p.application==='house')return 1;
+    if(p.application==='house'&&p.profile!=='custom')return 1;
     if(p.profile==='custom')return p.hourly[Math.floor(i/4)];
     return p.shifts.reduce((sum,s)=>{
       let overlap=0;for(const d of [-24,0,24])overlap+=Math.max(0,Math.min((i+1)/4,s.start+s.hours+d)-Math.max(i/4,s.start+d));
@@ -1286,7 +1307,7 @@ function buildProfile(p){
 function geometry(p,pump,points=null){
   const limits=[p.startsLimit,pump.maxStarts,p.utilityStartsLimit,p.manufacturerStartsLimit].filter(v=>typeof v==='number'&&v>0);
   const limit=Math.min(...limits);
-  const targetReserve=p.daily*(p.application==='house'?24:p.reserveHours)/24;
+  const targetReserve=p.daily*(p.application==='house'&&p.fcsmSingleDwelling==='yes'?24:p.reserveHours)/24;
   const candidate=diameter=>{
     const area=Math.PI*diameter**2/4,reserve=Math.max(targetReserve,area*p.alarmGap);
     const topElevation=p.inletElevation-p.inletClearance-reserve/area;
@@ -1294,7 +1315,7 @@ function geometry(p,pump,points=null){
     // MI (28) gives 0.9*Q[l/s]/Z = Q[m³/h]/(4Z). Conservatively use
     // full station flow for EACH stage; this extension is not an MI multipump rule.
     const byStarts=0.9*(maxFlow/3.6)/limit,byRun=maxFlow*p.minRunSeconds/3600;
-    const perStage=Math.max(byStarts,byRun,area*p.minDrawdown,p.application==='house'?0.2:0);
+    const perStage=Math.max(byStarts,byRun,area*p.minDrawdown,p.application==='house'&&p.fcsmSingleDwelling==='yes'?0.2:0);
     const active=perStage*p.maxParallel,drawdown=active/area,start=p.stopLevel+drawdown;
     const reserveTop=start+reserve/area,inletDepth=reserveTop+p.inletClearance,floorElevation=p.inletElevation-inletDepth;
     const startLevels=Array.from({length:p.maxParallel},(_,i)=>p.stopLevel+(i+1)*perStage/area);
@@ -1324,7 +1345,7 @@ function simulate(p,g,profile,flowAt,pipeVolume,{stepSeconds=60}={}){
   const wet=fifoQueue(g.dead),pipe=fifoQueue(pipeVolume);
   const starts=Array.from({length:p.workingCount},()=>[]),observedStarts=Array(p.workingCount).fill(0),runningHours=Array(p.workingCount).fill(0);
   let t=0,volume=g.dead,running=[],lead=0,initialVolume=volume,initialAtObservation=g.dead+pipeVolume;
-  let inflow=0,pumped=0,overflow=0,integral=0,wetMaxAge=0,systemMaxAge=0,maxObservedVolume=volume,minObservedVolume=Infinity,events=0;
+  let inflow=0,pumped=0,overflow=0,integral=0,wetMaxAge=0,systemMaxAge=0,systemMinAge=Infinity,maxObservedVolume=volume,minObservedVolume=Infinity,events=0;
   let offSince=0,maxOff=0;const series=[];
   while(t<end-1e-9){
     if(++events>400000)throw new Error('Túl sok kapcsolási esemény. Növeld a kapcsolási térfogatot.');
@@ -1345,7 +1366,7 @@ function simulate(p,g,profile,flowAt,pipeVolume,{stepSeconds=60}={}){
     const pumpedParts=wet.take(remove);
     for(const part of pumpedParts){if(observed)wetMaxAge=Math.max(wetMaxAge,t+dt-part.t);if(pipeVolume>0)pipe.add(part);}
     const delivered=pipeVolume>0?pipe.take(remove):pumpedParts;
-    if(observed)for(const part of delivered)systemMaxAge=Math.max(systemMaxAge,t+dt-part.t);
+    if(observed)for(const part of delivered){systemMaxAge=Math.max(systemMaxAge,t+dt-part.t);if(!part.initial)systemMinAge=Math.min(systemMinAge,t+dt-part.t);}
     volume=Math.max(0,volume+add-remove);const spill=Math.max(0,volume-g.belowInlet);
     if(spill>0){wet.take(spill);volume-=spill;}
     if(observed){
@@ -1365,10 +1386,18 @@ function simulate(p,g,profile,flowAt,pipeVolume,{stepSeconds=60}={}){
   const avgVolume=integral/(24*observationDays);
   return {series,observationDays,warmupDays,rollingStarts,observedStarts,runningHours,avgVolume,
     hydraulicMinutes:avgVolume/(p.daily/24)*60,pipeHydraulicMinutes:pipeVolume/(p.daily/24)*60,
+    systemFifoMinMinutes:Number.isFinite(systemMinAge)?systemMinAge*60:null,
     fifoMaxMinutes:wetMaxAge*60,systemFifoMaxMinutes:systemMaxAge*60,totalFifoMinutes:p.upstreamMinutes===''?null:systemMaxAge*60+p.upstreamMinutes,
     maxOffMinutes:maxOff*60,initialAtObservation,inflow,pumped,overflow,initialVolume,finalVolume:volume,
     maxLevel:g.floorElevation+maxObservedVolume/g.area,minLevel:g.floorElevation+minObservedVolume/g.area,
     balanceError:initialVolume+inflow-pumped-overflow-volume};
+}
+// Keep a rounded display from hiding a genuine MI boundary violation.
+function formatVelocity(value){
+  const rounded=Number(value.toFixed(4));
+  const hidesLower=value<0.3-1e-9&&rounded>=0.3;
+  const hidesUpper=value>5+1e-9&&rounded<=5;
+  return (hidesLower||hidesUpper?value.toPrecision(10):value.toFixed(4)).replace('.',',');
 }
 function calculate(input,simulationOptions={}){
   const p=validate(input),pump=pumps.find(x=>x.id===p.pumpId),profile=buildProfile(p);
@@ -1382,7 +1411,8 @@ function calculate(input,simulationOptions={}){
   const operating=Array.from({length:p.maxParallel},(_,i)=>{
     const count=i+1,waterElevation=g.floorElevation+(g.stop+g.startLevels[i])/2;
     const nominal=p.flowMode==='curve'?operatingPoint(p,points,count,waterElevation):{count,flow:p.manualFlows[i],perPump:p.manualFlows[i]/count,waterElevation,...systemHead(p,p.manualFlows[i],waterElevation)};
-    return {...nominal,flowLow:flowAt(count,g.floorElevation+g.stop),flowHigh:flowAt(count,g.topElevation)};
+    const flowLow=flowAt(count,g.floorElevation+g.stop),flowHigh=flowAt(count,g.topElevation);
+    return {...nominal,flowLow,flowHigh,velocityLow:systemHead(p,flowLow,g.floorElevation+g.stop).velocity,velocityHigh:systemHead(p,flowHigh,g.topElevation).velocity};
   });
   const pipeVolume=systemHead(p,0,p.inletElevation).pipeVolume,sim=simulate(p,g,profile,flowAt,pipeVolume,simulationOptions),checks=[];
   const add=(id,status,title,detail)=>checks.push({id,status,title,detail});
@@ -1390,15 +1420,21 @@ function calculate(input,simulationOptions={}){
   add('overflow',sim.overflow<1e-7?'pass':'fail','Visszaduzzasztás a modellben',sim.overflow<1e-7?'A szimuláció nem érte el a befolyó fenékszintjét.':'A víz elérte a befolyó szintjét; a túltöltés visszaduzzasztást vagy elöntést jelenthet.');
   add('capacity',operating.at(-1).flowLow>Math.max(...profile)?'pass':'fail','Kapacitás a csúcshozamhoz','MI 4.1.1.: az összes rendelkezésre álló kapacitás a legalsó üzemi vízszintnél is haladja meg a felvett csúcshozamot. Hidegtartalék nélkül számolva.');
   add('starts',Math.max(...sim.rollingStarts)<=g.limit?'pass':'fail','Kapcsolásszám gépenként',`Alkalmazott korlát: ${g.limit}/h; a tervezői, prospektus- és megadott áramszolgáltatói érték minimuma. MI 21. oldal: a gyakorlati tartomány 4–16/h, nem minden gépre kötelező rögzített korlát.`);
-  if(pump.maxStarts===null&&p.manufacturerStartsLimit==='')add('manufacturer-starts','pending','A típus gyártói indítási korlátja hiányzik','A táblázatos görbegyűjtemény nem ad ehhez indítási korlátot. Az N-sorozat 30/15 indítás/h adata nem vihető át erre a típusra. A számítás a megadott tervezői/villamos értékre készül, a pontos gyártói maximum külön megadandó.');
+  if(pump.maxStarts===null&&p.manufacturerStartsLimit==='')add('manufacturer-starts','pending','A típus gyártói indítási korlátja hiányzik','A mellékletek nem adnak ehhez a típushoz indítási korlátot. Az N-sorozat 30/15 indítás/h adata nem vihető át erre a típusra. A számítás a megadott tervezői/villamos értékre készül, a pontos gyártói maximum külön megadandó.');
   if(p.utilityStartsLimit==='')add('utility','pending','Áramszolgáltatói és pontos motorkorlát','Az áramszolgáltató/kapcsolóberendezés korlátja nincs megadva. A prospektus helyett a pontos kivitel és indítási mód adatai irányadók.');
   const knownAge=sim.systemFifoMaxMinutes;
-  if(sim.initialAtObservation>1e-7)add('residence','pending','Tartózkodási idő: nem beállt modell','A bemelegítés végére a kezdeti víz nem cserélődött ki teljesen; hosszabb vizsgálat szükséges.');
-  else if(knownAge>p.residenceLimit||(sim.totalFifoMinutes!==null&&sim.totalFifoMinutes>p.residenceLimit))add('residence','fail','MI-időkeret túllépése a FIFO-modellben','MI 4.1.1.: a hálózat és a szívótér együtt 5–6 óra. Az alapértelmezett 300 perc az alsó, konzervatív érték. A modell túllépi a felvett keretet; frissen tartás vagy más kialakítás vizsgálandó.');
+  if(p.residenceLimit==='')add('residence','pending','Felső tartózkodásiidő-keret nincs megadva','A FIFO-idő számított eredmény; felső keret nélkül nincs időkorlát-megfelelőség. MI 4.1.1., 21. oldal: a hálózat és a szívótér együtt 5–6 óra; túllépésnél frissen tartás vizsgálandó.');
+  else if(sim.initialAtObservation>1e-7)add('residence','pending','Tartózkodási idő: nem beállt modell','A bemelegítés végére a kezdeti víz nem cserélődött ki teljesen; hosszabb vizsgálat szükséges.');
+  else if(knownAge>p.residenceLimit||(sim.totalFifoMinutes!==null&&sim.totalFifoMinutes>p.residenceLimit))add('residence','fail','A felvett felső időkeret túllépése',`A megadott felső keret ${p.residenceLimit} perc. MI 4.1.1.: a hálózat és a szívótér együtt 5–6 óra; frissen tartás vagy más kialakítás vizsgálandó.`);
   else if(p.upstreamMinutes==='')add('residence','pending','Tartózkodási idő: hiányzó előzmény','A szívótér és a telt nyomócső modellezett ideje a kereten belül van, de a beérkezés előtti hálózati idő nélkül az összes idő nem igazolható.');
-  else add('residence','pass','MI-időkeret a felvett FIFO-modellben','A hálózati idő és az akna + telt nyomócső FIFO-kora együtt a tervezői kereten belül van. A valós keveredés, holtterek és a 1987-es irányelv mai alkalmazhatósága külön ellenőrzendő.');
-  const velocities=operating.flatMap(o=>[systemHead(p,o.flowLow,g.floorElevation+g.stop).velocity,systemHead(p,o.flowHigh,g.topElevation).velocity]);
-  add('velocity',Math.min(...velocities)>=0.3&&Math.max(...velocities)<=5?'pass':'fail','MI nyomócsősebesség: 0,3–5 m/s','MI 4.2., 23. oldal: működés közbeni sebességtartomány minden felvett fokozatra. Állásidőben a sebesség nulla.');
+  else add('residence','pass','A felvett felső időkeret a FIFO-modellben','A megadott hálózati idő és az akna + telt nyomócső FIFO-kora együtt a tervezői kereten belül van. Ez önmagában nem igazolja az MI alkalmazhatóságát vagy teljesítését.');
+  const minimumAge=sim.systemFifoMinMinutes===null?null:sim.systemFifoMinMinutes+(p.upstreamMinutes===''?0:p.upstreamMinutes);
+  add('residence-minimum',p.residenceMinimum===0?'pass':sim.initialAtObservation>1e-7||minimumAge===null?'pending':minimumAge>=p.residenceMinimum-1e-9?'pass':p.upstreamMinutes===''?'pending':'fail',`Tervezői minimum tartózkodás: ${p.residenceMinimum} perc`,p.residenceMinimum===0?'Nincs alsó időkövetelmény. Az MI-ben szereplő 5–6 óra felső időkeret, nem minimum.':`A kifolyó víz legkisebb megfigyelt FIFO-korát vizsgáljuk, a megadott hálózati előzménnyel. Ismeretlen előzményből nem állapítunk meg alsó határ alatti hibát. A felső keret külön ellenőrzés.`);
+  const velocityRange={min:Math.min(...operating.map(o=>o.velocityLow)),max:Math.max(...operating.map(o=>o.velocityHigh))};
+  const speedText=formatVelocity;
+  const failedStages=operating.filter(o=>o.velocityLow<0.3-1e-9||o.velocityHigh>5+1e-9);
+  add('velocity',failedStages.length?'fail':'pass','MI nyomócsősebesség: 0,3–5 m/s',`Összes üzemi fokozat tartománya: ${speedText(velocityRange.min)}–${speedText(velocityRange.max)} m/s. ${failedStages.length?'Határon kívül: '+failedStages.map(o=>`${o.count} gép (${speedText(o.velocityLow)}–${speedText(o.velocityHigh)} m/s)`).join('; ')+'. ':''}MI 4.2., 23. oldal: minden felvett fokozat, a leállítás és az utolsó indítás közötti vízszinteken; a középvízszinti érték önmagában nem elég. Állásidőben a sebesség nulla, ezt nem vizsgáljuk a minimumhoz.`);
+  if(p.projectVelocityMin!==''||p.projectVelocityMax!=='')add('project-velocity',(p.projectVelocityMin===''||velocityRange.min>=p.projectVelocityMin-1e-9)&&(p.projectVelocityMax===''||velocityRange.max<=p.projectVelocityMax+1e-9)?'pass':'fail','Külön tervezői sebességkövetelmény',`Felvett alsó / felső határ: ${p.projectVelocityMin===''?'nincs':p.projectVelocityMin} / ${p.projectVelocityMax===''?'nincs':p.projectVelocityMax} m/s. Az MI külön 0,3–5 m/s ellenőrzését ez nem módosítja. Az 5 m/s feletti sebesség fizikailag lehetséges, az idézett MI-határt viszont túllépi.`);
   if(p.application==='workplace')add('pipe-diameter',p.pipeDiameter>=150?'pass':'fail','MI hálózati nyomócső: legalább 150 mm','MI 4.2. hálózati előírás. Az FCSM lakossági bekötési szabálya eltérő esetkör; a konkrét telephelyre való alkalmazás egyeztetendő.');
   if(p.flowMode==='manual')add('duty','pending','Kézzel megadott fokozati vízhozamok','Ezekhez szükséges H-t és rendszerjelleggörbét számolunk. Automatikus munkapont csak pontos Q–H görbével adható; több gépnél sem feltételezünk N×Q szállítást.');
   else add('duty','pass','Q–H és rendszerjelleggörbe metszése','A megadott monoton Q–H görbe interpolációja és Colebrook–White veszteségszámítás. Azonos gépek közös nyomóvezetéken; az eltérő ágveszteségek nincsenek modellezve. A görbe eredetét a felhasználó igazolja.');
@@ -1407,13 +1443,72 @@ function calculate(input,simulationOptions={}){
   if(operating.some(o=>o.transition))add('transition','pending','Átmeneti Reynolds-tartomány','Re 2300–4000 között a lamináris és Colebrook-becslés közül a nagyobb ellenállást vesszük. Részletesebb ellenőrzés szükséges.');
   if(p.outletElevation+p.backpressureHead<=g.topElevation)add('siphon','pending','Gravitációs vagy szifonhatás lehetősége','A végpont piezometrikus szintje nem magasabb a felső üzemi vízszintnél. Hosszelvény és légtelenítés külön vizsgálandó; szivattyú nélküli szifonáramlást nem modellezünk.');
   add('installation','pending','Minimális bemerülés és beépíthetőség','A leállítási vízmélységet és az elrendezési minimumátmérőt a pontos kivitel rajza és hűtési követelménye igazolja. A gépészet kiszorított térfogatát nem vonjuk le.');
-  if(p.application==='house')add('fcsm',g.active>=0.2&&g.reserve>=p.daily?'pass':'fail','FCSM: egylakásos, 4 fős eset','A 2020-as részlet: min. 0,2 m³ üzemi tér és 1 napi kibocsátásnyi biztonsági tér a befolyó alatt.');
+  if(p.application==='house'&&p.fcsmSingleDwelling==='yes')add('fcsm',g.active>=0.2&&g.reserve>=p.daily?'pass':'fail','FCSM: egylakásos, 4 fős eset','A 2020-as részlet: min. 0,2 m³ üzemi tér és 1 napi kibocsátásnyi biztonsági tér a befolyó alatt.');
+  if(p.application==='house'&&p.fcsmSingleDwelling!=='yes')add('fcsm','pending','Lakóépület: üzemeltetői tárolási követelmény','Általános lakóépület, a megadott napi mennyiséggel és profillal. Az egylakásos, 4 fős esetre megadott 0,2 m³ és egynapi tartalék nem általánosítható automatikusan; a megfelelő FCSM-feltétel külön igazolandó.');
   const chartMax=points?points.at(-1).q*p.maxParallel:Math.max(...p.manualFlows)*1.3;
   const systemCurve=Array.from({length:81},(_,i)=>{const flow=chartMax*i/80;return {flow,head:systemHead(p,flow,operating[0].waterElevation).head};});
   const chartOperating=points?Array.from({length:p.maxParallel},(_,i)=>operatingPoint(p,points,i+1,operating[0].waterElevation)):[];
   const curveProvenance=p.flowMode!=='curve'?null:p.curveSource==='catalogue'?catalogueCurve(p.pumpId).provenance:{verification:'user-entered',model:pump.name,label:p.curveLabel,originalCatalogueVerified:false,method:'user-supplied numeric points; piecewise-linear interpolation'};
-  return {parameters:p,pump,profile,geometry:g,simulation:sim,checks,hydraulics:{operating,pipeVolume,points,systemCurve,curveProvenance,
+  return {parameters:p,pump,profile,geometry:g,simulation:sim,checks,hydraulics:{operating,velocityRange,pipeVolume,points,systemCurve,curveProvenance,
     chartOperating,pumpCurves:points?Array.from({length:p.maxParallel},(_,i)=>points.map(point=>({flow:point.q*(i+1),head:pumpHead(points,point.q)}))):[],referenceElevation:operating[0].waterElevation}};
+}
+
+const diagramFormat=(n,d=3)=>Number(n).toLocaleString('hu-HU',{minimumFractionDigits:d,maximumFractionDigits:d});
+function wellLayout(g,p){
+  const groundKnown=p.groundElevation!=='';
+  const ground=groundKnown?Number(p.groundElevation)-g.floorElevation:g.inletDepth+Math.max(0.35,g.inletDepth*0.12);
+  const levels=[
+    {key:'inlet',label:'Befolyócső fenékszintje',h:g.inletDepth,color:'#526e5c'},
+    {key:'reserve',label:'Biztonsági tárolás felső szintje',h:g.reserveTop,color:'#7b895b'},
+    {key:'alarm',label:'Vészvízszintjelzés',h:g.alarm,color:'#a66b1b'},
+    ...g.startLevels.map((h,i)=>({key:`start-${i+1}`,label:`${i+1}. fokozat indítása`,h,color:'#087c72'})),
+    {key:'stop',label:'Közös leállítás',h:g.stop,color:'#527465'},
+    {key:'floor',label:'Számított aknafenék',h:0,color:'#17383b'},
+  ];
+  if(groundKnown)levels.push({key:'ground',label:'Terepszint',h:ground,color:'#6d7754'});
+  levels.sort((a,b)=>b.h-a.h);
+  const height=Math.max(500,levels.length*41+110),floorY=height-70;
+  const y=h=>floorY-h/ground*(floorY-62);
+  for(let i=0;i<levels.length;i++)levels[i].labelY=Math.max(44,i?levels[i-1].labelY+38:44,y(levels[i].h)-9);
+  const overflow=levels.at(-1).labelY-(height-55);
+  if(overflow>0){levels.at(-1).labelY-=overflow;for(let i=levels.length-2;i>=0;i--)levels[i].labelY=Math.min(levels[i].labelY,levels[i+1].labelY-38);}
+  return {levels,height,floorY,y,ground,groundKnown};
+}
+function wellDiagram(g,p){
+  const {levels,height,floorY,y,ground,groundKnown}=wellLayout(g,p),left=350,right=590;
+  const dimensions=levels.filter(l=>l.h>0).map((l,i)=>{
+    const x=44+i*23,top=y(l.h);
+    return `<g class="floor-dimension" data-level="${l.key}"><path d="M${x-5} ${top}H${left-12}M${x-5} ${floorY}H${left-12}" stroke="#cbd7cb"/><path d="M${x} ${top}V${floorY}" stroke="#839986" marker-start="url(#dimension-arrow)" marker-end="url(#dimension-arrow)"/><text transform="translate(${x-5} ${(top+floorY)/2}) rotate(-90)" text-anchor="middle" fill="#536c5b" font-size="11" stroke="white" stroke-width="4" paint-order="stroke">${diagramFormat(l.h)} m</text></g>`;
+  }).join('');
+  const levelMarks=levels.map(l=>`<g data-level="${l.key}"><line x1="${left}" x2="${right}" y1="${y(l.h)}" y2="${y(l.h)}" stroke="${l.color}" stroke-dasharray="5 4"/><path d="M697 ${l.labelY+7}H678L638 ${y(l.h)}H${right+2}" fill="none" stroke="${l.color}" marker-end="url(#level-arrow)"/><text x="708" y="${l.labelY}" fill="${l.color}" font-size="12">${l.label}</text><text x="708" y="${l.labelY+17}" fill="${l.color}" font-weight="600" font-size="14">${diagramFormat(g.floorElevation+l.h)} mBf</text></g>`).join('');
+  const terrain=side=>side==='left'?`M300 ${y(ground)+5}L315 ${y(ground)-2}L329 ${y(ground)+2}L350 ${y(ground)}`:`M590 ${y(ground)}L612 ${y(ground)+3}L631 ${y(ground)-2}L657 ${y(ground)+4}`;
+  return `<svg viewBox="0 0 1000 ${height}" role="img" aria-label="Akna: jobb oldalon mBf szintek, bal oldalon fenéktől mért magasságok"><defs><pattern id="well-hatch" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><line y2="8" stroke="#c2d4bc" stroke-width="2"/></pattern><marker id="level-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#718879"/></marker><marker id="dimension-arrow" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M8 0L0 4L8 8Z" fill="#839986"/></marker></defs><text x="35" y="22" font-size="12" fill="#647777">Magasságok a fenéktől</text><text x="708" y="22" font-size="12" fill="#647777">Szintek · mBf</text>${dimensions}<path d="M338 ${y(ground)-15}V${floorY+10}H602V${y(ground)-15}" fill="#f1f4ed" stroke="#7c9180" stroke-width="3"/><rect x="350" y="${y(ground)-10}" width="240" height="${floorY-y(ground)+10}" fill="white"/><rect x="350" y="${y(g.reserveTop)}" width="240" height="${y(g.start)-y(g.reserveTop)}" fill="url(#well-hatch)"/><rect x="350" y="${y(g.start)}" width="240" height="${y(g.stop)-y(g.start)}" fill="#bee2d7"/><rect x="350" y="${y(g.stop)}" width="240" height="${floorY-y(g.stop)}" fill="#dae7df"/><path d="M350 ${y(ground)-10}V${floorY}H590V${y(ground)-10}" fill="none" stroke="#6b8272" stroke-width="2"/><path d="M310 ${y(g.inletDepth)-4}H350" stroke="#526e5c" stroke-width="8"/><path d="${terrain('left')}M305 ${y(ground)+9}l-6 9m20-6l-6 9m19-8l-6 9 ${terrain('right')}m-55 8l-6 9m20-6l-6 9m20-6l-6 9" fill="none" stroke="#87976b" stroke-width="2"/>${!groundKnown?`<text x="415" y="${y(ground)-22}" font-size="11" fill="#647777">Terep: vázlatos, szint nincs megadva</text>`:''}<path d="M420 ${floorY-6}v-22a18 18 0 0 1 36 0v22Z" fill="#476b60"/><rect x="430" y="${floorY-54}" width="17" height="20" rx="3" fill="#718d7b"/><path d="M456 ${floorY-21}H493V${y(ground)+15}h28" stroke="#7a9282" stroke-width="7" fill="none"/>${levelMarks}<path d="M350 ${height-37}H590m-240-5v10m240-10v10" stroke="#7a9282"/><text x="470" y="${height-15}" text-anchor="middle" fill="#607563" font-size="13">Belső Ø ${diagramFormat(g.diameter,2)} m</text></svg>`;
+}
+
+
+// Catalogue screening; nominal P₂ is available, efficiency and input power are not.
+function selectPumps(input){
+  const margin=Number(input.selectionMargin);
+  if(input.selectionMargin===''||!Number.isFinite(margin)||margin<0||margin>200)throw new Error('A kapacitástöbblet 0 és 200% közötti szám legyen.');
+  const candidates=[],excluded=[];
+  for(const pump of pumps){
+    if(!pump.curve){excluded.push({id:pump.id,name:pump.name,reason:'Pontos Q–H pontsor hiányzik; tartományábrából nem számolunk munkapontot.'});continue;}
+    if(pump.usage==='drainage'&&input.selectionDrainage!=='yes'){excluded.push({id:pump.id,name:pump.name,reason:'Szennyezettvíz-típus; az alapértelmezett szennyvíz-előválasztásból kizárva.'});continue;}
+    try{
+      // A manufacturer limit entered for the currently selected model is not transferable.
+      const r=calculate({...input,pumpId:pump.id,curveModelId:pump.id,flowMode:'curve',curveSource:'catalogue',manufacturerStartsLimit:''});
+      const duty=r.hydraulics.operating.at(-1),requiredFlow=Math.max(...r.profile)*(1+margin/100);
+      const reasons=r.checks.filter(c=>c.status==='fail').map(c=>c.title);
+      if(duty.flowLow<requiredFlow-1e-9)reasons.push(`A ${margin}% kapacitástöbblet nem teljesül.`);
+      candidates.push({id:pump.id,name:pump.name,powerKw:pump.curve.powerKw,totalNominalKw:pump.curve.powerKw*r.parameters.maxParallel,
+        flow: duty.flow,head:duty.head,minFlow:duty.flowLow,requiredFlow,diameter:r.geometry.diameter,active:r.geometry.active,
+        velocityRange:r.hydraulics.velocityRange,eligible:reasons.length===0,reasons,
+        pending:r.checks.filter(c=>c.status==='pending').map(c=>c.title)});
+    }catch(e){candidates.push({id:pump.id,name:pump.name,powerKw:pump.curve.powerKw,eligible:false,reasons:[e.message],pending:[]});}
+  }
+  candidates.sort((a,b)=>Number(b.eligible)-Number(a.eligible)||(a.totalNominalKw??Infinity)-(b.totalNominalKw??Infinity)||a.powerKw-b.powerKw||a.id.localeCompare(b.id));
+  return {candidates,excluded,best:candidates.find(c=>c.eligible)??null,margin,objective:'minimum-total-nominal-P2',
+    notice:'Az adott gépszámhoz, vezetékhez, terheléshez és aknakorlátokhoz rangsorolunk; a teljes párhuzamos fokozat névleges P₂-összege szerint. Nem energia- vagy hatásfok-optimalizálás. A gépszámot és a csőátmérőt nem változtatjuk. A gyártói indítás, közegalkalmasság, bemerülés és eredeti kivitelgörbe külön igazolandó.'};
 }
 
 
@@ -1426,6 +1521,7 @@ $('#shift-rows').innerHTML=defaults.shifts.map((_,i)=>`<div class="shift-row" da
 $('#hourly-fields').innerHTML=defaults.hourly.map((_,h)=>`<label>${String(h).padStart(2,'0')}:00<input name="hour-${h}" type="number" min="0" max="100000" step="0.1" aria-label="${h}. óra befolyási súlya"></label>`).join('');
 $('#manual-flow-fields').innerHTML=Array.from({length:8},(_,i)=>`<label data-flow="${i}">${i+1} egyidejű gép összes vízhozama<div class="unit-field"><input name="manualFlow-${i}" type="number" min="0.01" max="10000" step="0.1" placeholder="Igazolt fokozati Q"><span>m³/h</span></div></label>`).join('')+'<p class="hint emphasis">A 18 m³/h kezdő érték példa, nem igazolt Flygt-munkapont. Minden fokozat összes Q-ját külön add meg: közös csövön két gép nem feltétlenül szállít kétszer annyit. Kézi módban a megadott Q a vízszinttől független felvett érték.</p>';
 function fill(p){
+  $('#selection-results').innerHTML='';
   for(const [key,value]of Object.entries(p))if(!Array.isArray(value)&&form.elements.namedItem(key))form.elements.namedItem(key).value=value;
   for(let i=0;i<3;i++)for(const key of ['start','hours','people'])form.elements.namedItem(`shift-${i}-${key}`).value=p.shifts[i]?.[key]??defaults.shifts[i][key];
   p.hourly.forEach((v,h)=>form.elements.namedItem(`hour-${h}`).value=v);
@@ -1458,14 +1554,14 @@ function read(){
 }
 function sync(){
   const house=form.elements.application.value==='house',custom=form.elements.profile.value==='custom',curve=form.elements.flowMode.value==='curve';
-  $('#workplace-options').hidden=house;$('#house-note').hidden=!house;$('#shift-options').hidden=custom;$('#custom-profile').hidden=!custom;
+  $('#workplace-options').hidden=false;$('#house-note').hidden=!house;$('#fcsm-case').hidden=!house;$('#shift-options').hidden=custom||house;$('#custom-profile').hidden=!custom;
   document.querySelectorAll('[data-shift]').forEach((row,i)=>row.hidden=i>=Number(form.elements.shiftCount.value));
   $('#manual-flow-fields').hidden=curve;$('#curve-fields').hidden=!curve;
   document.querySelectorAll('[data-flow]').forEach((row,i)=>row.hidden=i>=Number(form.elements.maxParallel.value));
-  form.elements.reserveHours.disabled=house;
+  form.elements.reserveHours.disabled=house&&form.elements.fcsmSingleDwelling.value==='yes';
   form.elements.maxParallel.max=form.elements.workingCount.value;
   $('#pump-arrangement').textContent=`${form.elements.workingCount.value} üzemképes + ${form.elements.standbyCount.value} hidegtartalék; legfeljebb ${form.elements.maxParallel.value} gép egyszerre. A hidegtartalék nem vesz részt a szimulációban.`;
-  $('#reserve-hint').textContent=house?'FCSM, 22. oldal: legalább 1 napi kibocsátásnyi biztonsági tér az üzemi tér fölött.':'Tervezői tartalék: Qnapi / 24 × óra. Nem az MI által előírt tartózkodási idő, és csúcsterhelésnél nem garantál ugyanennyi hibaáthidalást.';
+  $('#reserve-hint').textContent=house&&form.elements.fcsmSingleDwelling.value==='yes'?'FCSM, 22. oldal: legalább 1 napi kibocsátásnyi biztonsági tér az üzemi tér fölött.':'Tervezői tartalék: Qnapi / 24 × óra. Nem az MI által előírt tartózkodási idő, és csúcsterhelésnél nem garantál ugyanennyi hibaáthidalást.';
   const pump=pumps.find(p=>p.id===form.elements.pumpId.value);
   if(!pump){$('#pump-info').textContent='Válassz szivattyútípust.';$('#catalogue-info').textContent='';return;}
   $('#pump-info').innerHTML=`<div><small>${pump.curve?'P₂ a gyűjteményben':'Motortartomány'}</small><strong>${pump.power?`${pump.power} kW`:'Adat szükséges'}</strong></div><div><small>Nyomócsonk</small><strong>${pump.discharge?`${pump.discharge} mm`:'Adatlap kell'}</strong></div><div><small>Gyártói indítás</small><strong>${pump.maxStarts?`≤ ${pump.maxStarts} ind./h`:'Nincs megadva'}</strong>${pump.page?`<br><a href="./docs/flygt-n-896876.pdf#page=${pump.page}" target="_blank" rel="noopener">PDF ${pump.page}. oldal ↗</a>`:''}</div>`;
@@ -1475,12 +1571,7 @@ function sync(){
   if(preset){
     const c=pump.curve;
     $('#catalogue-info').innerHTML=`<strong>Beépített táblázatos görbe · 50 Hz</strong><p>${c.points.length} eredeti táblázatpont · Q: ${fmt(c.points[0].q)}–${fmt(c.points.at(-1).q)} m³/h · H: ${fmt(c.headM.at(-1),1)}–${fmt(c.headM[0],1)} m.</p><p>Gyári táblázatokból újrarajzolt, másodlagos forrás. Numerikus pontok átvétele, képi digitalizálás nélkül; a pontok között lineáris közelítés. Az eredeti gyári katalógussal külön ellenőrizendő.</p><a href="./docs/flygt-szennyviz-szivattyugorbek.pdf#page=${c.pdfPage}" target="_blank" rel="noopener">Feltöltött PDF ${c.pdfPage}. oldal ↗</a>${!curve||!builtIn?'<button type="button" data-use-curve>Beépített görbe használata</button>':''}${pump.usage==='drainage'?'<p class="hint emphasis">Szennyezettvíz-típus: nyers szennyvízre való alkalmassága külön ellenőrizendő.</p>':''}`;
-  }else $('#catalogue-info').innerHTML='<strong>Görbeadat szükséges</strong><p>Az N 3000, C, F és Concertor családok pontos járókerék-/motorváltozataihoz a melléklet nem ad pontsort. Egyedi görbét vagy igazolt fokozati Q-t adj meg.</p>';
-}
-function well(g){
-  const top=g.inletDepth*1.12,y=h=>272-h/top*235;
-  const line=(h,label,color)=>`<line x1="63" x2="238" y1="${y(h)}" y2="${y(h)}" stroke="${color}" stroke-dasharray="4 3"/><text x="243" y="${y(h)+3}" fill="${color}" font-size="9">${label}</text>`;
-  return `<svg viewBox="0 0 330 314" role="img" aria-label="Akna és lépcsőzetes kapcsolási szintek"><defs><pattern id="hatch" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="6" stroke="#c2d4bc" stroke-width="2"/></pattern></defs><rect x="52" y="23" width="182" height="261" rx="4" fill="#eef2e9"/><rect x="64" y="28" width="158" height="244" fill="white"/><rect x="64" y="${y(g.reserveTop)}" width="158" height="${y(g.start)-y(g.reserveTop)}" fill="url(#hatch)"/><rect x="64" y="${y(g.start)}" width="158" height="${y(g.stop)-y(g.start)}" fill="#bee2d7"/><rect x="64" y="${y(g.stop)}" width="158" height="${272-y(g.stop)}" fill="#dae7df"/><path d="M58 28V278H228V28" fill="none" stroke="#6b8272" stroke-width="2"/><path d="M15 ${y(g.inletDepth)}H64" stroke="#526e5c" stroke-width="7"/>${line(g.inletDepth,'Befolyó','#607763')}${line(g.reserveTop,'Tartalék','#8c986f')}${line(g.alarm,'Vészjelzés','#ac7e28')}${g.startLevels.map((h,i)=>line(h,`${i+1}. indítás`,'#087c72')).join('')}${line(g.stop,'Leállítás','#547e6b')}<path d="M97 265v-14a14 14 0 0 1 28 0v14Z" fill="#476b60"/><rect x="104" y="228" width="16" height="17" rx="3" fill="#718d7b"/><path d="M125 253h21V37h25" stroke="#7a9282" stroke-width="6" fill="none"/><line x1="64" x2="222" y1="295" y2="295" stroke="#7a9282"/><text x="143" y="309" text-anchor="middle" fill="#607563" font-size="10">belső Ø ${fmt(g.diameter)} m</text></svg>`;
+  }else $('#catalogue-info').innerHTML='<strong>Görbeadat szükséges</strong><p>Az N 3000, C, F és Concertor családok pontos járókerék-/motorváltozataihoz a mellékletek nem adnak pontsort. Egyedi görbét vagy igazolt fokozati Q-t adj meg.</p>'+(pump.rangePage?`<a href="./docs/flygt-n-3000-tartomanyok.pdf#page=${pump.rangePage}" target="_blank" rel="noopener">${pump.name} · tájékoztató tartomány, ${pump.rangePage}. oldal ↗</a><p>A satírozott zóna közelítő családáttekintés, munkapont számítására nem használható.</p>`:'');
 }
 function timeChart(data,key,{height=160,color='#087c72',references=[],min=0,unit}){
   const width=680,left=48,right=12,top=13,bottom=27,w=width-left-right,h=height-top-bottom;
@@ -1507,28 +1598,28 @@ function render(r){
   $('#result-summary').className=`result-summary${fails?' fail':''}`;
   $('#result-summary').innerHTML=`<div class="summary-icon" aria-hidden="true">${fails?'!':'≋'}</div><div><strong>${fails?`${fails} számítási feltétel nem teljesül`:'Előméretezés elkészült'}</strong><p>${p.workingCount} üzemképes + ${p.standbyCount} hidegtartalék · max. ${p.maxParallel} párhuzamos gép. ${pending} feltétel egyeztetésre vagy adatlapra vár.</p></div>`;
   $('#metrics').innerHTML=[['Számított aknafenékszint',fmt(g.floorElevation,3),'mBf','Befolyó – szükséges tárolási mélység'],['Belső aknaátmérő',fmt(g.diameter),'m',`Befolyó alatti mélység: ${fmt(g.inletDepth)} m`],['Teljes hasznos szívótér',fmt(g.active,3),'m³',`${p.maxParallel} szintlépcső × ${fmt(g.perStage,3)} m³`]].map(([label,value,unit,sub])=>`<div class="metric"><span class="metric-label">${label}</span><div class="metric-value">${value}<small>${unit}</small></div><div class="metric-sub">${sub}</div></div>`).join('');
-  $('#well-diagram').innerHTML=well(g);
-  $('#level-table').innerHTML=[['Befolyócső fenékszintje',p.inletElevation,''],['Biztonsági tárolás felső szintje',g.floorElevation+g.reserveTop,''],['Vészvízszintjelzés',g.floorElevation+g.alarm,'alert'],...g.startLevels.map((level,i)=>[`${i+1}. fokozat indítása`,g.floorElevation+level,'accent']).reverse(),['Közös leállítás',g.floorElevation+g.stop,''],['Számított aknafenék',g.floorElevation,'accent']].map(([label,value,cls])=>`<div class="level-row ${cls}"><span>${label}</span><strong>${fmt(value,3)} mBf</strong></div>`).join('')+`<div class="mini-volumes"><div><span>Leállítás alatti maradó víz</span><strong>${fmt(g.dead,3)} m³</strong></div><div><span>Biztonsági tárolótér</span><strong>${fmt(g.reserve,3)} m³</strong></div></div>`;
+  $('#well-diagram').innerHTML=wellDiagram(g,p);
+  $('#level-table').innerHTML=[...(p.groundElevation!==''?[['Terepszint',p.groundElevation,'']]:[]),['Befolyócső fenékszintje',p.inletElevation,''],['Biztonsági tárolás felső szintje',g.floorElevation+g.reserveTop,''],['Vészvízszintjelzés',g.floorElevation+g.alarm,'alert'],...g.startLevels.map((level,i)=>[`${i+1}. fokozat indítása`,g.floorElevation+level,'accent']).reverse(),['Közös leállítás',g.floorElevation+g.stop,''],['Számított aknafenék',g.floorElevation,'accent']].map(([label,value,cls])=>`<div class="level-row ${cls}"><span>${label}</span><strong>${fmt(value,3)} mBf</strong></div>`).join('')+`<div class="mini-volumes"><div><span>Leállítás alatti maradó víz</span><strong>${fmt(g.dead,3)} m³</strong></div><div><span>Biztonsági tárolótér</span><strong>${fmt(g.reserve,3)} m³</strong></div></div>`;
   $('#hydraulic-caption').textContent=p.flowMode==='curve'?`Automatikus görbemetszés · ${p.curveLabel}`:'Kézzel megadott Q-hoz számított H-igény; gyártói görbe nélkül nem automatikus munkapont.';
   $('#hydraulic-summary').innerHTML=[['Végponti magasság',`${fmt(p.outletElevation,3)} mBf`],['Nyomócső',`${fmt(p.pipeLength,0)} m / belső Ø ${fmt(p.pipeDiameter,0)} mm`],['Telt vezeték térfogata',`${fmt(h.pipeVolume,3)} m³`]].map(([label,value])=>`<div><span>${label}</span><strong>${value}</strong></div>`).join('');
-  $('#duty-table').innerHTML=`<table><thead><tr><th>Fokozat</th><th>Összes Q</th><th>H-igény</th><th>Sebesség</th><th>Q-tartomány</th></tr></thead><tbody>${h.operating.map(o=>`<tr><td>${o.count} gép</td><td>${fmt(o.flow)} m³/h</td><td>${fmt(o.head)} m</td><td>${fmt(o.velocity)} m/s</td><td>${fmt(o.flowLow)}–${fmt(o.flowHigh)} m³/h</td></tr>`).join('')}</tbody></table>`;
+  $('#duty-table').innerHTML=`<table><thead><tr><th>Fokozat</th><th>Összes Q</th><th>H-igény</th><th>v középvízszinten</th><th>v teljes tartomány</th><th>Q-tartomány</th></tr></thead><tbody>${h.operating.map(o=>`<tr><td>${o.count} gép</td><td>${fmt(o.flow)} m³/h</td><td>${fmt(o.head)} m</td><td>${formatVelocity(o.velocity)} m/s</td><td>${formatVelocity(o.velocityLow)}–${formatVelocity(o.velocityHigh)} m/s</td><td>${fmt(o.flowLow)}–${fmt(o.flowHigh)} m³/h</td></tr>`).join('')}</tbody></table>`;
   $('#hydraulic-chart').innerHTML=hydraulicChart(r);
   $('#hydraulic-note').textContent=`A diagram minden görbéje azonos, ${fmt(h.referenceElevation,3)} mBf szívóoldali vízszintre vonatkozik. A táblázat fokozatonként a saját indítás és leállítás középvízszintjén számol; a Q-tartomány a közös leállítás és az utolsó indítás között értendő. ${p.flowMode==='manual'?'Kézi módban a pontok csak a szükséges H-t jelölik, nem igazolt gyártói görbemetszések.':'A szimuláció a vízszinttel változó munkapontot számolja, azonos fordulatszámú és jelleggörbéjű gépekre.'}`;
   if(h.curveProvenance?.pdfPage)$('#hydraulic-note').textContent+=` Forrás: újrarajzolt táblázatos gyűjtemény, ${h.curveProvenance.pdfPage}. oldal; eredeti katalógus-ellenőrzés szükséges. A táblázat közölt tartományán kívül nem extrapolálunk.`;
   $('#level-chart').innerHTML=timeChart(s.series,'level',{height:185,references:g.startLevels.map(l=>g.floorElevation+l),min:g.floorElevation+g.stop-0.05,unit:'Vízszint mBf'});
   $('#flow-chart').innerHTML=timeChart(s.series,'inflow',{height:115,color:'#7c9dab',unit:'Befolyás m³/h'});
-  $('#operation-stats').innerHTML=[['Max. indítás / üzemképes gép',`${Math.max(...s.rollingStarts)} /h`,`Gépenként: ${s.rollingStarts.join(' / ')} · korlát ${fmt(g.limit,0)}/h`],['Akna + nyomócső max. FIFO-kor',`${fmt(s.systemFifoMaxMinutes,0)} perc`,'A telt vezetékben álló víz idejével együtt'],['Teljes modellezett idő',s.totalFifoMinutes===null?'Előzmény hiányzik':`${fmt(s.totalFifoMinutes,0)} perc`,`Felvett MI-időkeret: ${fmt(p.residenceLimit,0)} perc`]].map(([label,value,sub])=>`<div class="operation-stat"><span>${label}</span><strong>${value}</strong><small>${sub}</small></div>`).join('');
+  $('#operation-stats').innerHTML=[['Max. indítás / üzemképes gép',`${Math.max(...s.rollingStarts)} /h`,`Gépenként: ${s.rollingStarts.join(' / ')} · korlát ${fmt(g.limit,0)}/h`],['Akna + nyomócső max. FIFO-kor',`${fmt(s.systemFifoMaxMinutes,0)} perc`,'A telt vezetékben álló víz idejével együtt'],['Teljes modellezett idő',s.totalFifoMinutes===null?'Előzmény hiányzik':`${fmt(s.totalFifoMinutes,0)} perc`,p.residenceLimit===''?'Felső időkeret nincs megadva':`Felvett felső keret: ${fmt(p.residenceLimit,0)} perc`]].map(([label,value,sub])=>`<div class="operation-stat"><span>${label}</span><strong>${value}</strong><small>${sub}</small></div>`).join('');
   $('#checks').innerHTML=checks.map(c=>`<div class="check ${c.status}" data-check="${c.id}"><span class="check-icon" aria-label="${{pass:'Teljesül',fail:'Nem teljesül',pending:'Egyeztetendő'}[c.status]}">${{pass:'✓',fail:'×',pending:'i'}[c.status]}</span><div><strong>${esc(c.title)}</strong><p>${esc(c.detail)}</p></div></div>`).join('');
-  $('#formula-output').innerHTML=[['MI (28): Vlépcső ≥ 0,9 × Qmax [L/s] / Z',`${fmt(g.byStarts,3)} m³`],['Futásidő minimum: Qmax × tmin / 3600',`${fmt(g.byRun,3)} m³`],['Egy szintlépcső / teljes hasznos tér',`${fmt(g.perStage,3)} / ${fmt(g.active,3)} m³`],['MI (29): periódusidő = 60 / Z',`${fmt(60/g.limit)} perc`],['Számított alsó aknaszint',`${fmt(p.inletElevation,3)} − ${fmt(g.inletDepth,3)} = ${fmt(g.floorElevation,3)} mBf`],['Teljes geometriai tér a befolyó alatt',`${fmt(g.belowInlet,3)} m³`],['Átlagos / legnagyobb befolyás',`${fmt(p.daily/24)} / ${fmt(Math.max(...r.profile))} m³/h`],['Átlagos hidraulikai idő a szívótérben',`${fmt(s.hydraulicMinutes,1)} perc`],['Nyomócső átlagos Vcső / Q24 ideje',`${fmt(s.pipeHydraulicMinutes,1)} perc`],['Legnagyobb FIFO-kor csak az aknában',`${fmt(s.fifoMaxMinutes,0)} perc`],['Leghosszabb megfigyelt teljes szivattyúállás',`${fmt(s.maxOffMinutes,0)} perc`],['Üzemképes gépek napi átlagos üzemideje',s.runningHours.map(v=>`${fmt(v/s.observationDays)} h`).join(' / ')],['Hidegtartalék gépek automatikus üzemideje','0 h'],['Túltöltés a megfigyelés alatt',`${fmt(s.overflow,3)} m³`],['Tömegmérleg eltérése',`${s.balanceError.toExponential(1)} m³`]].map(([label,value])=>`<div class="formula-row"><span>${label}</span><strong>${value}</strong></div>`).join('')+`<p class="model-note">${s.warmupDays} nap bemelegítés + ${s.observationDays} nap megfigyelés. Legfeljebb 60 másodperces, eseményhatárokon osztott explicit vízmérleg; FIFO-belépés az időlépés közepén. Görbemódban a Q a vízszinttel változik (0,1 mm-es vízszintsávra gyorsítótárazva). A többfokozatú térfogatválasztás konzervatív programbeli kiterjesztés, nem az MI-ben szereplő többgépes képlet. Az átmérő és a fenékszint az adott geometriai feltételekhez tartozó javaslat, nem teljes kiviteli méretezés.</p>`;
+  $('#formula-output').innerHTML=[['MI (28): Vlépcső ≥ 0,9 × Qmax [L/s] / Z',`${fmt(g.byStarts,3)} m³`],['Futásidő minimum: Qmax × tmin / 3600',`${fmt(g.byRun,3)} m³`],['Egy szintlépcső / teljes hasznos tér',`${fmt(g.perStage,3)} / ${fmt(g.active,3)} m³`],['MI (29): periódusidő = 60 / Z',`${fmt(60/g.limit)} perc`],['Számított alsó aknaszint',`${fmt(p.inletElevation,3)} − ${fmt(g.inletDepth,3)} = ${fmt(g.floorElevation,3)} mBf`],['Teljes geometriai tér a befolyó alatt',`${fmt(g.belowInlet,3)} m³`],['Átlagos / legnagyobb befolyás',`${fmt(p.daily/24)} / ${fmt(Math.max(...r.profile))} m³/h`],['Átlagos hidraulikai idő a szívótérben',`${fmt(s.hydraulicMinutes,1)} perc`],['Nyomócső átlagos Vcső / Q24 ideje',`${fmt(s.pipeHydraulicMinutes,1)} perc`],['Legkisebb kifolyási FIFO-kor (akna + cső)',s.systemFifoMinMinutes===null?'Nincs kifolyás':`${fmt(s.systemFifoMinMinutes,1)} perc`],['Legnagyobb FIFO-kor csak az aknában',`${fmt(s.fifoMaxMinutes,0)} perc`],['Leghosszabb megfigyelt teljes szivattyúállás',`${fmt(s.maxOffMinutes,0)} perc`],['Üzemképes gépek napi átlagos üzemideje',s.runningHours.map(v=>`${fmt(v/s.observationDays)} h`).join(' / ')],['Hidegtartalék gépek automatikus üzemideje','0 h'],['Túltöltés a megfigyelés alatt',`${fmt(s.overflow,3)} m³`],['Tömegmérleg eltérése',`${s.balanceError.toExponential(1)} m³`]].map(([label,value])=>`<div class="formula-row"><span>${label}</span><strong>${value}</strong></div>`).join('')+`<p class="model-note">${s.warmupDays} nap bemelegítés + ${s.observationDays} nap megfigyelés. Legfeljebb 60 másodperces, eseményhatárokon osztott explicit vízmérleg; FIFO-belépés az időlépés közepén. Görbemódban a Q a vízszinttel változik (0,1 mm-es vízszintsávra gyorsítótárazva). A többfokozatú térfogatválasztás konzervatív programbeli kiterjesztés, nem az MI-ben szereplő többgépes képlet. Az átmérő és a fenékszint az adott geometriai feltételekhez tartozó javaslat, nem teljes kiviteli méretezés.</p>`;
 }
 function update(){
   sync();try{const p=read();result=calculate(p);render(result);$('#error').hidden=true;$('#result-content').hidden=false;$('#calc-state').innerHTML='<span class="dot"></span> Számítás frissítve';try{localStorage.setItem(storageKey,JSON.stringify({version:2,parameters:p}));}catch{}}
   catch(e){result=null;$('#error').textContent=e.message;$('#error').hidden=false;$('#result-content').hidden=true;$('#calc-state').textContent='Adatok ellenőrzése szükséges';}
 }
 form.addEventListener('submit',e=>e.preventDefault());
-form.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(update,220);});
+form.addEventListener('input',()=>{$('#selection-results').innerHTML='';clearTimeout(timer);timer=setTimeout(update,220);});
 form.addEventListener('change',e=>{
-  clearTimeout(timer);
+  $('#selection-results').innerHTML='';clearTimeout(timer);
   if(e.target.name==='workingCount')form.elements.maxParallel.value=form.elements.workingCount.value;
   if(e.target.name==='pumpId'){
     curveModelId=e.target.value;form.elements.manufacturerStartsLimit.value='';
@@ -1538,14 +1629,14 @@ form.addEventListener('change',e=>{
   update();
 });
 $('#catalogue-info').addEventListener('click',e=>{if(e.target.closest('[data-use-curve]')){useCatalogueCurve();update();}});
-$('#reset').addEventListener('click',()=>{fill(structuredClone(defaults));update();});
+$('#reset').addEventListener('click',()=>{fill(structuredClone(defaults));$('#selection-results').innerHTML='';update();});
 $('#print').addEventListener('click',()=>window.print());
 let printDetails=[];window.addEventListener('beforeprint',()=>{printDetails=[...document.querySelectorAll('details')].map(element=>({element,open:element.open}));printDetails.forEach(({element})=>element.open=true);});
 window.addEventListener('afterprint',()=>printDetails.forEach(({element,open})=>element.open=open));
 function download(name,body,type){const url=URL.createObjectURL(new Blob([body],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 $('#export-json').addEventListener('click',()=>{
   if(!result)return;const {parameters,simulation,...summary}=result;const {series,...simulationSummary}=simulation;
-  download('atemelo-projekt.json',JSON.stringify({version:2,createdAt:new Date().toISOString(),parameters,summary:{...summary,simulation:simulationSummary},sources:['MI-10-167/3–87, pp.3,8–10,21,23','FCSM VSZ-40/2020, 4.0, pp.22–27','Flygt 896876, 20240605, PDF pp.6,8,10','Flygt_szennyviz_szivattyugorbek.pdf — feltöltött, újrarajzolt táblázatos gyűjtemény'],notice:'Előméretezés: a gyártói görbe, bemerülés és az irányelv alkalmazhatósága külön igazolandó. A beépített táblázatok nem eredeti gyártói görbeoldalak.'},null,2),'application/json');
+  download('atemelo-projekt.json',JSON.stringify({version:2,createdAt:new Date().toISOString(),parameters,summary:{...summary,simulation:simulationSummary},sources:['Flygt_N_3000_50Hz_szivattyu_tartomanyok.pdf — közelítő családtartományok, nem méretezési görbék','MI-10-167/3–87, pp.3,8–10,21,23','FCSM VSZ-40/2020, 4.0, pp.22–27','Flygt 896876, 20240605, PDF pp.6,8,10','Flygt_szennyviz_szivattyugorbek.pdf — feltöltött, újrarajzolt táblázatos gyűjtemény'],notice:'Előméretezés: a gyártói görbe, bemerülés és az irányelv alkalmazhatósága külön igazolandó. A beépített táblázatok nem eredeti gyártói görbeoldalak.'},null,2),'application/json');
 });
 $('#export-csv').addEventListener('click',()=>{
   if(!result)return;const rows=['Idő [óra];Befolyás [m3/h];Vízszint [mBf];Működő gépek száma;Összes szivattyú-Q [m3/h]',...result.simulation.series.map(d=>[d.hour,d.inflow,d.level,d.on,d.pumpFlow].map((v,i)=>i===3?v:Number(v).toFixed(4).replace('.',',')).join(';'))];
@@ -1566,6 +1657,25 @@ $('#import-curve').addEventListener('change',async e=>{
 let initial=structuredClone(defaults);
 try{const saved=JSON.parse(localStorage.getItem(storageKey)||localStorage.getItem('atemelo-project-v1'));if(saved){const migrated=migrateProject(saved);initial=migrated.parameters;$('#file-status').textContent=migrated.note;}}catch{}
 fill(initial);update();
+
+let selectionState=null;
+$('#select-pumps').addEventListener('click',async()=>{
+  clearTimeout(timer);const button=$('#select-pumps'),output=$('#selection-results');
+  button.disabled=true;output.textContent='Szivattyúk vizsgálata…';
+  await new Promise(resolve=>setTimeout(resolve,30));
+  try{
+    selectionState=selectPumps(read());
+    const {candidates,excluded,best,notice,margin}=selectionState,eligible=candidates.filter(c=>c.eligible);
+    output.innerHTML=`<p><strong>${best?`${eligible.length} típus teljesíti a vizsgált számítási feltételeket.`:'Nincs minden felvett számítási feltételt teljesítő típus.'}</strong></p><p>${esc(notice)}</p><p>A beépített táblázatos görbék között keresünk; az N-sorozat pontos görbéi hiányoznak. A gyártói indítási korlátot nem visszük át az aktuálisan kiválasztott gépről.</p>${eligible.length?`<ol class="selection-list">${eligible.map(c=>`<li><strong>${esc(c.name)} · ${fmt(c.powerKw)} kW/gép</strong><span>Összes P₂: ${fmt(c.totalNominalKw)} kW · Q/H: ${fmt(c.flow)} m³/h / ${fmt(c.head)} m</span><span>Q minimum: ${fmt(c.minFlow)} m³/h ≥ ${fmt(c.requiredFlow)} m³/h (${margin}% többlet) · akna Ø ${fmt(c.diameter)} m</span><span>${c.pending.length} feltétel még igazolandó: ${esc(c.pending.join('; '))}.</span><button type="button" class="secondary-button" data-apply-pump="${c.id}">Típus és görbe alkalmazása</button></li>`).join('')}</ol>`:''}<details><summary>Nem megfelelő / kizárt típusok (${candidates.length-eligible.length+excluded.length})</summary>${candidates.filter(c=>!c.eligible).map(c=>`<p><strong>${esc(c.name)}</strong>: ${esc(c.reasons.join(' · '))}</p>`).join('')}${excluded.map(c=>`<p><strong>${esc(c.name)}</strong>: ${esc(c.reason)}</p>`).join('')}</details>`;
+  }catch(e){selectionState=null;output.textContent=`Az előválasztás nem végezhető el: ${e.message}`;}
+  finally{button.disabled=false;}
+});
+$('#selection-results').addEventListener('click',e=>{
+  const button=e.target.closest('[data-apply-pump]');if(!button||!selectionState)return;
+  const candidate=selectionState.candidates.find(c=>c.id===button.dataset.applyPump&&c.eligible);if(!candidate)return;
+  form.elements.pumpId.value=candidate.id;form.elements.manufacturerStartsLimit.value='';useCatalogueCurve();update();
+  $('#selection-results').innerHTML=`<p><strong>${esc(candidate.name)} alkalmazva.</strong> A gyártói indítási maximumot, a bemerülést és a közegalkalmasságot a pontos kivitelhez add meg / igazold.</p>`;
+});
 
 </script>
 </body>
