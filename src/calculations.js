@@ -12,7 +12,7 @@ export const defaults={
   roughnessMm:0.25,minorLossK:3,outletMode:'free',backpressureHead:0,
   diameter:'auto',minDiameter:1.2,stopLevel:0.4,maxDepthBelowInlet:3,
   maxDrawdown:0.8,minDrawdown:0.15,alarmGap:0.15,inletClearance:0.15,reserveHours:2,
-  residenceMinimum:0,residenceLimit:'',upstreamMinutes:'',groundElevation:'',inletCrownElevation:'',pressureExitCover:1,fcsmSingleDwelling:'no',
+  residenceMinimum:0,residenceLimit:'',upstreamMinutes:'',groundElevation:'',pressureExitDepth:1,fcsmSingleDwelling:'no',
   projectVelocityMin:'',projectVelocityMax:'',
 };
 function number(value,name,min,max){
@@ -32,6 +32,13 @@ export function migrateProject(data){
     if(old.residenceLimit==='')p.residenceLimit='';
   }
   if(old.application==='house'&&!Object.hasOwn(old,'fcsmSingleDwelling')){p.fcsmSingleDwelling='yes';note+=' A régi lakóházi projekt egylakásos FCSM-esetét megtartottuk; általános lakóépülethez válaszd a tervezői tárolást.';}
+  if(Object.hasOwn(old,'pressureExitCover')&&!Object.hasOwn(old,'pressureExitDepth')){
+    const diameter=Number(old.pipeDiameter),cover=Number(old.pressureExitCover);
+    if(old.pipeDiameter!==''&&Number.isFinite(diameter)&&diameter>0&&old.pressureExitCover!==''&&Number.isFinite(cover)){
+      p.pressureExitDepth=cover+diameter/2000;
+      note+=' A korábbi felsőpalást-mélységet tengelymélységre váltottuk a korábbi rajz belső csőátmérőjével; a tengelyszint megmaradt. Az 1 m feltételt most a befolyó fenekéig és a nyomócső tengelyéig ellenőrizzük.';
+    }else{p.pressureExitDepth='';note+=' A korábbi falátvezetés tengelymélysége nem határozható meg a hiányos csőadatokból; add meg külön.';}
+  }
   return {parameters:p,note};
 }
 export function validate(input,{requireCurve=true}={}){
@@ -46,17 +53,16 @@ export function validate(input,{requireCurve=true}={}){
     ['outletElevation','Végponti mBf szint',-100,3000],['pipeDiameter','Nyomócső belső átmérő',15,2000],
     ['pipeLength','Nyomócsőhossz',0,100000],['roughnessMm','Üzemi érdesség',0,10],
     ['minorLossK','Helyi veszteségtényezők összege',0,1000],['backpressureHead','Ellennyomás',0,1000],
-    ['residenceMinimum','Minimum tartózkodási idő',0,10080],['pressureExitCover','Nyomócső kilépési földtakarása',0,20],
+    ['residenceMinimum','Minimum tartózkodási idő',0,10080],['pressureExitDepth','Nyomócső kilépési tengelymélysége',0,20],
   ])p[key]=number(p[key],name,min,max);
   for(const [key,name,min,max] of [['shiftCount','Műszakszám',1,3],['workingCount','Üzemképes szivattyúk száma',1,8],['standbyCount','Hidegtartalékok száma',0,8],['maxParallel','Max. egyidejű gépszám',1,p.workingCount]]){
     p[key]=number(p[key],name,min,max);if(!Number.isInteger(p[key]))throw new Error(`${name}: egész szám szükséges.`);
   }
   for(const [key,name,max] of [['manufacturerStartsLimit','Pontos gyártói kapcsolásszám',100],['upstreamMinutes','Befolyás előtti hálózati idő',10080]])if(p[key]!=='')p[key]=number(p[key],name,0,max);
-  for(const [key,name,min,max] of [['residenceLimit','Felső tartózkodásiidő-keret',0,10080],['groundElevation','Terepszint',-100,3000],['inletCrownElevation','Befolyó felső palást szintje',-100,3000],['projectVelocityMin','Tervezői minimum sebesség',0,20],['projectVelocityMax','Tervezői maximum sebesség',0,20]])if(p[key]!=='')p[key]=number(p[key],name,min,max);
+  for(const [key,name,min,max] of [['residenceLimit','Felső tartózkodásiidő-keret',0,10080],['groundElevation','Terepszint',-100,3000],['projectVelocityMin','Tervezői minimum sebesség',0,20],['projectVelocityMax','Tervezői maximum sebesség',0,20]])if(p[key]!=='')p[key]=number(p[key],name,min,max);
   if(p.residenceLimit!==''&&p.residenceMinimum>p.residenceLimit)throw new Error('A minimum tartózkodási idő nem haladhatja meg a felső keretet.');
   if(p.projectVelocityMin!==''&&p.projectVelocityMax!==''&&p.projectVelocityMin>p.projectVelocityMax)throw new Error('A minimum sebesség nem haladhatja meg a maximumot.');
   for(const key of ['fcsmSingleDwelling'])if(!['yes','no'].includes(p[key]))throw new Error('Ismeretlen választási beállítás.');
-  if(p.inletCrownElevation!==''&&p.inletCrownElevation<=p.inletElevation)throw new Error('A befolyó felső palástja a cső fenékszintje fölött legyen.');
   if(p.groundElevation!==''&&p.groundElevation<p.inletElevation)throw new Error('A terepszint nem lehet a befolyócső fenékszintje alatt.');
   if(p.manufacturerStartsLimit===0)throw new Error('A pontos gyártói kapcsolásszám legyen pozitív vagy hagyd üresen.');
   if(!['workplace','house'].includes(p.application))throw new Error('Ismeretlen felhasználási mód.');

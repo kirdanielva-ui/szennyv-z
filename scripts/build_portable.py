@@ -31,9 +31,10 @@ instructions = """ÁTEMELŐ – HASZNÁLATI ÚTMUTATÓ
 3. Add meg a napi szennyvízmennyiséget, a műszakok kezdetét, hosszát és létszámát.
 4. Add meg a befolyó és a nyomócső végpontjának mBf magasságát, a nyomócső belső
    átmérőjét és hosszát. A program származtatja az akna fenékszintjét.
-   Az 1 m földtakarás ellenőrzéséhez add meg a meglévő terepszintet és a befolyó
-   felső palástjának mBf szintjét is. A nyomócső helyi kilépési földtakarása
-   alapértéken 1 m; ez külön adat a nyomócső távoli végpontjától.
+   A befolyócső fenékszintje és a nyomócső tengelye az aknafalnál egyaránt
+   legalább 1 m-rel legyen a meglévő terep alatt. Add meg a terepszintet is;
+   a helyi nyomócsőtengely mélysége alapértéken 1 m a terep alatt. A nyomóvezeték
+   távoli végpontja külön adat. A befolyó felső palástját nem kell külön megadni.
 5. A Szivattyúk összehasonlítása gomb a számszerű görbés típusokat rangsorolja
    a teljes párhuzamos fokozat névleges P₂-összege szerint (nem energiaoptimalizálás).
    Az N-sorozat új tartományábrái tájékoztatók, nem munkaponti görbék.

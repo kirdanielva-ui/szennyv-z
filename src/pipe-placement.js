@@ -1,32 +1,31 @@
-// Project requirement supplied by the user: at least 1 m cover above both pipes.
-// This is independent of the pressure main's remote terminal elevation.
-export const MINIMUM_PIPE_COVER=1;
+// User-confirmed project requirement: 1 m from ground to inlet invert and
+// local pressure pipe centerline, independently of the remote terminal elevation.
+export const MINIMUM_PIPE_DEPTH=1;
 export function pipePlacement(p,g){
   const groundKnown=p.groundElevation!=='';
   const floor=g?.floorElevation??0;
-  const inletDepth=g?.inletDepth??p.inletElevation;
-  const pressureCover=Number(p.pressureExitCover??1);
-  const inletCrownKnown=p.inletCrownElevation!==''&&p.inletCrownElevation!==undefined;
-  const inletCrown=inletCrownKnown?Number(p.inletCrownElevation)-floor:null;
-  const ground=groundKnown?Number(p.groundElevation)-floor:Math.max(inletDepth,inletCrown??inletDepth)+1.2;
-  const pressureCrown=ground-pressureCover;
-  return {groundKnown,ground,inletCrownKnown,inletCrown,pressureCrown,pressureCover,
-    inletCover:groundKnown&&inletCrownKnown?Number(p.groundElevation)-Number(p.inletCrownElevation):null,
-    pressureCrownElevation:groundKnown?Number(p.groundElevation)-pressureCover:null,
-    // Centerline here is schematic; the required cover is to the outside crown.
-    pressureCenter:pressureCrown-p.pipeDiameter/2000,
-  };
+  const inletLevel=g?.inletDepth??p.inletElevation;
+  const ground=groundKnown?Number(p.groundElevation)-floor:inletLevel+1.2;
+  const pressureDepth=Number(p.pressureExitDepth??1);
+  const pressureCenter=ground-pressureDepth;
+  return {groundKnown,ground,pressureDepth,pressureCenter,
+    inletDepthBelowGround:groundKnown?Number(p.groundElevation)-p.inletElevation:null,
+    pressureCenterElevation:groundKnown?Number(p.groundElevation)-pressureDepth:null};
 }
 export function pipePlacementChecks(p,g){
   const f=n=>Number(n).toLocaleString('hu-HU',{minimumFractionDigits:3,maximumFractionDigits:6});
-  const placement=pipePlacement(p,g),knownGround=p.groundElevation!=='';
-  const coverToInvert=knownGround?Number(p.groundElevation)-p.inletElevation:null;
-  const checks=[];
-  if(!knownGround)checks.push({id:'inlet-cover',status:'pending',title:'Befolyócső: legalább 1 m földtakarás',detail:'A terepszint nincs megadva. A vázlat nem igazol földtakarási megfelelést; add meg a terepszintet és a befolyócső felső palástjának mBf szintjét.'});
-  else if(placement.inletCrownKnown)checks.push({id:'inlet-cover',status:placement.inletCover>=MINIMUM_PIPE_COVER-1e-9?'pass':'fail',title:'Befolyócső: legalább 1 m földtakarás',detail:`Terep ${f(p.groundElevation)} − felső palást ${f(p.inletCrownElevation)} = ${f(placement.inletCover)} m földtakarás. ${placement.inletCover<MINIMUM_PIPE_COVER-1e-9?`Hiány: ${f(MINIMUM_PIPE_COVER-placement.inletCover)} m. A befolyó szintjét vagy a terepadatot vizsgáld felül; a program nem módosítja a megadott fenékszintet.`:'A megadott legalább 1 m feltétel teljesül.'}`});
-  else checks.push({id:'inlet-cover',status:coverToInvert<MINIMUM_PIPE_COVER-1e-9?'fail':'pending',title:'Befolyócső: legalább 1 m földtakarás',detail:`A terep és a befolyó fenékszintje közti különbség ${f(coverToInvert)} m. ${coverToInvert<MINIMUM_PIPE_COVER-1e-9?'Már a fenékszint is 1 m-nél közelebb van a terephez, ezért a felső palástnál sem teljesülhet az 1 m.':'A fenékszint önmagában nem elég: a tényleges földtakarás igazolásához add meg a cső felső palástjának szintjét.'}`});
-  const belowFloor=Boolean(g)&&placement.pressureCrown<=0;
-  const noRoomForPipe=Boolean(g)&&placement.pressureCrown-p.pipeDiameter/1000<-1e-9;
-  checks.push({id:'pressure-cover',status:placement.pressureCover<MINIMUM_PIPE_COVER-1e-9||knownGround&&noRoomForPipe?'fail':knownGround?'pass':'pending',title:'Nyomócső az aknafalnál: legalább 1 m földtakarás',detail:!knownGround?`A kilépés felvett földtakarása ${f(placement.pressureCover)} m. Megadott terepszint nélkül a kilépési mBf szint és a valós földtakarás nem igazolható.`:`Terep ${f(p.groundElevation)} − földtakarás ${f(placement.pressureCover)} = felső palást ${f(placement.pressureCrownElevation)} mBf az aknafalnál. ${placement.pressureCover<MINIMUM_PIPE_COVER-1e-9?`A takarás hiánya ${f(MINIMUM_PIPE_COVER-placement.pressureCover)} m.`:'A megadott 1 m földtakarás teljesül.'}${belowFloor?' A felvett kilépési szint az aknafenéken vagy alatta van; csökkentsd a mélységet az 1 m minimum megtartásával, vagy vizsgáld felül az elrendezést.':noRoomForPipe?' A kilépésnél még a belső átmérőnek megfelelő csőmagasság sem fér el az aknafenék fölött; vizsgáld felül az elrendezést.':''} Ez a helyi falátvezetés, nem a nyomóvezeték távoli végpontjának szintje.`});
+  const placement=pipePlacement(p,g),knownGround=placement.groundKnown;
+  const inletTooHigh=knownGround&&placement.inletDepthBelowGround<MINIMUM_PIPE_DEPTH-1e-9;
+  const checks=[{id:'inlet-depth',status:!knownGround?'pending':inletTooHigh?'fail':'pass',
+    title:'Befolyó fenékszintje: legalább 1 m-rel a terep alatt',
+    detail:!knownGround?'A terepszint nincs megadva. Az 1 m szintkülönbség ellenőrzéséhez add meg a meglévő terep mBf szintjét.':`Terep ${f(p.groundElevation)} − befolyó fenékszint ${f(p.inletElevation)} = ${f(placement.inletDepthBelowGround)} m. ${inletTooHigh?`Hiány: ${f(MINIMUM_PIPE_DEPTH-placement.inletDepthBelowGround)} m. A befolyó szintjét vagy a terepadatot vizsgáld felül; a program nem módosítja a megadott fenékszintet.`:'A megadott legalább 1 m feltétel teljesül.'}`}];
+  const insufficientDepth=placement.pressureDepth<MINIMUM_PIPE_DEPTH-1e-9;
+  const belowFloor=Boolean(g)&&placement.pressureCenter<=0;
+  const noRoomForPipe=Boolean(g)&&placement.pressureCenter-p.pipeDiameter/2000<-1e-9;
+  const depthDetail=insufficientDepth?`A tengelymélység hiánya ${f(MINIMUM_PIPE_DEPTH-placement.pressureDepth)} m.`:'A megadott 1 m tengelymélység teljesül.';
+  const floorDetail=belowFloor?' A felvett csőtengely az aknafenéken vagy alatta van; vizsgáld felül az elrendezést.':noRoomForPipe?' A kilépésnél még a belső sugárnak megfelelő csőmagasság sem fér el a tengely és az aknafenék között; vizsgáld felül az elrendezést.':'';
+  checks.push({id:'pressure-depth',status:insufficientDepth||knownGround&&noRoomForPipe?'fail':knownGround?'pass':'pending',
+    title:'Nyomócső tengelye az aknafalnál: legalább 1 m-rel a terep alatt',
+    detail:!knownGround?`A kilépési csőtengely felvett mélysége ${f(placement.pressureDepth)} m a terep alatt. ${insufficientDepth?depthDetail+' ':''}Megadott terepszint nélkül a tengely mBf szintje nem igazolható.`:`Terep ${f(p.groundElevation)} − tengelymélység ${f(placement.pressureDepth)} = csőtengely ${f(placement.pressureCenterElevation)} mBf az aknafalnál. ${depthDetail}${floorDetail} Ez a helyi falátvezetés, nem a nyomóvezeték távoli végpontjának szintje.`});
   return checks;
 }

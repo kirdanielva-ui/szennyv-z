@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {nRangeTables,nRangeTableSource} from '../src/n-range-tables.js';
 import {pumps,catalogueCurve} from '../src/pumps.js';
-import {calculate,defaults} from '../src/calculations.js';
+import {calculate,defaults,migrateProject} from '../src/calculations.js';
 import {pipePlacement,pipePlacementChecks} from '../src/pipe-placement.js';
 import {wellDiagram,wellLayout} from '../src/diagram.js';
 const p=extra=>({...structuredClone(defaults),...extra});
@@ -26,36 +26,47 @@ test('N 3085: ugyanahhoz a Q-hoz két eltérő határmagasság tartozik, nem egy
  assert.deepEqual(table.rows[1],{qLps:7.6,qM3h:27.36,hMinM:4.8,hMaxM:17});
  assert.deepEqual(table.rows.at(-1),{qLps:45,qM3h:162,hMinM:3,hMaxM:4.8});
 });
-test('Befolyó: pontosan 1 m felsőpalást-takarás megfelel, a kisebb nem; a fenékszint változatlan',()=>{
- const base=p({groundElevation:104.2,inletElevation:103,inletCrownElevation:103.2});
- const valid=calculate(base);assert.equal(check(valid,'inlet-cover').status,'pass');assert.equal(valid.parameters.inletElevation,103);
- const failed=calculate({...base,groundElevation:104.1999});assert.equal(check(failed,'inlet-cover').status,'fail');assert.match(check(failed,'inlet-cover').detail,/Hiány/);
+test('Befolyó fenékszintje: pontosan 1 m megfelel, kisebb mélység hibás; külön palástadat nem kell',()=>{
+ const base=p({groundElevation:104,inletElevation:103});
+ const valid=calculate(base);assert.equal(check(valid,'inlet-depth').status,'pass');assert.equal(valid.parameters.inletElevation,103);
+ const failed=calculate({...base,groundElevation:103.9999});assert.equal(check(failed,'inlet-depth').status,'fail');assert.match(check(failed,'inlet-depth').detail,/Hiány/);
+ assert.equal(check(calculate({...base,inletCrownElevation:103.5}),'inlet-depth').status,'pass');
 });
-test('Befolyó: az ismeretlen felső palást nem nulla átmérő, a túl magas fenékszint önmagában hibát bizonyít',()=>{
- assert.equal(check(calculate(p({groundElevation:104.2})),'inlet-cover').status,'pending');
- assert.equal(check(calculate(p({groundElevation:103.9})),'inlet-cover').status,'fail');
- assert.equal(check(calculate(p()),'inlet-cover').status,'pending');
- assert.throws(()=>calculate(p({inletCrownElevation:102.9})),/felső palást/);
+test('Terepszint nélkül a tényleges szintkülönbség nem igazolható; ismert 0,9 m hiba',()=>{
+ assert.equal(check(calculate(p({groundElevation:103.9})),'inlet-depth').status,'fail');
+ assert.equal(check(calculate(p()),'inlet-depth').status,'pending');
+ assert.equal(check(calculate(p()),'pressure-depth').status,'pending');
 });
-test('A helyi nyomócső-kilépés és a távoli végpont magassága különböző adat; az 1 m követelmény ellenőrzött',()=>{
- const base=p({groundElevation:104.2,inletCrownElevation:103.2}),r=calculate(base),g=r.geometry;
- const location=pipePlacement(r.parameters,g);assert.ok(Math.abs(location.pressureCrownElevation-103.2)<1e-10);assert.equal(check(r,'pressure-cover').status,'pass');
- assert.equal(check(calculate({...base,pressureExitCover:0.9}),'pressure-cover').status,'fail');
- const changed=calculate({...base,outletElevation:109});assert.equal(pipePlacement(changed.parameters,changed.geometry).pressureCrownElevation,location.pressureCrownElevation);
- const lower=calculate({...base,pressureExitCover:1.1});assert.equal(r.hydraulics.operating[0].head,lower.hydraulics.operating[0].head);
- const cramped=calculate({...base,pressureExitCover:base.groundElevation-g.floorElevation-0.05});assert.equal(check(cramped,'pressure-cover').status,'fail');assert.match(check(cramped,'pressure-cover').detail,/csőmagasság sem fér el/);
- const invalid=calculate({...base,pressureExitCover:20});assert.equal(check(invalid,'pressure-cover').status,'fail');assert.match(check(invalid,'pressure-cover').detail,/aknafenéken vagy alatta/);
+test('A helyi nyomócsőtengely és a távoli végpont külön adat; az 1 m tengelymélység ellenőrzött',()=>{
+ const base=p({groundElevation:104}),r=calculate(base),g=r.geometry;
+ const location=pipePlacement(r.parameters,g);assert.equal(location.pressureCenterElevation,103);assert.equal(check(r,'pressure-depth').status,'pass');
+ assert.equal(check(calculate({...base,pressureExitDepth:0.9999}),'pressure-depth').status,'fail');
+ const changed=calculate({...base,outletElevation:109});assert.equal(pipePlacement(changed.parameters,changed.geometry).pressureCenterElevation,location.pressureCenterElevation);
+ const lower=calculate({...base,pressureExitDepth:1.1});assert.equal(r.hydraulics.operating[0].head,lower.hydraulics.operating[0].head);
+ const cramped=calculate({...base,pressureExitDepth:base.groundElevation-g.floorElevation-0.05});assert.equal(check(cramped,'pressure-depth').status,'fail');assert.match(check(cramped,'pressure-depth').detail,/csőmagasság sem fér el/);
+ const invalid=calculate({...base,pressureExitDepth:20});assert.equal(check(invalid,'pressure-depth').status,'fail');assert.match(check(invalid,'pressure-depth').detail,/aknafenéken vagy alatta/);
 });
-test('A terep nélküli rajz nem állít valós kilépési mBf szintet; a terep egyenes és a nyomócső átér a falon',()=>{
- const r=calculate(p()),svg=wellDiagram(r.geometry,r.parameters);
+test('A terep nélküli rajz nem állít valós kilépési mBf szintet; a nyomócső rajza a tengelyszinthez igazodik',()=>{
+ const r=calculate(p()),svg=wellDiagram(r.geometry,r.parameters),layout=wellLayout(r.geometry,r.parameters);
  assert.match(svg,/Terepszint nélkül vázlatos/);assert.match(svg,/class="terrain-line" d="M[\d. -]+H[\d.]+M[\d. -]+H[\d.]+"/);
- assert.match(svg,/class="pressure-pipe"[^>]+H618/);assert.ok(!svg.includes('NaN'));
- assert.equal(pipePlacementChecks(r.parameters,null).find(c=>c.id==='pressure-cover').status,'pending');
+ assert.match(svg,/class="pressure-pipe"[^>]+H618/);assert.ok(!svg.includes('NaN'));assert.ok(!svg.includes('palást'));
+ assert.ok(svg.includes(`V${layout.y(layout.placement.pressureCenter)}H618`));
+ assert.equal(pipePlacementChecks(r.parameters,null).find(c=>c.id==='pressure-depth').status,'pending');
 });
-test('Nyolc fokozat és két csőszint mellett is rendezett szintfeliratok, a méretvonalak az akna bal oldalán maradnak',()=>{
- const r=calculate(p({workingCount:8,maxParallel:8,manualFlows:[20,25,30,35,40,45,50,55],diameter:2,reserveHours:40,maxDrawdown:10,maxDepthBelowInlet:20,groundElevation:104.2,inletCrownElevation:103.2}));
+test('Nyolc fokozat mellett rendezett feliratok és bal oldali méretvonalak; a nyomócső tengelye feliratozott',()=>{
+ const r=calculate(p({workingCount:8,maxParallel:8,manualFlows:[20,25,30,35,40,45,50,55],diameter:2,reserveHours:40,maxDrawdown:10,maxDepthBelowInlet:20,groundElevation:104.2}));
  const layout=wellLayout(r.geometry,r.parameters),svg=wellDiagram(r.geometry,r.parameters);
  for(let i=1;i<layout.levels.length;i++)assert.ok(layout.levels[i].labelY-layout.levels[i-1].labelY>=37.999);
  for(const match of svg.matchAll(/class="floor-dimension"[^>]+><path d="M([\d.]+)/g))assert.ok(Number(match[1])<300);
- assert.match(svg,/Nyomócső kilépés · felső palást/);assert.match(svg,/Befolyócső felső palástja/);
+ assert.match(svg,/Nyomócső kilépés · csőtengely/);assert.match(svg,/Befolyócső fenékszintje/);
+});
+test('Régi felsőpalást-mélység importja megőrzi a korábbi tengelyszintet, és nem kéri a törölt befolyópalást-adatot',()=>{
+ const old={...structuredClone(defaults),pressureExitCover:1,pipeDiameter:150,inletCrownElevation:103.2};delete old.pressureExitDepth;
+ const {parameters,note}=migrateProject({version:2,parameters:old});
+ assert.equal(parameters.pressureExitDepth,1.075);assert.ok(!Object.hasOwn(parameters,'inletCrownElevation'));assert.ok(!Object.hasOwn(parameters,'pressureExitCover'));assert.match(note,/tengelyszint megmaradt/);
+ const modern=migrateProject({version:2,parameters:{pressureExitDepth:1,pressureExitCover:1.2}});assert.equal(modern.parameters.pressureExitDepth,1);
+});
+test('Hiányos korábbi csőadatból nem találunk ki tengelymélységet',()=>{
+ const {parameters,note}=migrateProject({version:2,parameters:{pressureExitCover:1,pipeDiameter:''}});
+ assert.equal(parameters.pressureExitDepth,'');assert.match(note,/hiányos csőadatok/);
 });

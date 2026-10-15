@@ -33,7 +33,7 @@ textarea{width:100%;resize:vertical;min-height:120px;padding:11px;border:1px sol
   <header class="topbar">
     <a href="#" class="brand" aria-label="Átemelő kezdőlap"><span class="brand-mark" aria-hidden="true">≋</span><span>átemelő<span class="brand-caption">MÉRETEZŐ MŰHELY</span></span></a>
     <nav aria-label="Oldalmenü"><a href="#calculator">Méretezés</a><a href="#method">Számítási háttér</a><a href="#sources">Források</a></nav>
-    <span class="version">ELŐMÉRETEZŐ <span>v0.6</span></span>
+    <span class="version">ELŐMÉRETEZŐ <span>v0.6.1</span></span>
   </header>
   <main>
     <section class="intro">
@@ -63,11 +63,10 @@ textarea{width:100%;resize:vertical;min-height:120px;padding:11px;border:1px sol
 
         <section class="panel">
           <div class="panel-heading"><span class="step">02</span><h2>Magasságok és nyomóvezeték</h2></div>
-          <label>Meglévő terepszint<div class="unit-field"><input name="groundElevation" type="number" min="-100" max="3000" step="0.01" placeholder="Az 1 m takarás ellenőrzéséhez"><span>mBf</span></div></label>
+          <label>Meglévő terepszint<div class="unit-field"><input name="groundElevation" type="number" min="-100" max="3000" step="0.01" placeholder="Az 1 m szintkülönbség ellenőrzéséhez"><span>mBf</span></div></label>
           <label>Befolyócső fenékszintje<div class="unit-field"><input name="inletElevation" type="number" min="-100" max="3000" step="0.01"><span>mBf</span></div></label>
-          <label>Befolyócső felső palástjának szintje<div class="unit-field"><input name="inletCrownElevation" type="number" min="-100" max="3000" step="0.01" placeholder="A földtakarás igazolásához"><span>mBf</span></div></label>
-          <label>Nyomócső kilépésének földtakarása<div class="unit-field"><input name="pressureExitCover" type="number" min="0" max="20" step="0.05"><span>m</span></div></label>
-          <p class="hint">Megadott tervezési feltétel: mindkét cső felső palástja legalább 1 m-rel a meglévő terep alatt legyen. A nyomócső helyi falátvezetésének mélysége a lenti távoli végponti szinttől külön adat. A befolyó fenékszintje önmagában nem igazolja a felső palást takarását.</p>
+          <label>Nyomócső tengelymélysége az aknafalnál<div class="unit-field"><input name="pressureExitDepth" type="number" min="0" max="20" step="0.05"><span>m</span></div></label>
+          <p class="hint">Megadott tervezési feltétel: a befolyócső fenékszintje és a nyomócső tengelye egyaránt legalább 1 m-rel a meglévő terep alatt legyen. A helyi nyomócsőtengely szintje a terepszintből és a tengelymélységből adódik; a lenti távoli végpont külön adat.</p>
           <label>Nyomócső végponti szintje<div class="unit-field"><input name="outletElevation" type="number" min="-100" max="3000" step="0.01"><span>mBf</span></div></label>
           <label>Végpont értelmezése<select name="outletMode"><option value="free">Szabad kifolyás · csőtengely szintje</option><option value="reservoir">Befogadó vízszint / nyomott csatlakozás</option></select></label>
           <div class="field-row"><label>Belső csőátmérő<div class="unit-field"><input name="pipeDiameter" type="number" min="15" max="2000" step="1"><span>mm</span></div></label><label>Nyomóvezeték hossza<div class="unit-field"><input name="pipeLength" type="number" min="0" max="100000" step="1"><span>m</span></div></label></div>
@@ -1887,36 +1886,35 @@ function operatingPoint(p,points,count,waterElevation) {
   return {count,flow,perPump:flow/count,waterElevation,...systemHead(p,flow,waterElevation)};
 }
 
-// Project requirement supplied by the user: at least 1 m cover above both pipes.
-// This is independent of the pressure main's remote terminal elevation.
-const MINIMUM_PIPE_COVER=1;
+// User-confirmed project requirement: 1 m from ground to inlet invert and
+// local pressure pipe centerline, independently of the remote terminal elevation.
+const MINIMUM_PIPE_DEPTH=1;
 function pipePlacement(p,g){
   const groundKnown=p.groundElevation!=='';
   const floor=g?.floorElevation??0;
-  const inletDepth=g?.inletDepth??p.inletElevation;
-  const pressureCover=Number(p.pressureExitCover??1);
-  const inletCrownKnown=p.inletCrownElevation!==''&&p.inletCrownElevation!==undefined;
-  const inletCrown=inletCrownKnown?Number(p.inletCrownElevation)-floor:null;
-  const ground=groundKnown?Number(p.groundElevation)-floor:Math.max(inletDepth,inletCrown??inletDepth)+1.2;
-  const pressureCrown=ground-pressureCover;
-  return {groundKnown,ground,inletCrownKnown,inletCrown,pressureCrown,pressureCover,
-    inletCover:groundKnown&&inletCrownKnown?Number(p.groundElevation)-Number(p.inletCrownElevation):null,
-    pressureCrownElevation:groundKnown?Number(p.groundElevation)-pressureCover:null,
-    // Centerline here is schematic; the required cover is to the outside crown.
-    pressureCenter:pressureCrown-p.pipeDiameter/2000,
-  };
+  const inletLevel=g?.inletDepth??p.inletElevation;
+  const ground=groundKnown?Number(p.groundElevation)-floor:inletLevel+1.2;
+  const pressureDepth=Number(p.pressureExitDepth??1);
+  const pressureCenter=ground-pressureDepth;
+  return {groundKnown,ground,pressureDepth,pressureCenter,
+    inletDepthBelowGround:groundKnown?Number(p.groundElevation)-p.inletElevation:null,
+    pressureCenterElevation:groundKnown?Number(p.groundElevation)-pressureDepth:null};
 }
 function pipePlacementChecks(p,g){
   const f=n=>Number(n).toLocaleString('hu-HU',{minimumFractionDigits:3,maximumFractionDigits:6});
-  const placement=pipePlacement(p,g),knownGround=p.groundElevation!=='';
-  const coverToInvert=knownGround?Number(p.groundElevation)-p.inletElevation:null;
-  const checks=[];
-  if(!knownGround)checks.push({id:'inlet-cover',status:'pending',title:'Befolyócső: legalább 1 m földtakarás',detail:'A terepszint nincs megadva. A vázlat nem igazol földtakarási megfelelést; add meg a terepszintet és a befolyócső felső palástjának mBf szintjét.'});
-  else if(placement.inletCrownKnown)checks.push({id:'inlet-cover',status:placement.inletCover>=MINIMUM_PIPE_COVER-1e-9?'pass':'fail',title:'Befolyócső: legalább 1 m földtakarás',detail:`Terep ${f(p.groundElevation)} − felső palást ${f(p.inletCrownElevation)} = ${f(placement.inletCover)} m földtakarás. ${placement.inletCover<MINIMUM_PIPE_COVER-1e-9?`Hiány: ${f(MINIMUM_PIPE_COVER-placement.inletCover)} m. A befolyó szintjét vagy a terepadatot vizsgáld felül; a program nem módosítja a megadott fenékszintet.`:'A megadott legalább 1 m feltétel teljesül.'}`});
-  else checks.push({id:'inlet-cover',status:coverToInvert<MINIMUM_PIPE_COVER-1e-9?'fail':'pending',title:'Befolyócső: legalább 1 m földtakarás',detail:`A terep és a befolyó fenékszintje közti különbség ${f(coverToInvert)} m. ${coverToInvert<MINIMUM_PIPE_COVER-1e-9?'Már a fenékszint is 1 m-nél közelebb van a terephez, ezért a felső palástnál sem teljesülhet az 1 m.':'A fenékszint önmagában nem elég: a tényleges földtakarás igazolásához add meg a cső felső palástjának szintjét.'}`});
-  const belowFloor=Boolean(g)&&placement.pressureCrown<=0;
-  const noRoomForPipe=Boolean(g)&&placement.pressureCrown-p.pipeDiameter/1000<-1e-9;
-  checks.push({id:'pressure-cover',status:placement.pressureCover<MINIMUM_PIPE_COVER-1e-9||knownGround&&noRoomForPipe?'fail':knownGround?'pass':'pending',title:'Nyomócső az aknafalnál: legalább 1 m földtakarás',detail:!knownGround?`A kilépés felvett földtakarása ${f(placement.pressureCover)} m. Megadott terepszint nélkül a kilépési mBf szint és a valós földtakarás nem igazolható.`:`Terep ${f(p.groundElevation)} − földtakarás ${f(placement.pressureCover)} = felső palást ${f(placement.pressureCrownElevation)} mBf az aknafalnál. ${placement.pressureCover<MINIMUM_PIPE_COVER-1e-9?`A takarás hiánya ${f(MINIMUM_PIPE_COVER-placement.pressureCover)} m.`:'A megadott 1 m földtakarás teljesül.'}${belowFloor?' A felvett kilépési szint az aknafenéken vagy alatta van; csökkentsd a mélységet az 1 m minimum megtartásával, vagy vizsgáld felül az elrendezést.':noRoomForPipe?' A kilépésnél még a belső átmérőnek megfelelő csőmagasság sem fér el az aknafenék fölött; vizsgáld felül az elrendezést.':''} Ez a helyi falátvezetés, nem a nyomóvezeték távoli végpontjának szintje.`});
+  const placement=pipePlacement(p,g),knownGround=placement.groundKnown;
+  const inletTooHigh=knownGround&&placement.inletDepthBelowGround<MINIMUM_PIPE_DEPTH-1e-9;
+  const checks=[{id:'inlet-depth',status:!knownGround?'pending':inletTooHigh?'fail':'pass',
+    title:'Befolyó fenékszintje: legalább 1 m-rel a terep alatt',
+    detail:!knownGround?'A terepszint nincs megadva. Az 1 m szintkülönbség ellenőrzéséhez add meg a meglévő terep mBf szintjét.':`Terep ${f(p.groundElevation)} − befolyó fenékszint ${f(p.inletElevation)} = ${f(placement.inletDepthBelowGround)} m. ${inletTooHigh?`Hiány: ${f(MINIMUM_PIPE_DEPTH-placement.inletDepthBelowGround)} m. A befolyó szintjét vagy a terepadatot vizsgáld felül; a program nem módosítja a megadott fenékszintet.`:'A megadott legalább 1 m feltétel teljesül.'}`}];
+  const insufficientDepth=placement.pressureDepth<MINIMUM_PIPE_DEPTH-1e-9;
+  const belowFloor=Boolean(g)&&placement.pressureCenter<=0;
+  const noRoomForPipe=Boolean(g)&&placement.pressureCenter-p.pipeDiameter/2000<-1e-9;
+  const depthDetail=insufficientDepth?`A tengelymélység hiánya ${f(MINIMUM_PIPE_DEPTH-placement.pressureDepth)} m.`:'A megadott 1 m tengelymélység teljesül.';
+  const floorDetail=belowFloor?' A felvett csőtengely az aknafenéken vagy alatta van; vizsgáld felül az elrendezést.':noRoomForPipe?' A kilépésnél még a belső sugárnak megfelelő csőmagasság sem fér el a tengely és az aknafenék között; vizsgáld felül az elrendezést.':'';
+  checks.push({id:'pressure-depth',status:insufficientDepth||knownGround&&noRoomForPipe?'fail':knownGround?'pass':'pending',
+    title:'Nyomócső tengelye az aknafalnál: legalább 1 m-rel a terep alatt',
+    detail:!knownGround?`A kilépési csőtengely felvett mélysége ${f(placement.pressureDepth)} m a terep alatt. ${insufficientDepth?depthDetail+' ':''}Megadott terepszint nélkül a tengely mBf szintje nem igazolható.`:`Terep ${f(p.groundElevation)} − tengelymélység ${f(placement.pressureDepth)} = csőtengely ${f(placement.pressureCenterElevation)} mBf az aknafalnál. ${depthDetail}${floorDetail} Ez a helyi falátvezetés, nem a nyomóvezeték távoli végpontjának szintje.`});
   return checks;
 }
 
@@ -1931,7 +1929,7 @@ const defaults={
   roughnessMm:0.25,minorLossK:3,outletMode:'free',backpressureHead:0,
   diameter:'auto',minDiameter:1.2,stopLevel:0.4,maxDepthBelowInlet:3,
   maxDrawdown:0.8,minDrawdown:0.15,alarmGap:0.15,inletClearance:0.15,reserveHours:2,
-  residenceMinimum:0,residenceLimit:'',upstreamMinutes:'',groundElevation:'',inletCrownElevation:'',pressureExitCover:1,fcsmSingleDwelling:'no',
+  residenceMinimum:0,residenceLimit:'',upstreamMinutes:'',groundElevation:'',pressureExitDepth:1,fcsmSingleDwelling:'no',
   projectVelocityMin:'',projectVelocityMax:'',
 };
 function number(value,name,min,max){
@@ -1951,6 +1949,13 @@ function migrateProject(data){
     if(old.residenceLimit==='')p.residenceLimit='';
   }
   if(old.application==='house'&&!Object.hasOwn(old,'fcsmSingleDwelling')){p.fcsmSingleDwelling='yes';note+=' A régi lakóházi projekt egylakásos FCSM-esetét megtartottuk; általános lakóépülethez válaszd a tervezői tárolást.';}
+  if(Object.hasOwn(old,'pressureExitCover')&&!Object.hasOwn(old,'pressureExitDepth')){
+    const diameter=Number(old.pipeDiameter),cover=Number(old.pressureExitCover);
+    if(old.pipeDiameter!==''&&Number.isFinite(diameter)&&diameter>0&&old.pressureExitCover!==''&&Number.isFinite(cover)){
+      p.pressureExitDepth=cover+diameter/2000;
+      note+=' A korábbi felsőpalást-mélységet tengelymélységre váltottuk a korábbi rajz belső csőátmérőjével; a tengelyszint megmaradt. Az 1 m feltételt most a befolyó fenekéig és a nyomócső tengelyéig ellenőrizzük.';
+    }else{p.pressureExitDepth='';note+=' A korábbi falátvezetés tengelymélysége nem határozható meg a hiányos csőadatokból; add meg külön.';}
+  }
   return {parameters:p,note};
 }
 function validate(input,{requireCurve=true}={}){
@@ -1965,17 +1970,16 @@ function validate(input,{requireCurve=true}={}){
     ['outletElevation','Végponti mBf szint',-100,3000],['pipeDiameter','Nyomócső belső átmérő',15,2000],
     ['pipeLength','Nyomócsőhossz',0,100000],['roughnessMm','Üzemi érdesség',0,10],
     ['minorLossK','Helyi veszteségtényezők összege',0,1000],['backpressureHead','Ellennyomás',0,1000],
-    ['residenceMinimum','Minimum tartózkodási idő',0,10080],['pressureExitCover','Nyomócső kilépési földtakarása',0,20],
+    ['residenceMinimum','Minimum tartózkodási idő',0,10080],['pressureExitDepth','Nyomócső kilépési tengelymélysége',0,20],
   ])p[key]=number(p[key],name,min,max);
   for(const [key,name,min,max] of [['shiftCount','Műszakszám',1,3],['workingCount','Üzemképes szivattyúk száma',1,8],['standbyCount','Hidegtartalékok száma',0,8],['maxParallel','Max. egyidejű gépszám',1,p.workingCount]]){
     p[key]=number(p[key],name,min,max);if(!Number.isInteger(p[key]))throw new Error(`${name}: egész szám szükséges.`);
   }
   for(const [key,name,max] of [['manufacturerStartsLimit','Pontos gyártói kapcsolásszám',100],['upstreamMinutes','Befolyás előtti hálózati idő',10080]])if(p[key]!=='')p[key]=number(p[key],name,0,max);
-  for(const [key,name,min,max] of [['residenceLimit','Felső tartózkodásiidő-keret',0,10080],['groundElevation','Terepszint',-100,3000],['inletCrownElevation','Befolyó felső palást szintje',-100,3000],['projectVelocityMin','Tervezői minimum sebesség',0,20],['projectVelocityMax','Tervezői maximum sebesség',0,20]])if(p[key]!=='')p[key]=number(p[key],name,min,max);
+  for(const [key,name,min,max] of [['residenceLimit','Felső tartózkodásiidő-keret',0,10080],['groundElevation','Terepszint',-100,3000],['projectVelocityMin','Tervezői minimum sebesség',0,20],['projectVelocityMax','Tervezői maximum sebesség',0,20]])if(p[key]!=='')p[key]=number(p[key],name,min,max);
   if(p.residenceLimit!==''&&p.residenceMinimum>p.residenceLimit)throw new Error('A minimum tartózkodási idő nem haladhatja meg a felső keretet.');
   if(p.projectVelocityMin!==''&&p.projectVelocityMax!==''&&p.projectVelocityMin>p.projectVelocityMax)throw new Error('A minimum sebesség nem haladhatja meg a maximumot.');
   for(const key of ['fcsmSingleDwelling'])if(!['yes','no'].includes(p[key]))throw new Error('Ismeretlen választási beállítás.');
-  if(p.inletCrownElevation!==''&&p.inletCrownElevation<=p.inletElevation)throw new Error('A befolyó felső palástja a cső fenékszintje fölött legyen.');
   if(p.groundElevation!==''&&p.groundElevation<p.inletElevation)throw new Error('A terepszint nem lehet a befolyócső fenékszintje alatt.');
   if(p.manufacturerStartsLimit===0)throw new Error('A pontos gyártói kapcsolásszám legyen pozitív vagy hagyd üresen.');
   if(!['workplace','house'].includes(p.application))throw new Error('Ismeretlen felhasználási mód.');
@@ -2193,13 +2197,12 @@ function wellLayout(g,p){
     {key:'stop',label:'Közös leállítás',h:g.stop,color:'#527465'},
     {key:'floor',label:'Számított aknafenék',h:0,color:'#17383b'},
   ];
-  if(placement.inletCrownKnown)levels.push({key:'inlet-crown',label:'Befolyócső felső palástja',h:placement.inletCrown,color:'#526e5c'});
-  levels.push({key:'pressure-crown',label:'Nyomócső kilépés · felső palást',h:placement.pressureCrown,color:'#466b79'});
+  levels.push({key:'pressure-center',label:'Nyomócső kilépés · csőtengely',h:placement.pressureCenter,color:'#466b79'});
   if(groundKnown)levels.push({key:'ground',label:'Terepszint',h:ground,color:'#6d7754'});
   levels.sort((a,b)=>b.h-a.h);
   const height=Math.max(540,levels.length*41+110);
   const lowest=Math.min(0,placement.pressureCenter-p.pipeDiameter/2000);
-  const highest=Math.max(ground,placement.inletCrown??ground);
+  const highest=ground;
   const y=h=>height-70-(h-lowest)/(highest-lowest)*(height-132);
   const floorY=y(0);
   for(let i=0;i<levels.length;i++)levels[i].labelY=Math.max(44,i?levels[i-1].labelY+38:44,y(levels[i].h)-9);
@@ -2214,14 +2217,14 @@ function wellDiagram(g,p){
     const x=44+i*spacing,top=y(l.h);
     return `<g class="floor-dimension" data-level="${l.key}"><path d="M${x-5} ${top}H${left-12}M${x-5} ${floorY}H${left-12}" stroke="#cbd7cb"/><path d="M${x} ${top}V${floorY}" stroke="#839986" marker-start="url(#dimension-arrow)" marker-end="url(#dimension-arrow)"/><text transform="translate(${x-5} ${(top+floorY)/2}) rotate(-90)" text-anchor="middle" fill="#536c5b" font-size="11" stroke="white" stroke-width="4" paint-order="stroke">${diagramFormat(l.h)} m</text></g>`;
   }).join('');
-  const levelMarks=levels.map(l=>`<g data-level="${l.key}"><line x1="${left}" x2="${right}" y1="${y(l.h)}" y2="${y(l.h)}" stroke="${l.color}" stroke-dasharray="5 4"/><path d="M697 ${l.labelY+7}H678L638 ${y(l.h)}H${right+2}" fill="none" stroke="${l.color}" marker-end="url(#level-arrow)"/><text x="708" y="${l.labelY}" fill="${l.color}" font-size="12">${l.label}</text><text x="708" y="${l.labelY+17}" fill="${l.color}" font-weight="600" font-size="14">${l.key==='pressure-crown'&&!groundKnown?'Terepszint nélkül vázlatos':`${diagramFormat(g.floorElevation+l.h)} mBf`}</text></g>`).join('');
-  const pressureStroke=Math.max(4,Math.min(18,y(placement.pressureCrown-p.pipeDiameter/1000)-y(placement.pressureCrown)));
-  const pressureY=y(placement.pressureCrown)+pressureStroke/2;
-  const inletHeight=placement.inletCrownKnown?Math.max(3,y(g.inletDepth)-y(placement.inletCrown)):8;
+  const levelMarks=levels.map(l=>`<g data-level="${l.key}"><line x1="${left}" x2="${right}" y1="${y(l.h)}" y2="${y(l.h)}" stroke="${l.color}" stroke-dasharray="5 4"/><path d="M697 ${l.labelY+7}H678L638 ${y(l.h)}H${right+2}" fill="none" stroke="${l.color}" marker-end="url(#level-arrow)"/><text x="708" y="${l.labelY}" fill="${l.color}" font-size="12">${l.label}</text><text x="708" y="${l.labelY+17}" fill="${l.color}" font-weight="600" font-size="14">${l.key==='pressure-center'&&!groundKnown?'Terepszint nélkül vázlatos':`${diagramFormat(g.floorElevation+l.h)} mBf`}</text></g>`).join('');
+  const pressureStroke=Math.max(4,Math.min(18,y(placement.pressureCenter-p.pipeDiameter/2000)-y(placement.pressureCenter+p.pipeDiameter/2000)));
+  const pressureY=y(placement.pressureCenter);
+  const inletHeight=8;
   const inletTop=y(g.inletDepth)-inletHeight;
-  const coverDimension=(x,top,label)=>`<g class="cover-dimension"><path d="M${x} ${y(ground)}V${top}" stroke="#7e8f74" marker-start="url(#dimension-arrow)" marker-end="url(#dimension-arrow)"/><path d="M${x-5} ${y(ground)}h10M${x-5} ${top}h10" stroke="#7e8f74"/><text transform="translate(${x-7} ${(top+y(ground))/2}) rotate(-90)" text-anchor="middle" fill="#526e5c" font-size="11" stroke="white" stroke-width="4" paint-order="stroke">${label}</text></g>`;
-  const coverMarks=coverDimension(631,y(placement.pressureCrown),`${diagramFormat(placement.pressureCover,2)} m`)+(placement.inletCrownKnown?coverDimension(311,y(placement.inletCrown),`${diagramFormat(ground-placement.inletCrown,2)} m`):'');
-  return `<svg viewBox="0 0 1000 ${height}" role="img" aria-label="Akna: jobb oldalon mBf szintek, bal oldalon fenéktől mért magasságok"><defs><pattern id="well-hatch" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><line y2="8" stroke="#c2d4bc" stroke-width="2"/></pattern><marker id="level-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#718879"/></marker><marker id="dimension-arrow" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M8 0L0 4L8 8Z" fill="#839986"/></marker></defs><text x="35" y="22" font-size="12" fill="#647777">Magasságok a fenéktől</text><text x="708" y="22" font-size="12" fill="#647777">Szintek · mBf</text>${dimensions}<path d="M338 ${y(ground)-15}V${floorY+10}H602V${y(ground)-15}" fill="#f1f4ed" stroke="#7c9180" stroke-width="3"/><rect x="350" y="${y(ground)-10}" width="240" height="${floorY-y(ground)+10}" fill="white"/><rect x="350" y="${y(g.reserveTop)}" width="240" height="${y(g.start)-y(g.reserveTop)}" fill="url(#well-hatch)"/><rect x="350" y="${y(g.start)}" width="240" height="${y(g.stop)-y(g.start)}" fill="#bee2d7"/><rect x="350" y="${y(g.stop)}" width="240" height="${floorY-y(g.stop)}" fill="#dae7df"/><path d="M350 ${y(ground)-10}V${floorY}H590V${y(ground)-10}" fill="none" stroke="#6b8272" stroke-width="2"/><rect class="inlet-pipe" x="320" y="${inletTop}" width="30" height="${inletHeight}" fill="#526e5c"/><path class="terrain-line" d="M290 ${y(ground)}H338M602 ${y(ground)}H663" fill="none" stroke="#87976b" stroke-width="2"/>${!groundKnown?`<text x="415" y="${y(ground)-22}" font-size="11" fill="#647777">Terep: vázlatos, szint nincs megadva</text>`:''}<path d="M420 ${floorY-6}v-22a18 18 0 0 1 36 0v22Z" fill="#476b60"/><rect x="430" y="${floorY-54}" width="17" height="20" rx="3" fill="#718d7b"/><path class="pressure-pipe" data-crown-h="${placement.pressureCrown}" d="M456 ${floorY-21}H493V${pressureY}H618" stroke="#6a8790" stroke-width="${pressureStroke}" fill="none"/>${coverMarks}${levelMarks}<path d="M350 ${height-37}H590m-240-5v10m240-10v10" stroke="#7a9282"/><text x="470" y="${height-15}" text-anchor="middle" fill="#607563" font-size="13">Belső Ø ${diagramFormat(g.diameter,2)} m</text></svg>`;
+  const depthDimension=(x,top,label)=>`<g class="depth-dimension"><path d="M${x} ${y(ground)}V${top}" stroke="#7e8f74" marker-start="url(#dimension-arrow)" marker-end="url(#dimension-arrow)"/><path d="M${x-5} ${y(ground)}h10M${x-5} ${top}h10" stroke="#7e8f74"/><text transform="translate(${x-7} ${(top+y(ground))/2}) rotate(-90)" text-anchor="middle" fill="#526e5c" font-size="11" stroke="white" stroke-width="4" paint-order="stroke">${label}</text></g>`;
+  const depthMarks=depthDimension(631,pressureY,`${diagramFormat(placement.pressureDepth,2)} m`)+depthDimension(311,y(g.inletDepth),`${diagramFormat(ground-g.inletDepth,2)} m`);
+  return `<svg viewBox="0 0 1000 ${height}" role="img" aria-label="Akna: jobb oldalon mBf szintek, bal oldalon fenéktől mért magasságok"><defs><pattern id="well-hatch" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><line y2="8" stroke="#c2d4bc" stroke-width="2"/></pattern><marker id="level-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#718879"/></marker><marker id="dimension-arrow" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M8 0L0 4L8 8Z" fill="#839986"/></marker></defs><text x="35" y="22" font-size="12" fill="#647777">Magasságok a fenéktől</text><text x="708" y="22" font-size="12" fill="#647777">Szintek · mBf</text>${dimensions}<path d="M338 ${y(ground)-15}V${floorY+10}H602V${y(ground)-15}" fill="#f1f4ed" stroke="#7c9180" stroke-width="3"/><rect x="350" y="${y(ground)-10}" width="240" height="${floorY-y(ground)+10}" fill="white"/><rect x="350" y="${y(g.reserveTop)}" width="240" height="${y(g.start)-y(g.reserveTop)}" fill="url(#well-hatch)"/><rect x="350" y="${y(g.start)}" width="240" height="${y(g.stop)-y(g.start)}" fill="#bee2d7"/><rect x="350" y="${y(g.stop)}" width="240" height="${floorY-y(g.stop)}" fill="#dae7df"/><path d="M350 ${y(ground)-10}V${floorY}H590V${y(ground)-10}" fill="none" stroke="#6b8272" stroke-width="2"/><rect class="inlet-pipe" x="320" y="${inletTop}" width="30" height="${inletHeight}" fill="#526e5c"/><path class="terrain-line" d="M290 ${y(ground)}H338M602 ${y(ground)}H663" fill="none" stroke="#87976b" stroke-width="2"/>${!groundKnown?`<text x="415" y="${y(ground)-22}" font-size="11" fill="#647777">Terep: vázlatos, szint nincs megadva</text>`:''}<path d="M420 ${floorY-6}v-22a18 18 0 0 1 36 0v22Z" fill="#476b60"/><rect x="430" y="${floorY-54}" width="17" height="20" rx="3" fill="#718d7b"/><path class="pressure-pipe" data-center-h="${placement.pressureCenter}" d="M456 ${floorY-21}H493V${pressureY}H618" stroke="#6a8790" stroke-width="${pressureStroke}" fill="none"/>${depthMarks}${levelMarks}<path d="M350 ${height-37}H590m-240-5v10m240-10v10" stroke="#7a9282"/><text x="470" y="${height-15}" text-anchor="middle" fill="#607563" font-size="13">Belső Ø ${diagramFormat(g.diameter,2)} m</text></svg>`;
 }
 
 
@@ -2331,7 +2334,7 @@ function render(r){
   $('#result-summary').innerHTML=`<div class="summary-icon" aria-hidden="true">${fails?'!':'≋'}</div><div><strong>${fails?`${fails} számítási feltétel nem teljesül`:'Előméretezés elkészült'}</strong><p>${p.workingCount} üzemképes + ${p.standbyCount} hidegtartalék · max. ${p.maxParallel} párhuzamos gép. ${pending} feltétel egyeztetésre vagy adatlapra vár.</p></div>`;
   $('#metrics').innerHTML=[['Számított aknafenékszint',fmt(g.floorElevation,3),'mBf','Befolyó – szükséges tárolási mélység'],['Belső aknaátmérő',fmt(g.diameter),'m',`Befolyó alatti mélység: ${fmt(g.inletDepth)} m`],['Teljes hasznos szívótér',fmt(g.active,3),'m³',`${p.maxParallel} szintlépcső × ${fmt(g.perStage,3)} m³`]].map(([label,value,unit,sub])=>`<div class="metric"><span class="metric-label">${label}</span><div class="metric-value">${value}<small>${unit}</small></div><div class="metric-sub">${sub}</div></div>`).join('');
   $('#well-diagram').innerHTML=wellDiagram(g,p);
-  $('#level-table').innerHTML=[...(p.groundElevation!==''?[['Terepszint',p.groundElevation,'']]:[]),...(p.inletCrownElevation!==''?[['Befolyócső felső palástja',p.inletCrownElevation,'']]:[]),...(p.groundElevation!==''?[['Nyomócső kilépés: felső palást',p.groundElevation-p.pressureExitCover,'']]:[]),['Befolyócső fenékszintje',p.inletElevation,''],['Biztonsági tárolás felső szintje',g.floorElevation+g.reserveTop,''],['Vészvízszintjelzés',g.floorElevation+g.alarm,'alert'],...g.startLevels.map((level,i)=>[`${i+1}. fokozat indítása`,g.floorElevation+level,'accent']).reverse(),['Közös leállítás',g.floorElevation+g.stop,''],['Számított aknafenék',g.floorElevation,'accent']].map(([label,value,cls])=>`<div class="level-row ${cls}"><span>${label}</span><strong>${fmt(value,3)} mBf</strong></div>`).join('')+`<div class="mini-volumes"><div><span>Leállítás alatti maradó víz</span><strong>${fmt(g.dead,3)} m³</strong></div><div><span>Biztonsági tárolótér</span><strong>${fmt(g.reserve,3)} m³</strong></div></div>`;
+  $('#level-table').innerHTML=[...(p.groundElevation!==''?[['Terepszint',p.groundElevation,'']]:[]),...(p.groundElevation!==''?[['Nyomócső kilépés: csőtengely',p.groundElevation-p.pressureExitDepth,'']]:[]),['Befolyócső fenékszintje',p.inletElevation,''],['Biztonsági tárolás felső szintje',g.floorElevation+g.reserveTop,''],['Vészvízszintjelzés',g.floorElevation+g.alarm,'alert'],...g.startLevels.map((level,i)=>[`${i+1}. fokozat indítása`,g.floorElevation+level,'accent']).reverse(),['Közös leállítás',g.floorElevation+g.stop,''],['Számított aknafenék',g.floorElevation,'accent']].map(([label,value,cls])=>`<div class="level-row ${cls}"><span>${label}</span><strong>${fmt(value,3)} mBf</strong></div>`).join('')+`<div class="mini-volumes"><div><span>Leállítás alatti maradó víz</span><strong>${fmt(g.dead,3)} m³</strong></div><div><span>Biztonsági tárolótér</span><strong>${fmt(g.reserve,3)} m³</strong></div></div>`;
   $('#hydraulic-caption').textContent=p.flowMode==='curve'?`Automatikus görbemetszés · ${p.curveLabel}`:'Kézzel megadott Q-hoz számított H-igény; gyártói görbe nélkül nem automatikus munkapont.';
   $('#hydraulic-summary').innerHTML=[['Végponti magasság',`${fmt(p.outletElevation,3)} mBf`],['Nyomócső',`${fmt(p.pipeLength,0)} m / belső Ø ${fmt(p.pipeDiameter,0)} mm`],['Telt vezeték térfogata',`${fmt(h.pipeVolume,3)} m³`]].map(([label,value])=>`<div><span>${label}</span><strong>${value}</strong></div>`).join('');
   $('#duty-table').innerHTML=`<table><thead><tr><th>Fokozat</th><th>Összes Q</th><th>H-igény</th><th>v középvízszinten</th><th>v teljes tartomány</th><th>Q-tartomány</th></tr></thead><tbody>${h.operating.map(o=>`<tr><td>${o.count} gép</td><td>${fmt(o.flow)} m³/h</td><td>${fmt(o.head)} m</td><td>${formatVelocity(o.velocity)} m/s</td><td>${formatVelocity(o.velocityLow)}–${formatVelocity(o.velocityHigh)} m/s</td><td>${fmt(o.flowLow)}–${fmt(o.flowHigh)} m³/h</td></tr>`).join('')}</tbody></table>`;

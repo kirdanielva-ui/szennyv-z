@@ -13,7 +13,7 @@
   <header class="topbar">
     <a href="#" class="brand" aria-label="Átemelő kezdőlap"><span class="brand-mark" aria-hidden="true">≋</span><span>átemelő<span class="brand-caption">MÉRETEZŐ MŰHELY</span></span></a>
     <nav aria-label="Oldalmenü"><a href="#calculator">Méretezés</a><a href="#method">Számítási háttér</a><a href="#sources">Források</a></nav>
-    <span class="version">ELŐMÉRETEZŐ <span>v0.6</span></span>
+    <span class="version">ELŐMÉRETEZŐ <span>v0.6.1</span></span>
   </header>
   <main>
     <section class="intro">
@@ -43,11 +43,10 @@
 
         <section class="panel">
           <div class="panel-heading"><span class="step">02</span><h2>Magasságok és nyomóvezeték</h2></div>
-          <label>Meglévő terepszint<div class="unit-field"><input name="groundElevation" type="number" min="-100" max="3000" step="0.01" placeholder="Az 1 m takarás ellenőrzéséhez"><span>mBf</span></div></label>
+          <label>Meglévő terepszint<div class="unit-field"><input name="groundElevation" type="number" min="-100" max="3000" step="0.01" placeholder="Az 1 m szintkülönbség ellenőrzéséhez"><span>mBf</span></div></label>
           <label>Befolyócső fenékszintje<div class="unit-field"><input name="inletElevation" type="number" min="-100" max="3000" step="0.01"><span>mBf</span></div></label>
-          <label>Befolyócső felső palástjának szintje<div class="unit-field"><input name="inletCrownElevation" type="number" min="-100" max="3000" step="0.01" placeholder="A földtakarás igazolásához"><span>mBf</span></div></label>
-          <label>Nyomócső kilépésének földtakarása<div class="unit-field"><input name="pressureExitCover" type="number" min="0" max="20" step="0.05"><span>m</span></div></label>
-          <p class="hint">Megadott tervezési feltétel: mindkét cső felső palástja legalább 1 m-rel a meglévő terep alatt legyen. A nyomócső helyi falátvezetésének mélysége a lenti távoli végponti szinttől külön adat. A befolyó fenékszintje önmagában nem igazolja a felső palást takarását.</p>
+          <label>Nyomócső tengelymélysége az aknafalnál<div class="unit-field"><input name="pressureExitDepth" type="number" min="0" max="20" step="0.05"><span>m</span></div></label>
+          <p class="hint">Megadott tervezési feltétel: a befolyócső fenékszintje és a nyomócső tengelye egyaránt legalább 1 m-rel a meglévő terep alatt legyen. A helyi nyomócsőtengely szintje a terepszintből és a tengelymélységből adódik; a lenti távoli végpont külön adat.</p>
           <label>Nyomócső végponti szintje<div class="unit-field"><input name="outletElevation" type="number" min="-100" max="3000" step="0.01"><span>mBf</span></div></label>
           <label>Végpont értelmezése<select name="outletMode"><option value="free">Szabad kifolyás · csőtengely szintje</option><option value="reservoir">Befogadó vízszint / nyomott csatlakozás</option></select></label>
           <div class="field-row"><label>Belső csőátmérő<div class="unit-field"><input name="pipeDiameter" type="number" min="15" max="2000" step="1"><span>mm</span></div></label><label>Nyomóvezeték hossza<div class="unit-field"><input name="pipeLength" type="number" min="0" max="100000" step="1"><span>m</span></div></label></div>

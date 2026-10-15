@@ -1,4 +1,4 @@
-# Átemelő — szennyvízátemelő előméretező, v0.6
+# Átemelő — szennyvízátemelő előméretező, v0.6.1
 
 Magyar böngészős alkalmazás műszakprofilhoz, mBf szintekhez, közös nyomóvezetékhez,
 Flygt típusválasztáshoz, aknatérfogathoz és kapcsolási szintekhez.
@@ -87,16 +87,19 @@ A terep kétoldalt egyenes, minimalista vonal. A nyomócső felvezetése a falon
 kilép, nem áll meg az akna belsejében. A helyi kilépés és a nyomóvezeték távoli
 végponti mBf szintje különböző adat; a helyi rajz nem változtatja meg a végpontot.
 
-A felhasználó által megadott tervezési feltétel: a két cső **felső palástján legalább
-1 m földtakarás**. A meglévő terepszint és a befolyó felső palástjának mBf szintje
-külön megadható. A befolyó eddigi fenékszintjét nem módosítjuk automatikusan.
-Ha már a fenékszint is 1 m-en belül van, a hiba a felső palást ismerete nélkül is
-bizonyítható; máskülönben a hiányzó felső palást függő ellenőrzés. A nyomócső
-kilépési földtakarása alaphelyzetben 1 m, mélyebbre is állítható. Ellenőrizzük a
-terep alatti helyzetet; terepszint nélkül nincs megfelelőségigazolás. Ez a felhasználó
-projektfeltétele, nem automatikusan az MI/FCSM-ből idézett általános szabály.
-A csőábra szemléltető: a falvastagság, külső méret, idomok és beépítési távolságok
-nem teljes gépészeti méretezés részei.
+A felhasználó által pontosított tervezési feltétel: a **befolyócső fenékszintje** és a
+**nyomócső tengelye** az aknafalnál egyaránt legalább 1 m-rel legyen a terep alatt.
+A befolyó ellenőrzése `zterep − zbefolyó ≥ 1 m`. A helyi nyomócsőtengely:
+`ztengely = zterep − tengelymélység`; az alapmélység 1 m. Nincs külön felsőpalást-mező.
+A befolyó fenékszintjét nem módosítjuk automatikusan. Terepszint nélkül a tényleges
+mBf szint nem igazolható. Ez a felhasználó projektfeltétele; a falvastagság, külső
+csőméret, tényleges földtakarás és gépészeti részletek külön tervezési adatok.
+A rajz méretvonala és a falon átvezetett cső közepe is a tengelyszintre illeszkedik.
+
+A v0.6 mentéseinek felsőpalást-mélységét a korábbi rajzban használt belső sugárral
+növelve tengelymélységre váltjuk, így a korábbi rajzi tengelyszint megmarad. Erről a
+betöltés tájékoztat. Ha a régi átmérő hiányzik, a tengelymélység üres marad, és azt
+külön meg kell adni. Új projekt és új formátumú mező esetén az alapérték 1 m.
 
 ## Hidraulika, kapcsolások és idő
 
