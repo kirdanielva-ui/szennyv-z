@@ -18,7 +18,7 @@ test('16 N-család 96 tartománypontja azonosítható PDF-forrásból, alsó és
  for(const table of nRangeTables){
   assert.equal(table.rows.length,6);assert.ok(table.rows[0].qLps>0);
   table.rows.forEach((row,i)=>{assert.ok(row.hMaxM>=row.hMinM);assert.ok(Math.abs(row.qM3h-row.qLps*3.6)<1e-8);if(i)assert.ok(row.qLps>table.rows[i-1].qLps);});
-  const pump=pumps.find(p=>p.id===table.id);assert.equal(pump.rangeTable,table);assert.equal(pump.curve,null);assert.equal(catalogueCurve(pump.id),null);
+  const pump=pumps.find(p=>p.id===table.id);assert.equal(pump.rangeTable,table);assert.equal(pump.curve.estimated,true);assert.equal(catalogueCurve(pump.id).provenance.estimated,true);
  }
 });
 test('N 3085: ugyanahhoz a Q-hoz két eltérő határmagasság tartozik, nem egy gyártói görbepont',()=>{

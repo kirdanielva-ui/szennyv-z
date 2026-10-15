@@ -44,10 +44,10 @@ test('Mind a 16 N-típus eredeti PDF-oldala beágyazott PNG-ként, azonosíthat�
   assert.equal(Object.keys(nRangeImages).length,16);
   for(const pump of pumps.filter(p=>p.group==='n')){
     assert.equal(pump.rangeImage,nRangeImages[pump.id]);const bytes=Buffer.from(pump.rangeImage.split(',')[1],'base64');
-    assert.equal(bytes.subarray(0,8).toString('hex'),'89504e470d0a1a0a');assert.equal(pump.rangeProvenance.sha256,nRangeSource.sha256);assert.equal(pump.curve,null);
+    assert.equal(bytes.subarray(0,8).toString('hex'),'89504e470d0a1a0a');assert.equal(pump.rangeProvenance.sha256,nRangeSource.sha256);assert.equal(pump.curve.estimated,true);
   }
 });
-test('Az N-típusnézet bemenetei görbe nélkül validálhatók, de pontos munkapontot nem gyártunk',()=>{
+test('Az N-típus becsült modellje munkapontot számol, és az eredmény becsültként jelölt',()=>{
   const p=params({pumpId:'3085',flowMode:'curve',curveSource:'catalogue',curveModelId:'3085'});
-  assert.equal(validate(p,{requireCurve:false}).pumpId,'3085');assert.throws(()=>calculate(p),/nincs beépített/);
+  assert.equal(validate(p,{requireCurve:false}).pumpId,'3085');const r=calculate(p);assert.equal(r.hydraulics.estimated,true);assert.equal(r.checks.find(c=>c.id==='duty').status,'pending');
 });

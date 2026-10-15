@@ -59,12 +59,12 @@ test('A külön sebességkövetelmény nem írja felül az MI 5 m/s maximumát',
   const strict=calculate(params({manualFlows:[flowFor(0.4)],projectVelocityMin:0.7}));assert.equal(check(strict,'velocity').status,'pass');assert.equal(check(strict,'project-velocity').status,'fail');
 });
 test('Előválasztás valós görbékre, a névleges P₂ szerint; a legjobb alkalmazása ugyanazt a munkapontot adja',()=>{
-  const p=params(),s=selectPumps(p),eligible=s.candidates.filter(c=>c.eligible);assert.ok(eligible.length>0);assert.equal(s.best,eligible[0]);
+  const p=params(),s=selectPumps(p),eligible=s.candidates.filter(c=>c.eligible&&!c.estimated);assert.ok(eligible.length>0);assert.equal(s.best,eligible[0]);
   assert.ok(eligible.every(c=>c.minFlow>=c.requiredFlow&&c.velocityRange.min>=0.3&&c.velocityRange.max<=5));
   for(let i=1;i<eligible.length;i++)assert.ok(eligible[i].totalNominalKw>=eligible[i-1].totalNominalKw);
   const r=calculate({...p,pumpId:s.best.id,curveModelId:s.best.id,flowMode:'curve',curveSource:'catalogue'});
   assert.ok(Math.abs(r.hydraulics.operating[0].flow-s.best.flow)<1e-8);assert.ok(s.best.pending.some(p=>/gyártói indítási/.test(p)));
-  assert.ok(s.excluded.some(c=>c.id==='3800'));assert.ok(s.excluded.some(c=>c.id==='sx-2'));assert.ok(!s.candidates.some(c=>c.id==='3800'));
+  assert.ok(s.candidates.some(c=>c.id==='3800'&&c.estimated));assert.ok(s.excluded.some(c=>c.id==='sx-2'));
 });
 test('Nincs találat esetén indokok láthatók; a hidegtartalék nem javítja a rangsort',()=>{
   const p=params({daily:10000}),s=selectPumps(p);assert.equal(s.best,null);assert.ok(s.candidates.every(c=>!c.eligible&&c.reasons.length));
@@ -74,7 +74,7 @@ test('Nincs találat esetén indokok láthatók; a hidegtartalék nem javítja a
 test('N 3800 családadat: új forrás, pontos Q–H és igazolt indítási korlát nélkül',async()=>{
   const n=pumps.filter(p=>p.group==='n');assert.equal(n.length,16);
   const last=n.find(p=>p.id==='3800');assert.equal(last.rangePage,21);assert.equal(last.maxStarts,null);assert.equal(last.page,null);assert.equal(last.power,'225–550');
-  for(const p of n){assert.equal(p.curve,null);assert.equal(catalogueCurve(p.id),null);assert.equal(p.rangeVerification,'approximate-envelope-not-for-sizing');}
+  for(const p of n){assert.equal(p.curve.estimated,true);assert.equal(catalogueCurve(p.id).provenance.manufacturerCurve,false);assert.equal(p.rangeVerification,'approximate-envelope-not-for-sizing');}
   const pdf=await readFile(new URL('../docs/flygt-n-3000-tartomanyok.pdf',import.meta.url));assert.ok(pdf.subarray(0,5).equals(Buffer.from('%PDF-')));
 });
 test('A mély, sokfokozatú akna szintfeliratai nem fedik egymást; mBf és fenéktől mért méretek',()=>{

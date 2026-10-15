@@ -17,3 +17,4 @@ textarea{width:100%;resize:vertical;min-height:120px;padding:11px;border:1px sol
 .n-range-image{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:7px;margin:18px 0}.check p{white-space:pre-line}button:disabled{opacity:.55;cursor:default}
 .daily-chart{overflow-x:auto}.daily-chart svg{min-width:960px}.n-range-table h4{font-size:13px;margin:20px 0 10px}.n-range-table .table-scroll{margin-bottom:15px}
 @media print{.daily-chart{overflow:visible}.daily-chart svg{min-width:0}}
+.result-summary.estimated{background:#735b2c}.estimated-legend{color:#996016}#n-model-details{padding-top:15px}#n-model-details summary{color:#996016}#n-model-content{padding-top:15px}.selection-panel h4{font-size:12px;margin:20px 0 8px}

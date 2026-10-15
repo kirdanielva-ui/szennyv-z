@@ -23,7 +23,7 @@ export function systemHead(p,flow,waterElevation) {
   return {head:staticHead+frictionLoss+localLoss+exitVelocityHead,staticHead,frictionLoss,localLoss,exitVelocityHead,
     velocity,reynolds,friction,transition:reynolds>=2300&&reynolds<4000,pipeVolume:area*p.pipeLength};
 }
-export function parseCurve(text) {
+export function parseCurve(text,{allowBounded=false}={}) {
   const rows=String(text).trim().split(/\r?\n/).filter(s=>s.trim()&&!s.trim().startsWith('#'));
   const points=rows.map((line,index)=>{
     const columns=/[;\t ]/.test(line.trim())?line.trim().split(/[;\t ]+/):line.trim().split(',');
@@ -33,7 +33,7 @@ export function parseCurve(text) {
     return {q,h};
   });
   if(points.length<3||points.length>200)throw new Error('A Q–H görbéhez 3–200 adatpont szükséges.');
-  if(points[0].q!==0)throw new Error('A Q–H görbe első pontja Q = 0 legyen (zárási emelőmagasság).');
+  if(!allowBounded&&points[0].q!==0)throw new Error('A Q–H görbe első pontja Q = 0 legyen (zárási emelőmagasság).');
   for(let i=1;i<points.length;i++)if(points[i].q<=points[i-1].q||points[i].h>points[i-1].h)throw new Error('Növekvő Q és nem növekvő H szükséges; a modell egy monoton jelleggörbeágat kezel.');
   if(points[0].h===points.at(-1).h)throw new Error('A Q–H görbe ne legyen teljesen vízszintes.');
   return points;
@@ -44,12 +44,16 @@ export function pumpHead(points,flowPerPump) {
   return points.at(-1).h;
 }
 export function operatingPoint(p,points,count,waterElevation) {
-  const high=points.at(-1).q*count;
-  const residual=q=>pumpHead(points,q/count)-systemHead(p,q,waterElevation).head;
-  if(residual(0)<=0)throw new Error(`${count} üzemi gép: a zárási emelőmagasság nem haladja meg a statikus igényt (${waterElevation.toFixed(3)} mBf vízszintnél).`);
-  if(residual(high)>0)throw new Error(`${count} üzemi gép: a munkapont a megadott Q–H görbén kívülre esik. Bővebb gyártói görbe kell; extrapolációt nem végzünk.`);
-  let a=0,b=high;
+  const low=points[0].q*count,high=points.at(-1).q*count;
+  // Total flow is bracketed in [low, high]. Clamp the division only against
+  // floating-point roundoff at per-pump endpoints (e.g. 7 × Qmin / 7).
+  const perPumpAt=q=>Math.max(points[0].q,Math.min(points.at(-1).q,q/count));
+  const residual=q=>pumpHead(points,perPumpAt(q))-systemHead(p,q,waterElevation).head;
+  if(low>0&&residual(low)<-1e-9)throw new Error(`${count} üzemi gép: a rendszerigény a modell alsó Q-határán (${low.toFixed(2)} m³/h) is nagyobb az emelőmagasságnál. A metszés a becsült görbetartomány alá esik; ellenőrizd a nyomócső méretét, hosszát és végponti magasságát. Extrapolációt nem végzünk.`);
+  if(low===0&&residual(0)<=0)throw new Error(`${count} üzemi gép: a zárási emelőmagasság nem haladja meg a statikus igényt (${waterElevation.toFixed(3)} mBf vízszintnél).`);
+  if(residual(high)>1e-9)throw new Error(`${count} üzemi gép: a munkapont a megadott Q–H görbén kívülre esik. Bővebb gyártói görbe kell; extrapolációt nem végzünk.`);
+  let a=low,b=high;
   for(let i=0;i<48;i++){const m=(a+b)/2;if(residual(m)>0)a=m;else b=m;}
   const flow=(a+b)/2;
-  return {count,flow,perPump:flow/count,waterElevation,...systemHead(p,flow,waterElevation)};
+  return {count,flow,perPump:perPumpAt(flow),waterElevation,...systemHead(p,flow,waterElevation)};
 }

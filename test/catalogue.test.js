@@ -35,7 +35,7 @@ test('A PDF kritikus szélsőpontjai és a HF-változat nem keverednek',()=>{
   const last=pumps.find(p=>p.id==='dlv-50-15').curve;near(last.points.at(-1).q,36);near(last.points.at(-1).h,4);assert.equal(last.pdfPage,40);
 });
 test('Mind a 30 görbén visszakapjuk a dokumentum közölt Q–H pontját illesztett rendszerrel',()=>{
-  for(const pump of pumps.filter(p=>p.curve)){
+  for(const pump of pumps.filter(p=>p.group==='catalogue')){
     const target=pump.curve.points[Math.floor(pump.curve.points.length/2)],water=100;
     const p={...structuredClone(defaults),outletElevation:water};
     const losses=systemHead(p,target.q,water).head;
@@ -63,8 +63,8 @@ test('A családok indítási korlátja nem öröklődik át; a külön megadott 
   const known=calculate(preset('dx-50-11',{startsLimit:25,manufacturerStartsLimit:8}));near(known.geometry.limit,8);
   assert.ok(!known.checks.some(c=>c.id==='manufacturer-starts'));
 });
-test('A hiányzó N/C/F/Concertor görbe nem helyettesíthető kisebb családéval',()=>{
-  for(const id of ['3085','3531','c-series','f-series','concertor']){
+test('A hiányzó C/F/Concertor görbe nem helyettesíthető kisebb családéval',()=>{
+  for(const id of ['c-series','f-series','concertor']){
     assert.equal(catalogueCurve(id),null);assert.throws(()=>calculate(preset(id)),/nincs beépített/);
   }
 });

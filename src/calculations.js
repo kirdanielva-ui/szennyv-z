@@ -89,7 +89,7 @@ export function validate(input,{requireCurve=true}={}){
       p.curveText=preset.text;p.curveLabel=preset.label;
     }
     if(!String(p.curveLabel).trim())throw new Error('Add meg a Q–H görbe pontos szivattyúkivitelét és adatlap-hivatkozását.');
-    parseCurve(p.curveText);
+    parseCurve(p.curveText,{allowBounded:p.curveSource==='catalogue'&&Boolean(pumps.find(pump=>pump.id===p.pumpId).curve?.bounded)});
   }
   return p;
 }
@@ -121,6 +121,12 @@ export function geometry(p,pump,points=null){
     const active=perStage*p.maxParallel,drawdown=active/area,start=p.stopLevel+drawdown;
     const reserveTop=start+reserve/area,inletDepth=reserveTop+p.inletClearance,floorElevation=p.inletElevation-inletDepth;
     const startLevels=Array.from({length:p.maxParallel},(_,i)=>p.stopLevel+(i+1)*perStage/area);
+    // A bounded N-model must cover the entire switching band for every stage.
+    // If a small well falls below Qmin at stop level, try a larger diameter.
+    if(points&&points[0].q>0)for(let count=1;count<=p.maxParallel;count++){
+      operatingPoint(p,points,count,floorElevation+p.stopLevel);
+      operatingPoint(p,points,count,topElevation);
+    }
     const fits=diameter>=p.minDiameter-1e-9&&drawdown<=p.maxDrawdown+1e-9&&inletDepth<=p.maxDepthBelowInlet+1e-9;
     return {diameter,area,active,perStage,drawdown,stop:p.stopLevel,start,startLevels,alarm:start+p.alarmGap,
       reserve,reserveTop,inletDepth,floorElevation,topElevation,dead:area*p.stopLevel,belowInlet:area*inletDepth,
@@ -216,7 +222,8 @@ export function formatVelocity(value){
 }
 export function calculate(input,simulationOptions={}){
   const p=validate(input),pump=pumps.find(x=>x.id===p.pumpId),profile=buildProfile(p);
-  const points=p.flowMode==='curve'?parseCurve(p.curveText):null,g=geometry(p,pump,points),cache=new Map();
+  const estimated=p.flowMode==='curve'&&p.curveSource==='catalogue'&&Boolean(pump.curve?.estimated);
+  const points=p.flowMode==='curve'?parseCurve(p.curveText,{allowBounded:estimated}):null,g=geometry(p,pump,points),cache=new Map();
   const flowAt=(count,elevation)=>{
     if(p.flowMode==='manual')return p.manualFlows[count-1];
     const key=`${count}:${Math.round(elevation*10000)}`;
@@ -253,8 +260,10 @@ export function calculate(input,simulationOptions={}){
   if(p.projectVelocityMin!==''||p.projectVelocityMax!=='')add('project-velocity',(p.projectVelocityMin===''||velocityRange.min>=p.projectVelocityMin-1e-9)&&(p.projectVelocityMax===''||velocityRange.max<=p.projectVelocityMax+1e-9)?'pass':'fail','Külön tervezői sebességkövetelmény',`Felvett alsó / felső határ: ${p.projectVelocityMin===''?'nincs':p.projectVelocityMin} / ${p.projectVelocityMax===''?'nincs':p.projectVelocityMax} m/s. Az MI külön 0,3–5 m/s ellenőrzését ez nem módosítja. Az 5 m/s feletti sebesség fizikailag lehetséges, az idézett MI-határt viszont túllépi.`);
   if(p.application==='workplace')add('pipe-diameter',p.pipeDiameter>=150?'pass':'fail','MI hálózati nyomócső: legalább 150 mm','MI 4.2. hálózati előírás. Az FCSM lakossági bekötési szabálya eltérő esetkör; a konkrét telephelyre való alkalmazás egyeztetendő.');
   if(p.flowMode==='manual')add('duty','pending','Kézzel megadott fokozati vízhozamok','Ezekhez szükséges H-t és rendszerjelleggörbét számolunk. Automatikus munkapont csak pontos Q–H görbével adható; több gépnél sem feltételezünk N×Q szállítást.');
+  else if(estimated)add('duty','pending','Becsült N-családgörbe és rendszerjelleggörbe metszése','A számítás az ábrából kiolvasott alsó/felső H-határok középvonalának csökkenő ágát használja. Matematikai családmodell, nem igazolt szivattyúkivitel. A munkapont, aknaméretek, kapcsolási szintek és napi üzem ennek a feltevésnek az eredményei.');
   else add('duty','pass','Q–H és rendszerjelleggörbe metszése','A megadott monoton Q–H görbe interpolációja és Colebrook–White veszteségszámítás. Azonos gépek közös nyomóvezetéken; az eltérő ágveszteségek nincsenek modellezve. A görbe eredetét a felhasználó igazolja.');
-  if(p.flowMode==='curve'&&p.curveSource==='catalogue')add('curve-source','pending','Újrarajzolt görbe: táblázatos másodlagos forrás','A feltöltött PDF numerikus Q–H táblázataiból, képi digitalizálás nélkül. 50 Hz; lineáris interpoláció. Nem eredeti gyártói görbeoldal és nem igazolt járókerék-/motorkivitel. A hivatkozott eredeti katalógus adataival külön összevetendő.');
+  if(estimated)add('curve-source','pending','Becsült modell: konkrét kivitel ellenőrzendő','A feltöltött családtartomány nem egyetlen szivattyúgörbe. Hmodell = (Halsó + Hfelső) / 2; a maximumtól induló csökkenő ágban lineáris interpoláció. Nem feltételezünk zárási emelőmagasságot, a felvett Q-tartományon kívül nem számolunk. A pontos munkapontot gyártói kivitelgörbével kell ellenőrizni.');
+  else if(p.flowMode==='curve'&&p.curveSource==='catalogue')add('curve-source','pending','Újrarajzolt görbe: táblázatos másodlagos forrás','A feltöltött PDF numerikus Q–H táblázataiból, képi digitalizálás nélkül. 50 Hz; lineáris interpoláció. Nem eredeti gyártói görbeoldal és nem igazolt járókerék-/motorkivitel. A hivatkozott eredeti katalógus adataival külön összevetendő.');
   if(pump.usage==='drainage')add('pump-application','pending','Szennyezettvíz-típus: szennyvízalkalmasság ellenőrizendő','Az SX/STA család alkalmazhatósága nyers, darabos szennyvízre a gyűjteményből nem igazolható. Ellenőrizd az átömlő keresztmetszetet, megengedett közeget és a gyártói alkalmazási korlátokat.');
   if(operating.some(o=>o.transition))add('transition','pending','Átmeneti Reynolds-tartomány','Re 2300–4000 között a lamináris és Colebrook-becslés közül a nagyobb ellenállást vesszük. Részletesebb ellenőrzés szükséges.');
   if(p.outletElevation+p.backpressureHead<=g.topElevation)add('siphon','pending','Gravitációs vagy szifonhatás lehetősége','A végpont piezometrikus szintje nem magasabb a felső üzemi vízszintnél. Hosszelvény és légtelenítés külön vizsgálandó; szivattyú nélküli szifonáramlást nem modellezünk.');
@@ -265,6 +274,6 @@ export function calculate(input,simulationOptions={}){
   const systemCurve=Array.from({length:81},(_,i)=>{const flow=chartMax*i/80;return {flow,head:systemHead(p,flow,operating[0].waterElevation).head};});
   const chartOperating=points?Array.from({length:p.maxParallel},(_,i)=>operatingPoint(p,points,i+1,operating[0].waterElevation)):[];
   const curveProvenance=p.flowMode!=='curve'?null:p.curveSource==='catalogue'?catalogueCurve(p.pumpId).provenance:{verification:'user-entered',model:pump.name,label:p.curveLabel,originalCatalogueVerified:false,method:'user-supplied numeric points; piecewise-linear interpolation'};
-  return {parameters:p,pump,profile,geometry:g,simulation:sim,checks,geometryChecks,hydraulics:{operating,velocityRange,pipeVolume,points,systemCurve,curveProvenance,
+  return {parameters:p,pump,profile,geometry:g,simulation:sim,checks,geometryChecks,hydraulics:{estimated,operating,velocityRange,pipeVolume,points,systemCurve,curveProvenance,
     chartOperating,pumpCurves:points?Array.from({length:p.maxParallel},(_,i)=>points.map(point=>({flow:point.q*(i+1),head:pumpHead(points,point.q)}))):[],referenceElevation:operating[0].waterElevation}};
 }

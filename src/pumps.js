@@ -1,3 +1,4 @@
+import {createNModel} from './n-models.js';
 import {nRangeTables,nRangeTableSource} from './n-range-tables.js';
 import {nRangeImages,nRangeSource} from './n-range-images.js';
 import {catalogueSource,catalogueTables} from './pump-catalogue.js';
@@ -20,7 +21,7 @@ const nPumps = [
   ['3400', '40–310', '400', 15, 10],
   ['3531', '40–680', '500', 15, 10],
   ['3800', '225–550', '800', null, null],
-].map(([id,power,discharge,maxStarts,page])=>({id,name:`Flygt N ${id}`,family:'N 3000',group:'n',power,discharge,maxStarts,page,curve:null,rangePage:6+['3069','3085','3102','3127','3153','3171','3202','3301','3315','3231','3306','3312','3356','3400','3531','3800'].indexOf(id),rangeSource:'flygt-n-3000-tartomanyok.pdf',rangeTable:nRangeTables.find(table=>table.id===id),rangeTableProvenance:nRangeTableSource,rangeImage:nRangeImages[id],rangeProvenance:nRangeSource,rangeVerification:'approximate-envelope-not-for-sizing'}));
+].map(([id,power,discharge,maxStarts,page])=>({id,name:`Flygt N ${id}`,family:'N 3000',group:'n',power,discharge,maxStarts,page,curve:createNModel(nRangeTables.find(table=>table.id===id)),rangePage:6+['3069','3085','3102','3127','3153','3171','3202','3301','3315','3231','3306','3312','3356','3400','3531','3800'].indexOf(id),rangeSource:'flygt-n-3000-tartomanyok.pdf',rangeTable:nRangeTables.find(table=>table.id===id),rangeTableProvenance:nRangeTableSource,rangeImage:nRangeImages[id],rangeProvenance:nRangeSource,rangeVerification:'approximate-envelope-not-for-sizing'}));
 
 const tablePumps=catalogueTables.map(table=>({
   id:table.id,name:`Flygt ${table.model}`,family:table.family,group:'catalogue',
@@ -35,6 +36,11 @@ const missingPumps=[['c-series','C'],['f-series','F'],['concertor','Concertor']]
 export const pumps=[...nPumps,...tablePumps,...missingPumps];
 export function catalogueCurve(pumpId){
   const pump=pumps.find(p=>p.id===pumpId);if(!pump?.curve)return null;
+  if(pump.curve.estimated)return {
+    text:pump.curve.points.map(p=>`${p.q};${p.h}`).join('\n'),
+    label:`${pump.name} · BECSÜLT CSALÁDGÖRBE · tartomány-középvonal, 50 Hz, PDF ${pump.rangePage}. oldal`,
+    provenance:{...nRangeTableSource,verification:'estimated-family-midline-scenario',estimated:true,sourceAllowedForDutyCalculation:false,allowedForDutyCalculation:true,useScope:'User-requested mathematical scenario; not manufacturer sizing data',manufacturerCurve:false,originalCatalogueVerified:false,model:pump.name,pdfPage:pump.rangePage,method:pump.curve.method,range:{...pump.curve.range},envelopeRows:pump.rangeTable.rows.map(row=>({...row})),generatedPoints:pump.curve.points.map(point=>({...point}))},
+  };
   return {
     text:pump.curve.points.map(p=>`${p.q};${p.h}`).join('\n'),
     label:`${pump.name} · 50 Hz · újrarajzolt táblázat, PDF ${pump.curve.pdfPage}. oldal / hivatkozott gyári katalógus ${pump.curve.cataloguePage}. oldal`,

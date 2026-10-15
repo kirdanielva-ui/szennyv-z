@@ -10,7 +10,7 @@ APP.mkdir(parents=True, exist_ok=True)
 
 css = (ROOT / "styles.css").read_text(encoding="utf-8")
 modules = []
-for name in ("n-range-images.js", "n-range-tables.js", "pump-catalogue.js", "pumps.js", "hydraulics.js", "pipe-placement.js", "calculations.js", "diagram.js", "selection.js", "app.js"):
+for name in ("n-range-images.js", "n-range-tables.js", "pump-catalogue.js", "n-models.js", "pumps.js", "hydraulics.js", "pipe-placement.js", "calculations.js", "diagram.js", "selection.js", "app.js"):
     source = (ROOT / "src" / name).read_text(encoding="utf-8")
     source = re.sub(r"^import [^\n]+\n", "", source, flags=re.MULTILINE)
     source = re.sub(r"^export ", "", source, flags=re.MULTILINE)
@@ -37,16 +37,16 @@ instructions = """ÁTEMELŐ – HASZNÁLATI ÚTMUTATÓ
    távoli végpontja külön adat. A befolyó felső palástját nem kell külön megadni.
 5. A Szivattyúk összehasonlítása gomb a számszerű görbés típusokat rangsorolja
    a teljes párhuzamos fokozat névleges P₂-összege szerint (nem energiaoptimalizálás).
-   Az N-sorozat új tartományábrái tájékoztatók, nem munkaponti görbék.
    Válaszd ki a Flygt típust és az üzemképes/hidegtartalék gépek számát.
-   A 30 táblázatos típus kiválasztása automatikusan betölti a Q–H adatokat.
-   Ezek a mellékelt, gyári táblázatokból újrarajzolt gyűjtemény számszerű pontjai;
-   az eredeti gyártói kiviteladatokkal még összevetendők. Az N 3000, C, F és
-   Concertor pontos kivitelgörbéi nincsenek ebben a mellékletben. Az N-családok
-   kiválasztásakor az eredeti típusoldal és a rendelkezésre álló adatok jelennek
-   meg, számított munkapont vagy aknaméret nélkül. A 16 N-család ábráiból kiolvasott,
-   közelítő alsó/felső H-határt tartalmazó táblázatok is láthatók és CSV-be menthetők.
-   Ezek nem konkrét szivattyúkivitel jelleggörbéi. Kézi görbeadat-bevitel nincs.
+   A 30 táblázatos típus és a 16 becsült N-családgörbe automatikusan betöltődik.
+   Az N-modellek az alsó/felső családhatár középvonalának maximumától induló
+   csökkenő ágból készülnek, extrapoláció nélkül. Ezekkel munkapontot, aknát,
+   kapcsolási szinteket és napi üzemet is számol a program. A rajzon és az
+   exportban becsült családmodellként vannak jelölve, nem gyártói kivitelgörbék.
+   A pontos szivattyúkivitelhez az eredményt külön ellenőrizni kell.
+   A munkapont alatt lenyithatók a modellpontok és a PDF eredeti típusoldala;
+   a becsült Q–H modell CSV-be is menthető. Kézi görbeadat-bevitel nincs.
+   A C, F és Concertor családokhoz nincs beépített modell.
    A hidegtartalék nem indul automatikusan. A több üzemképes gép váltott és
    párhuzamos üzemben is modellezhető, az egyidejű gépszám megadásával.
 6. A Projekt mentése gombbal JSON-fájlba menthetsz; ezt később visszatöltheted.

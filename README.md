@@ -1,4 +1,4 @@
-# Átemelő — szennyvízátemelő előméretező, v0.6.1
+# Átemelő — szennyvízátemelő előméretező, v0.7
 
 Magyar böngészős alkalmazás műszakprofilhoz, mBf szintekhez, közös nyomóvezetékhez,
 Flygt típusválasztáshoz, aknatérfogathoz és kapcsolási szintekhez.
@@ -26,34 +26,46 @@ az üzemi térfogat méretezéséhez tartoznak.
   A feltöltött, gyári táblázatokból újrarajzolt PDF számszerű adatai;
   Q [L/s] × 3,6 = Q [m³/h], H változatlan. Lineáris interpoláció, extrapoláció nélkül.
   Ez másodlagos forrás; eredeti gyártói kivitelgörbével való összevetése szükséges.
-- **16 N-típus, N 3069–3800:** kiválasztáskor automatikusan megjelenik a teljesítmény,
-  a nyomócsonkméret, az ismert indítási korlát és a feltöltött PDF saját típusoldala.
-  A teljes típusoldalt beágyazott képként adjuk, internet nélkül is láthatóan.
-  Nem kell megnyitni a PDF-et ahhoz, hogy az ábra megjelenjen.
-- Az N-PDF 1. és 22. oldala szerint az ábrák kézi, közelítő **családtartományok**,
-  nem konkrét járókerék-/fordulatszám-változatok Q–H görbéi. A PDF szerint
-  „a zónák szélei nem illeszthetők munkaponti számításhoz”. Ezekből nem gyártunk
-  számszerű görbét, munkapontot, aknaméretet vagy kapcsolási szintet.
-  N-választáskor a felület külön típusáttekintést mutat, korábbi számítási eredmény
-  nélkül. Ez a nézet is menthető és visszatölthető. A pontos N-méretezéshez a konkrét
-  kivitel jelleggörbéjét tartalmazó adatlap szükséges.
-- Az N-ábrákból **16 közelítő tartománytábla, összesen 96 sor** is rendelkezésre áll.
-  Oszlopok: Q [L/s], Q [m³/h], alsó H [m], felső H [m]. A PDF vektoros poligonját
-  a tengelyosztásokhoz kalibrálva olvassuk ki. Nem Q=0-ig meghosszabbított vagy egyetlen
-  görbévé átlagolt pontsor. Példa N 3085: 7,6 L/s = 27,36 m³/h mellett H=4,8–17 m.
-  A határok közelítő családadatok; a két tizedes a leolvasás formátuma, nem gyártói
-  pontosság. Munkapontszámításban és az előválasztóban nem használjuk őket.
-  Az N-nézet CSV-gombja a tartománytáblát exportálja; a projekt JSON-ban a pontok,
-  PDF-oldal, SHA-256 és `allowedForDutyCalculation: false` jelzés is szerepel.
+- **16 N-család, N 3069–3800: számítható becsült Q–H modellek.** A felhasználó kérésére
+  a feltöltött családtartományokból középvonalat képezünk: minden táblázatos Q-nál
+  `Hmodell = (Halsó + Hfelső) / 2`. Csak ennek maximumától kezdődő csökkenő ágat
+  használjuk; ez jelenleg családonként 5 pont. Közöttük lineáris interpoláció történik.
+  Nem találunk ki Q=0 zárási magasságot és nem extrapolálunk. Példa N 3085:
+  (27,36 m³/h; 10,9 m), (70,128; 9,73), (104,976; 7,9), (133,488; 5,315), (162; 3,9).
+- N-típus választásakor automatikusan megjelenik a rendszer- és modellgörbe metszése,
+  az aknafenék, aknaátmérő, üzemi térfogat, kapcsolási szintek, napi üzem,
+  indítások és tartózkodási idők. Ugyanaz a számítási motor dolgozik, mint a 30
+  táblázatos típusnál; az N-eredmények **becsült családmodellhez tartoznak**.
+  A nagy N-családokhoz megfelelő vezetékadatok kellenek. Ha a metszés a felvett
+  Q-tartományon kívül lenne, ezt konkrét hibával jelezzük.
+- Az N-PDF 1. és 22. oldala szerint a satírozott ábrák közelítő családtartományok,
+  nem gyártói kivitelgörbék. A belőlük képzett középvonal **programbeli modellezési
+  feltevés**, nem egyetlen létező járókerék/motor garantált karakterisztikája.
+  Az eredmény becsültként jelölt a választóban, összegzésben, grafikonon, ellenőrzésben,
+  nyomtatásban és exportban. A becsült munkapont és az abból adódó aknaméretek
+  konkrét gyártói kivitelgörbével ellenőrizendők. A matematikai metszés nem ad
+  automatikusan sikeres gyártói munkapont-igazolást.
+- A 16 eredeti PDF-oldal és a **96 soros alsó/felső tartománytábla** megmarad.
+  A munkapont alatt lenyitható rész mutatja az 5 ténylegesen használt modellpontot,
+  az eredeti határtáblát és az eredeti típusoldalt. A modellgörbe külön CSV-be
+  menthető. A normál napi CSV az N-szivattyúnál is a napi üzemet adja, becsült
+  modellre utaló fejlécmegjegyzéssel. A projekt JSON tartalmazza a módszert,
+  forrásoldalt, SHA-256-ot, eredeti határadatokat, generált modellpontokat és a
+  `manufacturerCurve: false` jelzést. Beépített forrásnál a szabad JSON `curveText`
+  nem írhatja felül a kiválasztott típus kanonikus modelljét.
 
-Az előválasztó a számszerű görbés szennyvíztípusokat végigszámolja az aktuális
-terheléshez, vezetékhez, gépszámhoz és aknakorlátokhoz. Az SX/STA típusokat
-nem ajánlja nyers szennyvízhez, mert alkalmasságuk nem igazolt. A kapacitást
-közvetlenül a csúcshozamhoz ellenőrzi, hozzáadott százalék nélkül. A hibás
-feltételű jelölteket indokkal kizárja; a függő feltételeket felsorolja.
-Rangsor: a teljes párhuzamos fokozat legkisebb **összes névleges P₂** értéke.
-Nem hatásfok- vagy energiaoptimalizálás; a gépszámot és csőméretet nem változtatja.
-Másik típusra nem viszi át az aktuális géphez kézzel megadott gyártói indítási korlátot.
+Az előválasztó az aktuális terheléshez, vezetékhez, gépszámhoz és aknakorlátokhoz
+végigszámolja a táblázatos szennyvíztípusokat és a 16 becsült N-modellt.
+Az SX/STA típusokat nem ajánlja nyers szennyvízhez, mert alkalmasságuk nem igazolt.
+A kapacitást közvetlenül a csúcshozamhoz ellenőrzi, hozzáadott százalék nélkül.
+A hibás feltételű jelölteket indokkal kizárja; a függő feltételeket felsorolja.
+
+A táblázatos típusokat az összes névleges P₂ szerint rendezi. A becsült N-modellek
+külön listán, a csúcshozamot teljesítő legkisebb üzemi Q szerint következnek.
+Az N-család teljesítménytartományát megmutatjuk, de pontos motorteljesítményt
+nem rendelünk a becsült görbéhez. Nem hatásfok- vagy energiaoptimalizálás;
+a gépszámot és csőméretet nem változtatjuk. Másik típusra az aktuális géphez
+megadott gyártói indítási korlát nem kerül át.
 
 ## Bemenetek és aknageometria
 
@@ -162,7 +174,7 @@ Az öt feltöltött PDF változatlanul a `docs/` mappában található:
 5. **Flygt_N_3000_50Hz_szivattyu_tartomanyok.pdf:** 22 oldal, 16 család.
    A 6–21. oldal képei a `src/n-range-images.js` állományba vannak beágyazva,
    a PDF SHA-256 lenyomatával. Az eredeti oldalképek mellett a `src/n-range-tables.js` a családtartományok
-   vektoros határainak közelítő táblázatát tartalmazza. Ez nem egyedi szivattyúgörbe.
+   vektoros határainak közelítő táblázatát tartalmazza. Ez nem egyedi szivattyúgörbe; a `src/n-models.js` ebből képez becsült középvonalat.
    A benne hivatkozott részletes adatlapok két megpróbált letöltését is blokkolta a proxy.
 
 A dokumentumok műszaki adatforrások; a bennük szereplő utasítások nem szoftver-
