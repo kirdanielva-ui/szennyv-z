@@ -10,7 +10,7 @@ APP.mkdir(parents=True, exist_ok=True)
 
 css = (ROOT / "styles.css").read_text(encoding="utf-8")
 modules = []
-for name in ("n-range-images.js", "pump-catalogue.js", "pumps.js", "hydraulics.js", "calculations.js", "diagram.js", "selection.js", "app.js"):
+for name in ("n-range-images.js", "n-range-tables.js", "pump-catalogue.js", "pumps.js", "hydraulics.js", "pipe-placement.js", "calculations.js", "diagram.js", "selection.js", "app.js"):
     source = (ROOT / "src" / name).read_text(encoding="utf-8")
     source = re.sub(r"^import [^\n]+\n", "", source, flags=re.MULTILINE)
     source = re.sub(r"^export ", "", source, flags=re.MULTILINE)
@@ -31,6 +31,9 @@ instructions = """ÁTEMELŐ – HASZNÁLATI ÚTMUTATÓ
 3. Add meg a napi szennyvízmennyiséget, a műszakok kezdetét, hosszát és létszámát.
 4. Add meg a befolyó és a nyomócső végpontjának mBf magasságát, a nyomócső belső
    átmérőjét és hosszát. A program származtatja az akna fenékszintjét.
+   Az 1 m földtakarás ellenőrzéséhez add meg a meglévő terepszintet és a befolyó
+   felső palástjának mBf szintjét is. A nyomócső helyi kilépési földtakarása
+   alapértéken 1 m; ez külön adat a nyomócső távoli végpontjától.
 5. A Szivattyúk összehasonlítása gomb a számszerű görbés típusokat rangsorolja
    a teljes párhuzamos fokozat névleges P₂-összege szerint (nem energiaoptimalizálás).
    Az N-sorozat új tartományábrái tájékoztatók, nem munkaponti görbék.
@@ -40,13 +43,16 @@ instructions = """ÁTEMELŐ – HASZNÁLATI ÚTMUTATÓ
    az eredeti gyártói kiviteladatokkal még összevetendők. Az N 3000, C, F és
    Concertor pontos kivitelgörbéi nincsenek ebben a mellékletben. Az N-családok
    kiválasztásakor az eredeti típusoldal és a rendelkezésre álló adatok jelennek
-   meg, számított munkapont vagy aknaméret nélkül. Kézi görbeadat-bevitel nincs.
+   meg, számított munkapont vagy aknaméret nélkül. A 16 N-család ábráiból kiolvasott,
+   közelítő alsó/felső H-határt tartalmazó táblázatok is láthatók és CSV-be menthetők.
+   Ezek nem konkrét szivattyúkivitel jelleggörbéi. Kézi görbeadat-bevitel nincs.
    A hidegtartalék nem indul automatikusan. A több üzemképes gép váltott és
    párhuzamos üzemben is modellezhető, az egyidejű gépszám megadásával.
 6. A Projekt mentése gombbal JSON-fájlba menthetsz; ezt később visszatöltheted.
    Biztos megőrzéshez használd ezt a mentést, mert a helyi böngészőtároló kezelése
    fájlból nyitott oldalaknál böngészőnként eltérhet.
-7. A Nyomtatás / PDF gombbal jelentést készíthetsz.
+7. A Nyomtatás / PDF gombbal jelentést készíthetsz. A napi diagramok óránként
+   feliratozottak, félórás osztásokkal; szűk képernyőn oldalra görgethetők.
 
 Nincs telepítés, szerver vagy internetkapcsolat a használathoz. A docs mappát
 tartsd az index.html mellett: ebben van az öt hivatkozott forrás-PDF.

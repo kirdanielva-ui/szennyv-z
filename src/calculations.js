@@ -1,3 +1,4 @@
+import {pipePlacementChecks} from './pipe-placement.js';
 import {pumps,catalogueCurve} from './pumps.js';
 import {systemHead,parseCurve,operatingPoint,pumpHead} from './hydraulics.js';
 
@@ -11,7 +12,7 @@ export const defaults={
   roughnessMm:0.25,minorLossK:3,outletMode:'free',backpressureHead:0,
   diameter:'auto',minDiameter:1.2,stopLevel:0.4,maxDepthBelowInlet:3,
   maxDrawdown:0.8,minDrawdown:0.15,alarmGap:0.15,inletClearance:0.15,reserveHours:2,
-  residenceMinimum:0,residenceLimit:'',upstreamMinutes:'',groundElevation:'',fcsmSingleDwelling:'no',
+  residenceMinimum:0,residenceLimit:'',upstreamMinutes:'',groundElevation:'',inletCrownElevation:'',pressureExitCover:1,fcsmSingleDwelling:'no',
   projectVelocityMin:'',projectVelocityMax:'',
 };
 function number(value,name,min,max){
@@ -45,16 +46,17 @@ export function validate(input,{requireCurve=true}={}){
     ['outletElevation','Végponti mBf szint',-100,3000],['pipeDiameter','Nyomócső belső átmérő',15,2000],
     ['pipeLength','Nyomócsőhossz',0,100000],['roughnessMm','Üzemi érdesség',0,10],
     ['minorLossK','Helyi veszteségtényezők összege',0,1000],['backpressureHead','Ellennyomás',0,1000],
-    ['residenceMinimum','Minimum tartózkodási idő',0,10080],
+    ['residenceMinimum','Minimum tartózkodási idő',0,10080],['pressureExitCover','Nyomócső kilépési földtakarása',0,20],
   ])p[key]=number(p[key],name,min,max);
   for(const [key,name,min,max] of [['shiftCount','Műszakszám',1,3],['workingCount','Üzemképes szivattyúk száma',1,8],['standbyCount','Hidegtartalékok száma',0,8],['maxParallel','Max. egyidejű gépszám',1,p.workingCount]]){
     p[key]=number(p[key],name,min,max);if(!Number.isInteger(p[key]))throw new Error(`${name}: egész szám szükséges.`);
   }
   for(const [key,name,max] of [['manufacturerStartsLimit','Pontos gyártói kapcsolásszám',100],['upstreamMinutes','Befolyás előtti hálózati idő',10080]])if(p[key]!=='')p[key]=number(p[key],name,0,max);
-  for(const [key,name,min,max] of [['residenceLimit','Felső tartózkodásiidő-keret',0,10080],['groundElevation','Terepszint',-100,3000],['projectVelocityMin','Tervezői minimum sebesség',0,20],['projectVelocityMax','Tervezői maximum sebesség',0,20]])if(p[key]!=='')p[key]=number(p[key],name,min,max);
+  for(const [key,name,min,max] of [['residenceLimit','Felső tartózkodásiidő-keret',0,10080],['groundElevation','Terepszint',-100,3000],['inletCrownElevation','Befolyó felső palást szintje',-100,3000],['projectVelocityMin','Tervezői minimum sebesség',0,20],['projectVelocityMax','Tervezői maximum sebesség',0,20]])if(p[key]!=='')p[key]=number(p[key],name,min,max);
   if(p.residenceLimit!==''&&p.residenceMinimum>p.residenceLimit)throw new Error('A minimum tartózkodási idő nem haladhatja meg a felső keretet.');
   if(p.projectVelocityMin!==''&&p.projectVelocityMax!==''&&p.projectVelocityMin>p.projectVelocityMax)throw new Error('A minimum sebesség nem haladhatja meg a maximumot.');
   for(const key of ['fcsmSingleDwelling'])if(!['yes','no'].includes(p[key]))throw new Error('Ismeretlen választási beállítás.');
+  if(p.inletCrownElevation!==''&&p.inletCrownElevation<=p.inletElevation)throw new Error('A befolyó felső palástja a cső fenékszintje fölött legyen.');
   if(p.groundElevation!==''&&p.groundElevation<p.inletElevation)throw new Error('A terepszint nem lehet a befolyócső fenékszintje alatt.');
   if(p.manufacturerStartsLimit===0)throw new Error('A pontos gyártói kapcsolásszám legyen pozitív vagy hagyd üresen.');
   if(!['workplace','house'].includes(p.application))throw new Error('Ismeretlen felhasználási mód.');
@@ -223,6 +225,7 @@ export function calculate(input,simulationOptions={}){
   });
   const pipeVolume=systemHead(p,0,p.inletElevation).pipeVolume,sim=simulate(p,g,profile,flowAt,pipeVolume,simulationOptions),checks=[];
   const add=(id,status,title,detail)=>checks.push({id,status,title,detail});
+  checks.push(...pipePlacementChecks(p,g));
   const geometryChecks=geometryDiagnostics(p,g);
   add('geometry',g.fits?'pass':'fail','Akna és mBf fenékszint',geometryChecks.filter(c=>!c.pass).map(c=>c.detail).join('\n')||'Az átmérő, a teljes kapcsolási szintkülönbség és a befolyó alatti mélység is a megadott korláton belül van.');
   add('overflow',sim.overflow<1e-7?'pass':'fail','Visszaduzzasztás a modellben',sim.overflow<1e-7?'A szimuláció nem érte el a befolyó fenékszintjét.':'A víz elérte a befolyó szintjét; a túltöltés visszaduzzasztást vagy elöntést jelenthet.');

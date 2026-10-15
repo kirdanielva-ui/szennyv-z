@@ -1,3 +1,4 @@
+import {nRangeTables,nRangeTableSource} from './n-range-tables.js';
 import {nRangeImages,nRangeSource} from './n-range-images.js';
 import {catalogueSource,catalogueTables} from './pump-catalogue.js';
 // Source: user-supplied Flygt brochure 896876, 2024-06-05, PDF pp. 6, 8, 10.
@@ -19,7 +20,7 @@ const nPumps = [
   ['3400', '40–310', '400', 15, 10],
   ['3531', '40–680', '500', 15, 10],
   ['3800', '225–550', '800', null, null],
-].map(([id,power,discharge,maxStarts,page])=>({id,name:`Flygt N ${id}`,family:'N 3000',group:'n',power,discharge,maxStarts,page,curve:null,rangePage:6+['3069','3085','3102','3127','3153','3171','3202','3301','3315','3231','3306','3312','3356','3400','3531','3800'].indexOf(id),rangeSource:'flygt-n-3000-tartomanyok.pdf',rangeImage:nRangeImages[id],rangeProvenance:nRangeSource,rangeVerification:'approximate-envelope-not-for-sizing'}));
+].map(([id,power,discharge,maxStarts,page])=>({id,name:`Flygt N ${id}`,family:'N 3000',group:'n',power,discharge,maxStarts,page,curve:null,rangePage:6+['3069','3085','3102','3127','3153','3171','3202','3301','3315','3231','3306','3312','3356','3400','3531','3800'].indexOf(id),rangeSource:'flygt-n-3000-tartomanyok.pdf',rangeTable:nRangeTables.find(table=>table.id===id),rangeTableProvenance:nRangeTableSource,rangeImage:nRangeImages[id],rangeProvenance:nRangeSource,rangeVerification:'approximate-envelope-not-for-sizing'}));
 
 const tablePumps=catalogueTables.map(table=>({
   id:table.id,name:`Flygt ${table.model}`,family:table.family,group:'catalogue',

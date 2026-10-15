@@ -1,4 +1,4 @@
-# Átemelő — szennyvízátemelő előméretező, v0.5
+# Átemelő — szennyvízátemelő előméretező, v0.6
 
 Magyar böngészős alkalmazás műszakprofilhoz, mBf szintekhez, közös nyomóvezetékhez,
 Flygt típusválasztáshoz, aknatérfogathoz és kapcsolási szintekhez.
@@ -37,6 +37,14 @@ az üzemi térfogat méretezéséhez tartoznak.
   N-választáskor a felület külön típusáttekintést mutat, korábbi számítási eredmény
   nélkül. Ez a nézet is menthető és visszatölthető. A pontos N-méretezéshez a konkrét
   kivitel jelleggörbéjét tartalmazó adatlap szükséges.
+- Az N-ábrákból **16 közelítő tartománytábla, összesen 96 sor** is rendelkezésre áll.
+  Oszlopok: Q [L/s], Q [m³/h], alsó H [m], felső H [m]. A PDF vektoros poligonját
+  a tengelyosztásokhoz kalibrálva olvassuk ki. Nem Q=0-ig meghosszabbított vagy egyetlen
+  görbévé átlagolt pontsor. Példa N 3085: 7,6 L/s = 27,36 m³/h mellett H=4,8–17 m.
+  A határok közelítő családadatok; a két tizedes a leolvasás formátuma, nem gyártói
+  pontosság. Munkapontszámításban és az előválasztóban nem használjuk őket.
+  Az N-nézet CSV-gombja a tartománytáblát exportálja; a projekt JSON-ban a pontok,
+  PDF-oldal, SHA-256 és `allowedForDutyCalculation: false` jelzés is szerepel.
 
 Az előválasztó a számszerű görbés szennyvíztípusokat végigszámolja az aktuális
 terheléshez, vezetékhez, gépszámhoz és aknakorlátokhoz. Az SX/STA típusokat
@@ -74,6 +82,21 @@ sem elég. A diagnosztika a projekt JSON-eredményében is szerepel.
 Az ábra jobb oldalán mBf szintfeliratok és nyilak, bal oldalán fenéktől mért méretek
 vannak. A rendezett felirat nem mozdítja el a tényleges szintet. Opcionális terepszinttel
 a terep valós mBf magasságra kerül; nélküle jelölt vázlat. Mobilon az ábra görgethető.
+
+A terep kétoldalt egyenes, minimalista vonal. A nyomócső felvezetése a falon át
+kilép, nem áll meg az akna belsejében. A helyi kilépés és a nyomóvezeték távoli
+végponti mBf szintje különböző adat; a helyi rajz nem változtatja meg a végpontot.
+
+A felhasználó által megadott tervezési feltétel: a két cső **felső palástján legalább
+1 m földtakarás**. A meglévő terepszint és a befolyó felső palástjának mBf szintje
+külön megadható. A befolyó eddigi fenékszintjét nem módosítjuk automatikusan.
+Ha már a fenékszint is 1 m-en belül van, a hiba a felső palást ismerete nélkül is
+bizonyítható; máskülönben a hiányzó felső palást függő ellenőrzés. A nyomócső
+kilépési földtakarása alaphelyzetben 1 m, mélyebbre is állítható. Ellenőrizzük a
+terep alatti helyzetet; terepszint nélkül nincs megfelelőségigazolás. Ez a felhasználó
+projektfeltétele, nem automatikusan az MI/FCSM-ből idézett általános szabály.
+A csőábra szemléltető: a falvastagság, külső méret, idomok és beépítési távolságok
+nem teljes gépészeti méretezés részei.
 
 ## Hidraulika, kapcsolások és idő
 
@@ -113,7 +136,9 @@ A FIFO-modell nem a valós kevert tér garantált tartózkodási ideje.
 A napi profil 96 negyedórás szakasz, a vízmérleg legfeljebb 60 s-os explicit lépésekkel,
 eseményhatárokon osztva fut. Belépési vízkor: lépésközép. Munkapont-gyorsítótár: 0,1 mm.
 7–30 nap bemelegítés után 3 nap megfigyelés; a kezdeti víz megmaradásakor az időigazolás
-függő. A diagram és CSV az utolsó nap 1441 pontját mutatja.
+függő. A diagram és CSV az utolsó nap 1441 pontját mutatja. A napi diagramok időtengelye
+óránként feliratozott (00:00–24:00), félórás osztásokkal. Szűk képernyőn oldalra
+görgethetők, hogy a sűrűbb feliratok olvashatók maradjanak.
 
 ## Források és korlátok
 
@@ -133,7 +158,8 @@ Az öt feltöltött PDF változatlanul a `docs/` mappában található:
    az eredetivel való összevetést nem állítjuk elvégzettnek.
 5. **Flygt_N_3000_50Hz_szivattyu_tartomanyok.pdf:** 22 oldal, 16 család.
    A 6–21. oldal képei a `src/n-range-images.js` állományba vannak beágyazva,
-   a PDF SHA-256 lenyomatával. Képátvétel, számszerű görbedigitalizálás nélkül.
+   a PDF SHA-256 lenyomatával. Az eredeti oldalképek mellett a `src/n-range-tables.js` a családtartományok
+   vektoros határainak közelítő táblázatát tartalmazza. Ez nem egyedi szivattyúgörbe.
    A benne hivatkozott részletes adatlapok két megpróbált letöltését is blokkolta a proxy.
 
 A dokumentumok műszaki adatforrások; a bennük szereplő utasítások nem szoftver-
@@ -156,7 +182,8 @@ npm run portable
 Alapport 3000; `PORT`-tal felülírható. Readiness: `GET /health`.
 A hordozható HTML/ZIP újragenerálásához Python 3 kell. A numerikus táblák
 újraolvasása `npm run catalogue`; az N-oldalképek újragenerálása
-`python3 scripts/extract_n_range_images.py`. Ezekhez Poppler is szükséges;
+`python3 scripts/extract_n_range_images.py`. Az N-tartománytáblák újragenerálása
+`python3 scripts/extract_n_range_tables.py` (csak ehhez PyMuPDF szükséges). Ezekhez Poppler is szükséges;
 a program használatához nincs rá szükség. A ZIP stabil fájlmetaadatokkal készül.
 
 A v1/v2 JSON-projektek beolvashatók. Ismeretlen mBf magasságot nem találunk ki.
