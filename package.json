@@ -1,6 +1,6 @@
 {
   "name": "szennyviz-atemelo-meretezo",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "description": "Szennyvízátemelő előméretező MI/FCSM forrásokkal és Flygt táblázatos görbekatalógussal",
@@ -10,6 +10,6 @@
     "catalogue": "python3 scripts/extract_curve_catalogue.py",
     "start": "node server.js",
     "test": "node --test",
-    "check": "node --check server.js && node --check src/app.js && node --check src/calculations.js && node --check src/hydraulics.js && node --check src/pumps.js && node --check src/pump-catalogue.js && node --check src/diagram.js && node --check src/selection.js"
+    "check": "node --check server.js && node --check src/app.js && node --check src/calculations.js && node --check src/hydraulics.js && node --check src/pumps.js && node --check src/pump-catalogue.js && node --check src/diagram.js && node --check src/selection.js && node --check src/n-range-images.js"
   }
 }

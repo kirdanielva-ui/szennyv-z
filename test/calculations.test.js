@@ -65,7 +65,7 @@ test('Azonos mBf eltolás minden pontnál változatlan hidraulikát eredményez'
  near(b.geometry.floorElevation-a.geometry.floorElevation,100,1e-7);near(a.hydraulics.operating[0].flow,b.hydraulics.operating[0].flow,1e-7);near(a.hydraulics.operating[0].head,b.hydraulics.operating[0].head,1e-7);
 });
 test('MI (28) L/s átváltása és legkedvezőtlenebb kapcsolásszám',()=>{
- const r=calculate(params({startsLimit:16,utilityStartsLimit:8}));near(r.geometry.byStarts,0.9*(18/3.6)/8);near(r.geometry.limit,8);
+ const r=calculate(params({startsLimit:16,manufacturerStartsLimit:8}));near(r.geometry.byStarts,0.9*(18/3.6)/8);near(r.geometry.limit,8);
  const large=calculate(params({pumpId:'3231',startsLimit:20}));near(large.geometry.limit,15);
 });
 test('Qsz/2 befolyásnál a ciklusidő az analitikus indítási maximumot adja',()=>{
@@ -130,7 +130,7 @@ test('60 másodperces napló 0:00–24:00 között, új mBf és fokozati adatokk
  const r=calculate(params()),s=r.simulation.series;assert.equal(s.length,1441);near(s[0].hour,0);near(s.at(-1).hour,24);for(let i=1;i<s.length;i++)near(s[i].hour-s[i-1].hour,1/60);assert.ok(s.every(d=>d.level>100&&d.on>=0&&d.on<=1&&d.pumpFlow>=0));
 });
 test('Hibás bemenet, hiányos többgépes Q, hibás görbekötés és darabszám elutasítása',()=>{
- for(const bad of[{daily:-1},{daily:''},{pipeDiameter:0},{workingCount:1.5},{maxParallel:2},{manualFlows:[]},{workingCount:3,maxParallel:3,manualFlows:[18]},{upstreamMinutes:-1},{utilityStartsLimit:0},{minDrawdown:1,maxDrawdown:0.5}])assert.throws(()=>calculate(params(bad)));
+ for(const bad of[{daily:-1},{daily:''},{pipeDiameter:0},{workingCount:1.5},{maxParallel:2},{manualFlows:[]},{workingCount:3,maxParallel:3,manualFlows:[18]},{upstreamMinutes:-1},{manufacturerStartsLimit:0},{minDrawdown:1,maxDrawdown:0.5}])assert.throws(()=>calculate(params(bad)));
  assert.throws(()=>calculate(auto({curveModelId:'3153'})),/más típuscsalád/);assert.throws(()=>calculate(auto({curveLabel:''})),/hivatkozás/);
 });
 test('Régi JSON migrációja: nem talál ki mBf szintet, a váltott üzem megmarad',()=>{

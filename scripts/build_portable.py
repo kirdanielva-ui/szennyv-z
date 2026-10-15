@@ -10,7 +10,7 @@ APP.mkdir(parents=True, exist_ok=True)
 
 css = (ROOT / "styles.css").read_text(encoding="utf-8")
 modules = []
-for name in ("pump-catalogue.js", "pumps.js", "hydraulics.js", "calculations.js", "diagram.js", "selection.js", "app.js"):
+for name in ("n-range-images.js", "pump-catalogue.js", "pumps.js", "hydraulics.js", "calculations.js", "diagram.js", "selection.js", "app.js"):
     source = (ROOT / "src" / name).read_text(encoding="utf-8")
     source = re.sub(r"^import [^\n]+\n", "", source, flags=re.MULTILINE)
     source = re.sub(r"^export ", "", source, flags=re.MULTILINE)
@@ -38,8 +38,9 @@ instructions = """ÁTEMELŐ – HASZNÁLATI ÚTMUTATÓ
    A 30 táblázatos típus kiválasztása automatikusan betölti a Q–H adatokat.
    Ezek a mellékelt, gyári táblázatokból újrarajzolt gyűjtemény számszerű pontjai;
    az eredeti gyártói kiviteladatokkal még összevetendők. Az N 3000, C, F és
-   Concertor pontos görbéihez egyedi pontsor szükséges. Görbe nélkül fokozatonként
-   megadhatod az összes Q-t; a program a szükséges H-t számítja.
+   Concertor pontos kivitelgörbéi nincsenek ebben a mellékletben. Az N-családok
+   kiválasztásakor az eredeti típusoldal és a rendelkezésre álló adatok jelennek
+   meg, számított munkapont vagy aknaméret nélkül. Kézi görbeadat-bevitel nincs.
    A hidegtartalék nem indul automatikusan. A több üzemképes gép váltott és
    párhuzamos üzemben is modellezhető, az egyidejű gépszám megadásával.
 6. A Projekt mentése gombbal JSON-fájlba menthetsz; ezt később visszatöltheted.
@@ -48,7 +49,7 @@ instructions = """ÁTEMELŐ – HASZNÁLATI ÚTMUTATÓ
 7. A Nyomtatás / PDF gombbal jelentést készíthetsz.
 
 Nincs telepítés, szerver vagy internetkapcsolat a használathoz. A docs mappát
-tartsd az index.html mellett: ebben van a öt hivatkozott forrás-PDF.
+tartsd az index.html mellett: ebben van az öt hivatkozott forrás-PDF.
 
 Előméretező változat: a munkapont és a minimális bemerülés a pontos kivitel
 adatlapjából igazolandó. Az MI-10-167/3–87 a hálózat és a szívótér együttes

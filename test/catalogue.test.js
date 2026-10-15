@@ -60,7 +60,7 @@ test('A beépített adatsort nem hamisítja át a projekt szabad szövegű curve
 test('A családok indítási korlátja nem öröklődik át; a külön megadott gyártói korlát érvényesül',()=>{
   const unknown=calculate(preset('dx-50-11',{startsLimit:25}));near(unknown.geometry.limit,25);
   assert.equal(unknown.checks.find(c=>c.id==='manufacturer-starts').status,'pending');
-  const known=calculate(preset('dx-50-11',{startsLimit:25,manufacturerStartsLimit:8,utilityStartsLimit:6}));near(known.geometry.limit,6);
+  const known=calculate(preset('dx-50-11',{startsLimit:25,manufacturerStartsLimit:8}));near(known.geometry.limit,8);
   assert.ok(!known.checks.some(c=>c.id==='manufacturer-starts'));
 });
 test('A hiányzó N/C/F/Concertor görbe nem helyettesíthető kisebb családéval',()=>{

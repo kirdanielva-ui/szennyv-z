@@ -13,7 +13,7 @@
   <header class="topbar">
     <a href="#" class="brand" aria-label="Átemelő kezdőlap"><span class="brand-mark" aria-hidden="true">≋</span><span>átemelő<span class="brand-caption">MÉRETEZŐ MŰHELY</span></span></a>
     <nav aria-label="Oldalmenü"><a href="#calculator">Méretezés</a><a href="#method">Számítási háttér</a><a href="#sources">Források</a></nav>
-    <span class="version">ELŐMÉRETEZŐ <span>v0.4</span></span>
+    <span class="version">ELŐMÉRETEZŐ <span>v0.5</span></span>
   </header>
   <main>
     <section class="intro">
@@ -64,25 +64,13 @@
           <label>Egyidejűleg legfeljebb működő gépek<input name="maxParallel" type="number" min="1" max="8" step="1"></label>
           <p id="pump-arrangement" class="hint emphasis"></p>
           <p class="hint">Az üzemképes gépek ciklusonként váltják a vezető szerepet, és a kapcsolási szinteken lépcsőzetesen indulnak. A hidegtartalék automatikusan nem indul és nem ad kapacitást.</p>
-          <label>Kapacitástöbblet a csúcshozam felett<div class="unit-field"><input name="selectionMargin" type="number" min="0" max="200" step="1"><span>%</span></div></label>
-          <label>Vizsgált közeg / típusok<select name="selectionDrainage"><option value="no">Szennyvíz · SX/STA típusok kizárva</option><option value="yes">Szennyezettvíz-típusokkal együtt</option></select></label>
           <button type="button" id="select-pumps" class="primary-button">Szivattyúk összehasonlítása</button><div id="selection-results" aria-live="polite"></div></div>
           <label>Szivattyútípus / típuscsalád<select name="pumpId" id="pump-select"></select></label>
           <div id="pump-info" class="pump-info"></div>
           <div id="catalogue-info" class="catalogue-info"></div>
-          <label>Munkapont meghatározása<select name="flowMode"><option value="manual">Kézi fokozati Q → szükséges H számítása</option><option value="curve">Automatikus Q–H görbemetszés</option></select></label>
-          <div id="manual-flow-fields"></div>
-          <div id="curve-fields" hidden>
-            <label>Görbeadat forrása<select name="curveSource"><option value="manual">Egyedi, szerkeszthető Q–H pontok</option><option value="catalogue">Beépített táblázatos görbe · 50 Hz</option></select></label>
-            <label>Pontos kivitel / görbe forrása<input name="curveLabel" type="text" maxlength="240" placeholder="Típus, járókerék, fordulatszám, adatlap azonosító"></label>
-            <label>Gyártói Q–H pontok · Q m³/h; H m<textarea name="curveText" rows="6" spellcheck="false" placeholder="Soronként két szám, pontosvesszővel.
-Első pont: Q = 0. Legalább 3 pont kell."></textarea></label>
-            <label class="import-label">Q–H pontok beolvasása CSV/TXT fájlból<input id="import-curve" type="file" accept=".csv,.txt,text/plain,text/csv"></label>
-            <p class="hint emphasis">A beépített 30 adatsor a feltöltött, újrarajzolt gyűjtemény numerikus táblázataiból származik; a m³/h értékek az eredeti L/s × 3,6 átváltásai. A köztük húzott egyenes közelítés. Az N 3000, C, F és Concertor kivitelgörbéi hiányoznak. Egyedi adatok azonos fordulatszámhoz tartozzanak; fejléc helyett # kezdetű megjegyzés használható.</p>
-          </div>
-          <div class="field-row"><label>Tervezői kapcsolásszám<div class="unit-field"><input name="startsLimit" type="number" min="1" max="100" step="1"><span>1/h/gép</span></div></label><label>Áramszolgáltatói maximum<div class="unit-field"><input name="utilityStartsLimit" type="number" min="1" max="100" step="1" placeholder="Ha ismert"><span>1/h</span></div></label></div>
-          <label>Pontos típus gyártói indítási maximuma<div class="unit-field"><input name="manufacturerStartsLimit" type="number" min="1" max="100" step="1" placeholder="A pontos kivitel adatlapjából"><span>1/h/gép</span></div></label>
-          <p class="hint">MI 4.1.1.: a gyakorlatban 4–16/h. Mindig a tervezői, gyártói és megadott villamos korlát legkisebbikére méretezünk. A 12/h induló érték tervezői felvétel a tartományon belül.</p>
+          <label>Tervezői kapcsolásszám<div class="unit-field"><input name="startsLimit" type="number" min="1" max="100" step="1"><span>1/h/gép</span></div></label>
+          <label>Gyártói indítási maximum (ha ismert)<div class="unit-field"><input name="manufacturerStartsLimit" type="number" min="1" max="100" step="1" placeholder="A típushoz megadott érték"><span>1/h/gép</span></div></label>
+          <p class="hint">MI 4.1.1.: a gyakorlatban 4–16/h. A tervezői és ismert gyártói korlát közül a kisebbikre méretezünk. A 12/h induló érték tervezői felvétel.</p>
           <label>Tervezői minimum futásidő<div class="unit-field"><input name="minRunSeconds" type="number" min="0" max="3600" step="1"><span>s</span></div></label>
         </section>
 
@@ -110,6 +98,7 @@ Első pont: Q = 0. Legalább 3 pont kell."></textarea></label>
       <section class="results" aria-label="Méretezés eredménye">
         <div class="results-header"><div><span class="eyebrow">SZÁMÍTÁSI EREDMÉNY</span><h2 id="result-title">Új szennyvízátemelő</h2></div><span class="live-label" id="calc-state"><span class="dot"></span> Automatikus számítás</span></div>
         <div id="error" role="alert" hidden></div>
+        <div id="pump-overview" hidden></div>
         <div id="result-content">
           <div class="result-summary" id="result-summary"></div>
           <div class="metrics" id="metrics"></div>
@@ -120,9 +109,9 @@ Első pont: Q = 0. Legalább 3 pont kell."></textarea></label>
           <section class="panel" id="method"><div class="section-heading"><div><h3>Számítási háttér</h3><p>Visszakövethető térfogatok és modellhatárok</p></div></div><div id="formula-output"></div>
             <details><summary>Mit jelentenek az időeredmények és az MI-kiterjesztés?</summary><p>MI (28): V = 0,9 × Qsz [L/s] / Z; ez m³/h egységgel Qsz / (4Z). Több fokozatnál minden egyes szintlépcsőre a teljes maximális üzemi vízhozamból képezünk térfogatot. Ez konzervatív programbeli kiterjesztés; az MI ábrája egy gépre vonatkozik. A futásidőből és a geometriai minimumokból szükséges nagyobb térfogatok elsőbbséget élveznek.</p><p>Az átlagos hidraulikai idő az átlagos víztérfogat / napi átlaghozam. A FIFO-szimuláció az előbb érkező víz előbbi távozását feltételezi, a maradó vizet és a teljesen telt nyomócsőben álló vizet is követi. Az MI teljes időkeretéhez hozzáadjuk a megadott beérkezés előtti hálózati időt. Az ismeretlen előzmény nem nulla. A valós keveredés, holttér és berothadás ettől eltérhet.</p><p>Naponta ismételt műszakprofilt és azonos szivattyúkat modellezünk. A hidegtartalék nem indul automatikusan. A különböző ágvezetékek, változó fordulatszám, vízütés, légzsákok, hétvégi leállás és frissen tartó berendezés hatása nincs modellezve. A vezetéknek végig teltnek kell lennie; a hosszelvényt külön ellenőrizni kell.</p></details>
           </section>
+        </div>
           <div class="export-bar"><p>A beállítások ebben a böngészőben megmaradnak.</p><div><button type="button" class="secondary-button" id="export-json">Projekt mentése</button><button type="button" class="secondary-button" id="export-csv">Napi adatok · CSV</button><button type="button" class="primary-button" id="print">Nyomtatás / PDF ↗</button></div></div>
           <label class="import-label">Mentett projekt betöltése<input type="file" id="import-json" accept="application/json,.json"></label><p id="file-status" role="status"></p>
-        </div>
       </section>
     </div>
 
