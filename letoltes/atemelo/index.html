@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#103b3d">
+  <meta name="description" content="Szennyvízátemelő előméretezés műszakrenddel, Flygt N típusválasztóval és dokumentált FCSM-forrásokkal.">
+  <title>Átemelő — szennyvízátemelő méretező</title>
+  <style>
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+:root{--ink:#17383b;--muted:#647777;--teal:#087c72;--pale:#eaf4ef;--line:#dce5df;--bg:#f4f6f1;--white:#fff;--amber:#996016;--red:#ae3e35;font-family:Inter,"Segoe UI",Arial,sans-serif;color:var(--ink);background:var(--bg);font-synthesis:none;scroll-behavior:smooth}
+*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}a{color:var(--teal);text-decoration:none}a:hover{text-decoration:underline}button{cursor:pointer}button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #43b3a4;outline-offset:4px}input:focus,select:focus{outline:2px solid #42a99a;outline-offset:1px;border-color:#42a99a}input,select{width:100%;height:42px;padding:9px 11px;border:1px solid #d1ddd5;border-radius:7px;background:#fff;color:var(--ink);min-width:0}input:disabled{background:#edf0ea;color:#6d7971}input::placeholder{color:#8b9791;font-size:12px}input[type=number]{appearance:textfield}input::-webkit-inner-spin-button{appearance:none}.topbar{height:88px;max-width:1440px;margin:auto;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding:0 44px}.brand{display:flex;gap:12px;align-items:center;color:var(--ink);font-size:29px;font-weight:750;letter-spacing:-1px;line-height:1}.brand:hover{text-decoration:none}.brand-mark{display:grid;place-items:center;width:43px;height:43px;border-radius:10px;color:#fff;background:var(--teal);font-size:37px;font-weight:400}.brand-caption{display:block;font-size:8px;font-weight:600;letter-spacing:2.1px;margin-top:7px}.topbar nav{display:flex;gap:32px;font-size:13px;font-weight:600}.topbar nav a{color:#50645e}.version{font-size:9px;letter-spacing:1.2px;border:1px solid #d2ddd4;border-radius:20px;padding:8px 12px}.version span{margin-left:10px;color:var(--muted);letter-spacing:0}main{max-width:1440px;margin:0 auto;padding:0 44px}.intro{display:flex;justify-content:space-between;align-items:center;gap:44px;padding:52px 0 40px}.eyebrow{font-size:10px;font-weight:700;letter-spacing:1.7px;color:var(--teal);display:flex;align-items:center;gap:8px}.dot{display:inline-block;width:6px;height:6px;background:#249f7c;border-radius:50%;flex-shrink:0}h1{font-size:clamp(32px,3.5vw,48px);font-weight:650;letter-spacing:-1.8px;line-height:1.12;margin:18px 0}h2,h3,p{margin-top:0}.intro>div>p{font-size:14px;line-height:1.7;color:var(--muted);margin-bottom:0}.intro-note{display:flex;gap:13px;background:#e9efe5;border:1px solid #dce5d6;border-radius:12px;padding:22px;max-width:430px}.note-icon{display:inline-grid;place-items:center;background:#dae6d4;border-radius:50%;width:23px;height:23px;font-family:Georgia,serif;font-weight:bold;flex-shrink:0}.intro-note strong{font-size:12px}.intro-note p{font-size:11px;line-height:1.8;margin:9px 0;color:#5e7164}.intro-note a{font-size:11px;font-weight:650}.workspace{display:grid;grid-template-columns:370px minmax(0,1fr);gap:26px;align-items:start;scroll-margin-top:20px}.panel{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:23px;margin-bottom:18px;box-shadow:0 2px 3px #23472b03}.panel-heading{display:flex;align-items:center;gap:10px;margin-bottom:22px}.panel-heading h2{font-size:15px;letter-spacing:-.3px;margin:0;flex:1}.step{color:var(--teal);font-size:10px;font-weight:700;border:1px solid #dbe9df;border-radius:5px;padding:5px;background:#f3f8f2}.small-tag{font-size:8px;font-weight:650;letter-spacing:.8px;background:#f0f4ee;padding:6px 8px;border-radius:4px;white-space:nowrap}.panel-heading .small-tag{font-size:7px;padding:5px}label{display:block;font-size:11px;font-weight:600;line-height:1.5;margin-bottom:14px}label>input,label>select,label>.unit-field{margin-top:6px}select{font-size:12px}.unit-field{position:relative}.unit-field input{padding-right:68px}.unit-field span{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:10px;color:#6d7e71;pointer-events:none}.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.hint{font-size:10px;line-height:1.65;color:var(--muted);margin:0 0 14px}.hint.emphasis{color:#80734b;border-left:2px solid #dfcd9c;padding-left:9px}.panel>.hint:last-child{margin-bottom:0}.shift-head,.shift-row{display:grid;grid-template-columns:45px 1fr 1fr 1fr;gap:7px;align-items:center}.shift-head{font-size:9px;color:#79877b;margin-bottom:6px;white-space:nowrap}.shift-row{margin-bottom:8px}.shift-row>span{font-size:11px;color:#647a66}.shift-row input{height:36px;padding:6px;font-size:12px}.shift-row label{margin:0}.hourly-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.hourly-grid label{font-size:9px}.hourly-grid input{height:32px;padding:6px}.pump-info{display:flex;gap:10px;padding:12px;border-radius:7px;background:#eef5ef;margin:-3px 0 15px}.pump-info>div{flex:1}.pump-info small{font-size:8px;display:block;text-transform:uppercase;letter-spacing:.4px;color:#697e6c;margin-bottom:5px}.pump-info strong{font-size:11px;font-weight:600}.pump-info a{font-size:9px}details{border-top:1px solid var(--line);padding-top:13px;margin-top:8px}summary{font-size:11px;color:var(--teal);cursor:pointer;line-height:1.6;font-weight:600}details p{font-size:11px;color:var(--muted);line-height:1.8;margin:12px 0 0}.detail-fields{padding-top:15px}.spaced{margin-top:17px}.reset-button{width:100%;padding:11px;border:1px dashed #c9d5c7;border-radius:7px;background:transparent;font-size:11px;color:var(--muted)}.results-header{display:flex;justify-content:space-between;align-items:center;padding:3px 0 18px;gap:12px}.results-header .eyebrow{font-size:8px;letter-spacing:1.5px}.results-header h2{font-size:19px;font-weight:600;margin:8px 0 0;overflow-wrap:anywhere}.live-label{font-size:9px;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:7px}.result-summary{background:#123e3e;color:#e1eee3;border-radius:12px;padding:23px 25px;display:flex;gap:17px;align-items:center;margin-bottom:17px}.summary-icon{width:40px;height:40px;flex-shrink:0;border:1px solid #527569;border-radius:50%;display:grid;place-items:center;font-size:20px;color:#c4e4a9}.result-summary strong{font-size:15px;display:block;margin-bottom:7px;font-weight:600}.result-summary p{font-size:11px;line-height:1.6;color:#bfd1c6;margin:0}.result-summary.fail{background:#783b33}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}.metric{border:1px solid var(--line);background:white;padding:18px 16px;border-radius:10px;min-width:0}.metric-label{font-size:10px;color:var(--muted);display:block;margin-bottom:13px}.metric-value{font-size:30px;font-weight:600;letter-spacing:-1px;white-space:nowrap}.metric-value small{font-size:13px;font-weight:400;letter-spacing:0;margin-left:4px;color:var(--muted)}.metric-sub{font-size:9px;color:var(--muted);margin-top:9px;line-height:1.5}.section-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:19px}.section-heading h3{font-size:14px;font-weight:650;letter-spacing:-.1px;margin:0 0 6px}.section-heading p{font-size:10px;line-height:1.6;color:var(--muted);margin:0}.well-layout{display:grid;grid-template-columns:1.03fr 1fr;gap:15px;align-items:center}.well-diagram svg{width:100%;max-height:320px;display:block}.level-row{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:10px;padding:11px 0;border-bottom:1px solid #edf0e9}.level-row span{color:var(--muted);max-width:65%;line-height:1.5}.level-row strong{font-size:12px;white-space:nowrap}.level-row.accent strong{color:var(--teal)}.level-row.alert strong{color:var(--amber)}.well-panel>.hint{padding-top:17px;margin-bottom:0}.mini-volumes{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:15px}.mini-volumes>div{background:#f3f6ef;border-radius:7px;padding:10px}.mini-volumes span{display:block;font-size:8px;color:var(--muted);margin-bottom:5px}.mini-volumes strong{font-size:13px}.chart svg{width:100%;display:block}.chart-legend{display:flex;align-items:center;gap:17px;font-size:9px;color:var(--muted);margin-bottom:3px}.chart-legend span{display:flex;align-items:center;gap:5px}.chart-legend i{display:inline-block;width:9px;height:3px;border-radius:2px}.chart-legend .teal{background:#087c72}.chart-legend .gray{background:#9baa99}.chart-legend .blue{background:#7c9dab}.chart-legend .unit-label{margin-left:auto;font-size:9px}.flow-chart{margin-bottom:10px}.operation-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-top:1px solid var(--line);padding-top:17px}.operation-stat{border-right:1px solid var(--line);padding-right:10px}.operation-stat:last-child{border:0}.operation-stat span{display:block;font-size:9px;color:var(--muted);line-height:1.5;margin-bottom:7px}.operation-stat strong{font-size:16px;font-weight:600}.operation-stat small{display:block;font-size:8px;line-height:1.6;color:var(--muted);margin-top:5px}.check{display:flex;gap:11px;border-bottom:1px solid #ecf0e9;padding:13px 0}.check:first-child{padding-top:0}.check:last-child{padding-bottom:0;border:0}.check-icon{width:19px;height:19px;display:grid;place-items:center;border-radius:50%;flex-shrink:0;font-size:10px;font-weight:bold;background:#f7efd9;color:#936a23}.check.pass .check-icon{background:#e6f2e7;color:#28704c}.check.fail .check-icon{background:#fae8e5;color:var(--red)}.check strong{font-size:11px;font-weight:600;display:block;margin:2px 0 5px}.check p{font-size:10px;line-height:1.65;color:var(--muted);margin:0}.formula-row{display:flex;justify-content:space-between;gap:15px;padding:9px 0;border-bottom:1px solid #edf0e9;font-size:10px;line-height:1.6}.formula-row span{color:var(--muted)}.formula-row strong{text-align:right;font-weight:500;white-space:nowrap}.model-note{background:#f5f7f0;border-radius:6px;padding:12px;font-size:10px;line-height:1.7;color:var(--muted);margin:13px 0 0}.export-bar{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-top:23px}.export-bar p{font-size:10px;color:var(--muted);margin:0}.export-bar>div{display:flex;gap:7px;flex-wrap:wrap}.primary-button,.secondary-button{padding:10px 12px;border-radius:6px;border:1px solid #cfdacf;font-size:10px;background:white;color:var(--ink)}.primary-button{background:var(--teal);color:white;border-color:var(--teal)}.primary-button:hover{background:#08645d}.secondary-button:hover{background:#e9efe5}.import-label{font-size:10px;color:var(--muted);margin-top:20px}.import-label input{display:block;font-size:10px;max-width:300px;height:auto;border:0;background:transparent;padding:6px 0}#file-status{font-size:11px;color:var(--muted)}#error{padding:20px;background:#fff1e9;border:1px solid #ebc6b2;color:#8d3a21;border-radius:9px;font-size:13px;line-height:1.6;margin-bottom:20px}.sources-section{border-top:1px solid var(--line);padding-top:40px;margin-top:45px;scroll-margin-top:30px}.sources-section h2{font-size:23px;font-weight:600;letter-spacing:-.5px;margin:10px 0 0}.source-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}.source-card{padding:27px;background:#ebf0e6;border:1px solid #dce4d7;border-radius:11px}.document-tag{font-size:9px;letter-spacing:1px;color:var(--teal);font-weight:700}.source-card h3{font-size:17px;margin:13px 0 7px;font-weight:600}.source-card>p{font-size:10px;color:var(--muted)}.source-card ul{padding-left:15px;margin:17px 0 22px}.source-card li{font-size:11px;line-height:1.8;color:#5b7162;margin-bottom:8px}.source-card a{font-size:11px;font-weight:650}footer{padding:30px 0;margin-top:25px;border-top:1px solid var(--line);display:flex;align-items:center;gap:30px;justify-content:space-between}footer>span{font-size:9px;font-weight:700;letter-spacing:1px;white-space:nowrap}footer p{font-size:9px;line-height:1.7;color:var(--muted);margin:0;max-width:600px;text-align:right}[hidden]{display:none!important}#method{scroll-margin-top:20px}
+@media(min-width:1350px){.workspace{grid-template-columns:405px minmax(0,1fr);gap:30px}.panel{padding:26px}.metric-value{font-size:34px}.well-layout{grid-template-columns:1.05fr 1fr}}
+@media(max-width:1050px){main{padding:0 26px}.topbar{padding:0 26px}.workspace{grid-template-columns:330px minmax(0,1fr);gap:18px}.panel{padding:18px}.intro-note{max-width:340px;padding:17px}.metrics{gap:8px}.metric{padding:14px 11px}.metric-value{font-size:25px}.well-layout{grid-template-columns:1fr}.well-diagram svg{max-height:260px}.mini-volumes{margin-bottom:8px}.results-header{align-items:start}.live-label{font-size:0}.section-heading .small-tag{display:none}.operation-stats{gap:7px}.operation-stat strong{font-size:14px}}
+@media(max-width:780px){main{padding:0 18px}.topbar{height:74px;padding:0 18px}.brand{font-size:25px}.brand-mark{width:36px;height:36px;font-size:31px}.topbar nav{gap:15px;font-size:11px}.version{display:none}.intro{display:block;padding:32px 0 24px}h1{font-size:38px}.intro-note{max-width:none;margin-top:23px}.intro>div>p{font-size:13px}.workspace{grid-template-columns:1fr}.inputs{display:grid;grid-template-columns:1fr;gap:0}.panel{padding:22px}.results-header{margin-top:20px}.live-label{font-size:9px}.metric-value{font-size:28px}.well-layout{grid-template-columns:1fr 1fr}.well-diagram svg{max-height:320px}.source-grid{grid-template-columns:1fr}.sources-section{margin-top:25px;padding-top:27px}.sources-section h2{font-size:21px}footer{display:block}footer p{text-align:left;margin-top:13px}.export-bar{align-items:start;gap:15px}.source-card{padding:22px}}
+@media(max-width:400px){.topbar nav a:nth-child(2){display:none}.well-layout{grid-template-columns:1fr}.metrics{gap:6px}.metric{padding:12px 9px}.metric-value{font-size:23px}.metric-label{font-size:9px}.metric-value small{font-size:10px}.field-row{gap:9px}.operation-stat strong{font-size:13px}.panel{padding:17px}h1{font-size:34px}.wide-only{display:none}}
+@media print{body{background:white;font-size:10px;color:#183936}.topbar{height:60px;padding:0;border-bottom:1px solid #ccc}.topbar nav,.version,.intro,.reset-button,.export-bar,.import-label,#file-status{display:none}main{max-width:none;padding:0}.workspace{display:block}.inputs{display:grid;grid-template-columns:1fr 1fr;gap:12px}.inputs .panel:last-of-type{grid-column:1/-1}.inputs .panel{margin-bottom:0;padding:15px;break-inside:avoid}.results{margin-top:20px}.panel,.source-card{box-shadow:none;break-inside:avoid;padding:15px}input,select{height:30px;font-size:10px;border-color:#ccc}.hint{font-size:8px}.result-summary{color:#183936!important;background:#edf3ed!important;border:1px solid #aaa}.result-summary p{color:#485b4d}.metrics{gap:10px}.metric{padding:12px}.metric-value{font-size:25px}.well-layout{grid-template-columns:1fr 1fr}.well-diagram svg{max-height:280px}.source-grid{gap:12px}.sources-section{margin-top:20px;padding-top:20px}.source-card{background:white}details[open]{display:block}.chart svg{max-height:180px}h2,h3{break-after:avoid}footer{margin-top:15px;padding-top:15px}*{print-color-adjust:exact;-webkit-print-color-adjust:exact}@page{size:A4;margin:12mm}}
+
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <a href="#" class="brand" aria-label="Átemelő kezdőlap"><span class="brand-mark" aria-hidden="true">≋</span><span>átemelő<span class="brand-caption">MÉRETEZŐ MŰHELY</span></span></a>
+    <nav aria-label="Oldalmenü"><a href="#calculator">Méretezés</a><a href="#method">Számítási háttér</a><a href="#sources">Források</a></nav>
+    <span class="version">ELŐMÉRETEZŐ <span>v0.1</span></span>
+  </header>
+  <main>
+    <section class="intro">
+      <div><div class="eyebrow"><span class="dot"></span> SZENNYVÍZTECHNIKA · FLYGT N SOROZAT</div><h1>A befolyástól<br>a kapcsolási szintig.</h1><p>Műszakrend, szivattyú és aknageometria egy számításban.<br class="wide-only"> Kövesd a napi üzemet, és lásd, hol vannak a korlátok.</p></div>
+      <div class="intro-note"><span class="note-icon">i</span><div><strong>Dokumentált alapok. Látható feltételezések.</strong><p>FCSM-részlet: 2020.09.24. · Flygt prospektus: 2024.06.05.<br>Az időkorlát és a pontos munkapont projektspecifikus adat.</p><a href="#sources">Mit tartalmaznak a mellékletek? <span aria-hidden="true">↗</span></a></div></div>
+    </section>
+
+    <div class="workspace" id="calculator">
+      <form id="parameters" class="inputs" novalidate>
+        <section class="panel">
+          <div class="panel-heading"><span class="step">01</span><h2>Terhelés és műszakrend</h2></div>
+          <label>Projekt neve<input name="project" type="text" maxlength="120"></label>
+          <label>Felhasználás<select name="application"><option value="workplace">Műszakos telephely</option><option value="house">Egylakásos lakóépület · 4 fő</option></select></label>
+          <div class="field-row"><label>Napi szennyvízmennyiség<div class="unit-field"><input name="daily" type="number" min="0.01" max="100000" step="0.1"><span>m³/nap</span></div></label><label>Folyamatos hányad<div class="unit-field"><input name="basePercent" type="number" min="0" max="100" step="1"><span>%</span></div></label></div>
+          <p class="hint">A napi összmennyiség már tartalmazza a dolgozói és technológiai szennyvizet. A létszám ennek időbeli elosztását súlyozza.</p>
+          <div id="workplace-options">
+            <label>Befolyási profil<select name="profile"><option value="shift">Műszakok létszáma alapján</option><option value="custom">Egyedi óránkénti súlyok</option></select></label>
+            <div id="shift-options"><label>Műszakok száma<select name="shiftCount"><option value="1">1 műszak</option><option value="2">2 műszak</option><option value="3">3 műszak</option></select></label>
+              <div class="shift-head"><span>Műszak</span><span>Kezdés</span><span>Hossz, óra</span><span>Létszám, fő</span></div><div id="shift-rows"></div>
+              <p class="hint">Éjfélen átnyúló és átfedő műszakok is megadhatók. Műszakon belül egyenletes befolyást feltételezünk.</p>
+            </div>
+            <div id="custom-profile" hidden><p class="hint">Relatív súlyok: a program a napi összmennyiség változó részére normálja őket. A 0 befolyásmentes órát jelent a folyamatos részen felül.</p><div id="hourly-fields" class="hourly-grid"></div></div>
+          </div>
+          <p id="house-note" class="hint" hidden>A 4 fős egylakásos esetben 24 órás egyenletes profillal számolunk. A napi mennyiség a megadott érték marad.</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading"><span class="step">02</span><h2>Szivattyú és üzem</h2><span class="small-tag">XYLEM / FLYGT</span></div>
+          <label>Típuscsalád<select name="pumpId" id="pump-select"></select></label>
+          <div id="pump-info" class="pump-info"></div>
+          <div class="field-row"><label>Munkaponti vízhozam<div class="unit-field"><input name="pumpFlow" type="number" min="0.01" max="10000" step="0.1"><span>m³/h</span></div></label><label>Beépített szivattyúk<select name="pumpCount"><option value="1">1 db üzemi</option><option value="2">1 üzemi + 1 tartalék</option></select></label></div>
+          <p class="hint emphasis">A 18 m³/h induló érték számítási példa, nem a kiválasztott típus igazolt adata. Két szivattyúnál váltott üzemet, egyidejűleg egy működő gépet modellezünk.</p>
+          <label>Munkapont / pontos kivitel hivatkozása<input name="dutyReference" type="text" maxlength="200" placeholder="Pl. adatlap azonosító, járókerék, Q és H"></label>
+          <div class="field-row"><label>Tervezett max. indítás<div class="unit-field"><input name="startsLimit" type="number" min="1" max="100" step="1"><span>1/h/gép</span></div></label><label>Minimum futásidő<div class="unit-field"><input name="minRunSeconds" type="number" min="0" max="3600" step="1"><span>s</span></div></label></div>
+          <p class="hint">A prospektus és a megadott indítási korlát közül a szigorúbb érvényesül. A futásidő tervezői feltétel, nem a mellékelt prospektus előírása.</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading"><span class="step">03</span><h2>Akna és határértékek</h2></div>
+          <div class="field-row"><label>Belső átmérő<select name="diameter"><option value="auto">Automatikus javaslat</option><option value="0.8">0,80 m</option><option value="1">1,00 m</option><option value="1.2">1,20 m</option><option value="1.5">1,50 m</option><option value="1.8">1,80 m</option><option value="2">2,00 m</option><option value="2.5">2,50 m</option><option value="3">3,00 m</option><option value="4">4,00 m</option></select></label><label>Elrendezési min. átmérő<div class="unit-field"><input name="minDiameter" type="number" min="0.5" max="10" step="0.1"><span>m</span></div></label></div>
+          <p class="hint">Az automatikus választás hengeres aknára vonatkozik. A szivattyúk, vezetősínek és úszók helyigényét a beépítési rajzból ellenőrizni kell.</p>
+          <div class="field-row"><label>Leállítási szint, fenéktől<div class="unit-field"><input name="stopLevel" type="number" min="0.01" max="10" step="0.05"><span>m</span></div></label><label>Befolyó fenékszintje<div class="unit-field"><input name="inletLevel" type="number" min="0.1" max="20" step="0.05"><span>m</span></div></label></div>
+          <p class="hint emphasis">A leállítási szint példaérték. A minimális bemerülést és a motor hűtését a pontos típus telepítési utasítása alapján kell megadni.</p>
+          <details><summary>Kapcsolási és biztonsági geometria</summary><div class="detail-fields">
+            <div class="field-row"><label>Min. kapcsolási különbség<div class="unit-field"><input name="minDrawdown" type="number" min="0.01" max="2" step="0.05"><span>m</span></div></label><label>Max. kapcsolási különbség<div class="unit-field"><input name="maxDrawdown" type="number" min="0.05" max="5" step="0.05"><span>m</span></div></label></div>
+            <div class="field-row"><label>Riasztás az indítás fölött<div class="unit-field"><input name="alarmGap" type="number" min="0.01" max="2" step="0.05"><span>m</span></div></label><label>Tartalék a befolyó alatt<div class="unit-field"><input name="inletClearance" type="number" min="0.01" max="2" step="0.05"><span>m</span></div></label></div>
+          </div></details>
+          <label class="spaced">Biztonsági tárolási igény<div class="unit-field"><input name="reserveHours" type="number" min="0" max="168" step="0.5"><span>átlaghozam-óra</span></div></label>
+          <p id="reserve-hint" class="hint">Tervezői felvétel: Qnapi / 24 × óra. A 2 óra nem FCSM-előírás, és nem igazolja a csúcsterhelés melletti hibaáthidalást.</p>
+          <label>Tervezői tartózkodásiidő-korlát<div class="unit-field"><input name="residenceLimit" type="number" min="1" max="10080" step="1" placeholder="Egyeztetendő"><span>perc</span></div></label>
+          <p class="hint emphasis">A mellékelt FCSM-részlet nem határoz meg számszerű időkorlátot. A mező szándékosan üres; a projektre egyeztetett értéket add meg.</p>
+        </section>
+        <button class="reset-button" type="button" id="reset">↺ Példaadatok visszaállítása</button>
+      </form>
+
+      <section class="results" aria-label="Méretezés eredménye">
+        <div class="results-header"><div><span class="eyebrow">SZÁMÍTÁSI EREDMÉNY</span><h2 id="result-title">Új szennyvízátemelő</h2></div><span class="live-label" id="calc-state"><span class="dot"></span> Automatikus számítás</span></div>
+        <div id="error" role="alert" hidden></div>
+        <div id="result-content">
+          <div class="result-summary" id="result-summary"></div>
+          <div class="metrics" id="metrics"></div>
+          <section class="panel well-panel"><div class="section-heading"><div><h3>Akna és kapcsolási szintek</h3><p>Minden magasság az akna belső fenéksíkjától értendő.</p></div><span class="small-tag">HENGERES AKNA</span></div><div class="well-layout"><div id="well-diagram" class="well-diagram"></div><div id="level-table"></div></div><p class="hint">A biztonsági tér az üzemi indítási szint fölött helyezkedik el. A vészjelzés önálló érzékelőt igényel. A vázlat nem beépítési rajz; a fedlap és a befolyó feletti aknarész nincs méretezve.</p></section>
+          <section class="panel"><div class="section-heading"><div><h3>Napi üzem, egy pillantásra</h3><p>Az utolsó szimulált nap · 1 perces lépés, pontos kapcsolási események</p></div></div><div class="chart-legend"><span><i class="teal"></i> Vízszint</span><span><i class="gray"></i> Indítási szint</span></div><div id="level-chart" class="chart"></div><div class="chart-legend"><span><i class="blue"></i> Befolyás</span><span class="unit-label">m³/h</span></div><div id="flow-chart" class="chart flow-chart"></div><div id="operation-stats" class="operation-stats"></div></section>
+          <section class="panel"><div class="section-heading"><div><h3>Ellenőrzések és nyitott feltételek</h3><p>A zöld jelölés csak az adott számítási feltétel teljesülését mutatja.</p></div></div><div id="checks" class="checks"></div></section>
+          <section class="panel" id="method"><div class="section-heading"><div><h3>Számítási háttér</h3><p>Visszakövethető térfogatok és modellhatárok</p></div></div><div id="formula-output"></div>
+            <details><summary>Tartózkodási idő: mit mutat a modell?</summary><p>Az átlagos hidraulikai tartózkodási idő: τ = átlagos víztérfogat / napi átlaghozam. A teljes víztérfogatot, így a leállítási szint alatti maradó vizet is figyelembe vesszük.</p><p>A FIFO-modell az előbb érkező víz előbbi kiszivattyúzását feltételezi. A jelzett legnagyobb kor az elszállított és az aknában még bent lévő víz modellezett korát is figyeli. Ez nem a valós, kevert akna garantált maximális tartózkodási ideje. A rövidzár, holttér, ülepedés és berothadás külön vizsgálat tárgya.</p><p>A program naponta ismétlődő profilt modellez; a hétvégi leállás, lökésszerű technológiai ürítés, nyomócsőben töltött idő, szivattyúhiba, változó munkapont és párhuzamos szivattyúzás nincs benne. Az egyeztetett időkorlát értelmezésének illeszkednie kell a választott mutatóhoz.</p></details>
+          </section>
+          <div class="export-bar"><p>A beállítások ebben a böngészőben megmaradnak.</p><div><button type="button" class="secondary-button" id="export-json">Projekt mentése</button><button type="button" class="secondary-button" id="export-csv">Napi adatok · CSV</button><button type="button" class="primary-button" id="print">Nyomtatás / PDF ↗</button></div></div>
+          <label class="import-label">Mentett projekt betöltése<input type="file" id="import-json" accept="application/json,.json"></label><p id="file-status" role="status"></p>
+        </div>
+      </section>
+    </div>
+
+    <section class="sources-section" id="sources"><div class="section-heading"><div><span class="eyebrow">FORRÁSOK ÉS ALKALMAZHATÓSÁG</span><h2>A mellékletek helye a méretezésben</h2></div></div><div class="source-grid">
+      <article class="source-card"><span class="document-tag">FCSM · 6 OLDALAS RÉSZLET</span><h3>Üzletszabályzat, VSZ-40/2020.</h3><p>4.0 kiadás · 2020.09.24. · eredeti 22–27. oldal</p><ul><li><strong>22. oldal:</strong> egylakásos, 4 fős eset: min. 0,2 m³ üzemi tér és ezen felül min. 1 napi kibocsátásnyi biztonsági tér, a befolyó alatt.</li><li><strong>24. oldal:</strong> a kapcsolási szintek csökkentsék az ülepedés és berothadás veszélyét; külön vészvízszintjelzés.</li><li><strong>Nincs számszerű tartózkodásiidő-korlát.</strong> A lakossági feltételek telephelyre való alkalmazása és a dokumentum jelenlegi érvényessége egyeztetendő.</li></ul><a href="./docs/fcsm-2020.pdf" target="_blank" rel="noopener">FCSM melléklet megnyitása <span aria-hidden="true">↗</span></a></article>
+      <article class="source-card"><span class="document-tag">XYLEM · FLYGT N · 50 HZ</span><h3>N-technology pump series</h3><p>896876 · dokumentumjelölés: 20240605</p><ul><li><strong>PDF 6. és 8. oldal:</strong> kis és közepes típuscsaládok, legfeljebb 30 indítás óránként.</li><li><strong>PDF 10. oldal:</strong> nagy típuscsaládok, legfeljebb 15 indítás óránként.</li><li>A katalógus teljesítménytartományai nem Q–H jelleggörbék. Az indítási korlátot, bemerülést és helyigényt a pontos motorra és kivitelre kell ellenőrizni.</li></ul><a href="./docs/flygt-n-896876.pdf" target="_blank" rel="noopener">Flygt prospektus megnyitása <span aria-hidden="true">↗</span></a></article>
+    </div></section>
+    <footer><span>≋ ÁTEMELŐ / MÉRETEZŐ MŰHELY</span><p>Előméretezés dokumentált feltételezésekkel. A kiviteli méretezéshez helyszíni adatok és üzemeltetői egyeztetés szükséges.</p></footer>
+  </main>
+<script type="module">
+// Source: user-supplied Flygt brochure 896876, 2024-06-05, PDF pp. 6, 8, 10.
+// These are model families, not complete hydraulic/motor variants or Q-H curves.
+const pumps = [
+  ['3069', '1,5–2,4', '50 / 65 / 80', 30, 6],
+  ['3085', '1,3–2,4', '80', 30, 6],
+  ['3102', '3,1–4,5', '80 / 100 / 150', 30, 6],
+  ['3127', '4,7–8,5', '80 / 100 / 150', 30, 6],
+  ['3153', '7,5–15', '80 / 100 / 150 / 200 / 250', 30, 8],
+  ['3171', '15–22', '100 / 150 / 250', 30, 8],
+  ['3202', '22–47', '100 / 150 / 200 / 300', 30, 8],
+  ['3301', '37–70', '150 / 250 / 300 / 350', 30, 8],
+  ['3315', '48–105', '150 / 250 / 300 / 350', 30, 8],
+  ['3231', '70–215', '200', 15, 10],
+  ['3306', '58–100', '300', 15, 10],
+  ['3312', '55–250', '300', 15, 10],
+  ['3356', '45–140', '350', 15, 10],
+  ['3400', '40–310', '400', 15, 10],
+  ['3531', '40–680', '500', 15, 10],
+].map(([id, power, discharge, maxStarts, page]) => ({id, name: `Flygt N ${id}`, power, discharge, maxStarts, page}));
+
+
+const defaults = {
+  project: 'Új szennyvízátemelő', application: 'workplace', daily: 12,
+  shiftCount: 2,
+  shifts: [{start: 6, hours: 8, people: 60}, {start: 14, hours: 8, people: 40}, {start: 22, hours: 8, people: 40}],
+  basePercent: 10, profile: 'shift', hourly: Array(24).fill(1),
+  pumpId: '3085', pumpFlow: 18, dutyReference: '', pumpCount: 2,
+  startsLimit: 20, minRunSeconds: 30,
+  diameter: 'auto', minDiameter: 1.2, stopLevel: 0.4,
+  inletLevel: 3, maxDrawdown: 0.8, minDrawdown: 0.15,
+  alarmGap: 0.15, inletClearance: 0.15, reserveHours: 2,
+  residenceLimit: '',
+};
+
+function number(value, name, min, max) {
+  if (value === '' || value === null || value === undefined || !Number.isFinite(Number(value))) throw new Error(`${name}: adj meg egy számot.`);
+  const n = Number(value);
+  if (n < min || n > max) throw new Error(`${name}: ${min} és ${max} közötti érték szükséges.`);
+  return n;
+}
+
+function validate(input) {
+  const p = structuredClone(input);
+  for (const [key, name, min, max] of [
+    ['daily','Napi mennyiség',0.01,100000], ['basePercent','Folyamatos hányad',0,100],
+    ['pumpFlow','Munkaponti vízhozam',0.01,10000], ['startsLimit','Indítási korlát',1,100],
+    ['minRunSeconds','Minimum futásidő',0,3600], ['minDiameter','Minimum átmérő',0.5,10],
+    ['stopLevel','Leállítási szint',0.01,10], ['inletLevel','Befolyó fenékszint',0.1,20],
+    ['maxDrawdown','Maximum kapcsolási szintkülönbség',0.05,5], ['minDrawdown','Minimum kapcsolási szintkülönbség',0.01,2],
+    ['alarmGap','Riasztási szintkülönbség',0.01,2], ['inletClearance','Befolyó alatti tartalék',0.01,2],
+    ['reserveHours','Biztonsági tárolási idő',0,168],
+  ]) p[key] = number(p[key],name,min,max);
+  if (!['workplace','house'].includes(p.application)) throw new Error('Ismeretlen felhasználási mód.');
+  if (!['shift','custom'].includes(p.profile)) throw new Error('Ismeretlen befolyási profil.');
+  p.shiftCount = number(p.shiftCount, 'Műszakok száma',1,3);
+  p.pumpCount = number(p.pumpCount,'Szivattyúk száma',1,2);
+  if (!Number.isInteger(p.shiftCount) || !Number.isInteger(p.pumpCount)) throw new Error('A darabszám és a műszakszám egész szám legyen.');
+  if (!pumps.some(x => x.id === p.pumpId)) throw new Error('Válassz ismert Flygt típuscsaládot.');
+  if (p.residenceLimit !== '') p.residenceLimit = number(p.residenceLimit,'Tartózkodásiidő-korlát',1,10080);
+  if (p.diameter !== 'auto') p.diameter = number(p.diameter,'Belső átmérő',0.5,10);
+  if (p.minDrawdown > p.maxDrawdown) throw new Error('A minimum szintkülönbség nem lehet nagyobb a maximumnál.');
+  if (p.inletLevel <= p.stopLevel + p.inletClearance) throw new Error('A befolyó szintje legyen a leállítási szint és a szabad tartalék fölött.');
+  if (!Array.isArray(p.shifts) || p.shifts.length < p.shiftCount) throw new Error('Hiányos műszakadatok.');
+  p.shifts = p.shifts.slice(0,p.shiftCount).map((s,i) => ({
+    start: number(s.start,`${i+1}. műszak kezdete`,0,23.75),
+    hours: number(s.hours,`${i+1}. műszak hossza`,0.25,24),
+    people: number(s.people,`${i+1}. műszak létszáma`,0,100000),
+  }));
+  if (!Array.isArray(p.hourly) || p.hourly.length !== 24) throw new Error('Pontosan 24 órás profilsúly szükséges.');
+  p.hourly = p.hourly.map((v,i) => number(v,`${i}. óra profilsúlya`,0,100000));
+  return p;
+}
+
+// 96 quarter-hour bins. Person-hours determine relative weights, never add
+// another per-person water allowance to the user-specified daily total.
+function buildProfile(p) {
+  const weights = Array.from({length:96},(_,i) => {
+    if (p.application === 'house') return 1;
+    if (p.profile === 'custom') return p.hourly[Math.floor(i/4)];
+    const t = (i+0.5)/4;
+    return p.shifts.reduce((sum,s) => sum + (((t-s.start+24)%24)<s.hours ? s.people : 0),0);
+  });
+  // Exact overlap for non-quarter-hour shift boundaries (including midnight).
+  if (p.application !== 'house' && p.profile === 'shift') {
+    for (let i=0;i<96;i++) weights[i] = p.shifts.reduce((sum,s) => {
+      let overlap=0;
+      for (const d of [-24,0,24]) overlap += Math.max(0,Math.min((i+1)/4,s.start+s.hours+d)-Math.max(i/4,s.start+d));
+      return sum + s.people*overlap*4;
+    },0);
+  }
+  const weightHours = weights.reduce((a,b)=>a+b,0)/4;
+  const baseFraction = p.application === 'house' ? 0 : p.basePercent/100;
+  if (weightHours === 0 && baseFraction < 1) throw new Error('A változó befolyáshoz legalább egy pozitív létszám vagy profilsúly kell.');
+  return weights.map(w => p.daily*baseFraction/24 + (weightHours ? p.daily*(1-baseFraction)*w/weightHours : 0));
+}
+
+function geometry(p, pump) {
+  const limit = Math.min(p.startsLimit,pump.maxStarts);
+  const byStarts = p.pumpFlow/(4*limit);
+  const byRun = p.pumpFlow*p.minRunSeconds/3600;
+  const domesticMin = p.application === 'house' ? 0.2 : 0;
+  const targetReserve = p.daily*(p.application === 'house' ? 24 : p.reserveHours)/24;
+  const candidate = diameter => {
+    const area = Math.PI*diameter**2/4;
+    const active = Math.max(byStarts,byRun,area*p.minDrawdown,domesticMin);
+    const stop = p.stopLevel;
+    const start = stop+active/area;
+    const alarm = start+p.alarmGap;
+    const reserve = Math.max(targetReserve,area*p.alarmGap);
+    const reserveTop = start+reserve/area;
+    const fits = diameter>=p.minDiameter-1e-9 && reserveTop <= p.inletLevel-p.inletClearance+1e-9 && active/area<=p.maxDrawdown+1e-9;
+    return {diameter,area,active,stop,start,alarm,reserve,reserveTop,fits,
+      dead: area*stop, belowInlet:area*p.inletLevel, drawdown:active/area};
+  };
+  const sizes = [...new Set([p.minDiameter,...[0.8,1,1.2,1.5,1.8,2,2.5,3,4,5,6,8,10].filter(x=>x>=p.minDiameter)])].sort((a,b)=>a-b);
+  const options = (p.diameter === 'auto' ? sizes : [p.diameter]).map(candidate);
+  const g = options.find(x=>x.fits) || options.at(-1);
+  return {...g,byStarts,byRun,limit,targetReserve, theoreticalMaxStarts:p.pumpFlow/(4*g.active),
+    worstRunSeconds:3600*g.active/p.pumpFlow};
+}
+
+// Event-split 60 s integration. FIFO is an ideal plug-flow assumption, NOT a
+// guarantee of maximum water age in a real mixed/short-circuiting sump.
+function simulate(p, g, profile) {
+  const warmupDays = Math.min(30,Math.max(7,Math.ceil((g.dead+g.active)/p.daily)+2));
+  const observationDays=3, begin=warmupDays*24, end=begin+observationDays*24;
+  let t=0, volume=g.dead, on=false, duty=0, nextDuty=0, head=0;
+  const parcels=[{v:volume,t:0,initial:true}];
+  const starts=Array.from({length:p.pumpCount},()=>[]);
+  const observedStarts=Array(p.pumpCount).fill(0), runningHours=Array(p.pumpCount).fill(0);
+  let initialVolume=volume, inflow=0,pumped=0,overflow=0,integral=0,maxAge=0,initialRemaining=volume, initialAtObservation=volume;
+  let maxObservedVolume=volume, minObservedVolume=Infinity, events=0;
+  let offSince=0,maxOff=0;
+  const series=[];
+  function take(amount, time, observed, effluent) {
+    while (amount>1e-10 && head<parcels.length) {
+      const part=parcels[head], used=Math.min(amount,part.v);
+      if (observed && effluent && used>1e-10) maxAge=Math.max(maxAge,time-part.t);
+      if (part.initial) initialRemaining=Math.max(0,initialRemaining-used);
+      part.v-=used; amount-=used;
+      if (part.v<1e-10) head++;
+    }
+    if (head>1000) {parcels.splice(0,head); head=0;}
+  }
+  while (t<end-1e-9) {
+    if (++events>300000) throw new Error('Túl sok kapcsolási esemény. Növeld az üzemi térfogatot vagy csökkentsd a szivattyú vízhozamát.');
+    const observed=t>=begin-1e-9;
+    if (!on && volume>=g.dead+g.active-1e-9) {
+      on=true; duty=nextDuty; nextDuty=(nextDuty+1)%p.pumpCount;
+      starts[duty].push(t);
+      if (observed) {observedStarts[duty]++; maxOff=Math.max(maxOff,t-Math.max(offSince,begin));}
+    } else if (on && volume<=g.dead+1e-9) {on=false; offSince=t;}
+    const bin=Math.floor((t+1e-8)*4)%96, q=profile[bin], out=on?p.pumpFlow:0, net=q-out;
+    const nextMinute=(Math.floor((t+1e-8)*60)+1)/60;
+    let dt=Math.min(1/60,nextMinute-t,(Math.floor((t+1e-8)*4)+1)/4-t,end-t);
+    if (t<begin-1e-9) dt=Math.min(dt,begin-t);
+    if (!on && q>0) dt=Math.min(dt,Math.max(1e-9,(g.dead+g.active-volume)/q));
+    if (on && net<0) dt=Math.min(dt,Math.max(1e-9,(volume-g.dead)/(-net)));
+    const previous=volume, add=q*dt, remove=out*dt;
+    if (add>1e-12) parcels.push({v:add,t:t+dt/2,initial:false});
+    take(remove,t+dt,observed,true);
+    volume=Math.max(0,volume+add-remove);
+    const spill=Math.max(0,volume-g.belowInlet);
+    if (spill>0) {take(spill,t+dt,observed,false); volume-=spill;}
+    if (observed) {
+      inflow+=add; pumped+=remove; overflow+=spill; integral+=(previous+volume)/2*dt;
+      if (on) runningHours[duty]+=dt;
+      maxObservedVolume=Math.max(maxObservedVolume,volume); minObservedVolume=Math.min(minObservedVolume,volume);
+      if (parcels[head]) maxAge=Math.max(maxAge,t+dt-parcels[head].t);
+      if (!on) maxOff=Math.max(maxOff,t+dt-Math.max(offSince,begin));
+    }
+    t+=dt;
+    if (Math.abs(t-begin)<1e-7) {initialVolume=volume; maxObservedVolume=volume; initialAtObservation=initialRemaining;}
+    if (t>=end-24-1e-8 && Math.abs(t*60-Math.round(t*60))<1e-6) {
+      series.push({absolute:t,hour:t-(end-24),inflow:q,level:volume/g.area,on:on?duty+1:0});
+    }
+  }
+  const rollingStarts=starts.map(times=>{
+    let left=0,max=0;
+    for (let right=0;right<times.length;right++) {
+      while(times[right]-times[left]>=1-1e-9) left++;
+      if(times[right]>=begin) max=Math.max(max,right-left+1);
+    }
+    return max;
+  });
+  return {series,observationDays,warmupDays,rollingStarts,observedStarts,runningHours,
+    avgVolume:integral/(24*observationDays),
+    hydraulicMinutes:(integral/(24*observationDays))/(p.daily/24)*60,
+    fifoMaxMinutes:maxAge*60, maxOffMinutes:maxOff*60,
+    initialRemaining, initialAtObservation, inflow,pumped,overflow,initialVolume,finalVolume:volume,
+    maxLevel:maxObservedVolume/g.area,minLevel:minObservedVolume/g.area,
+    balanceError:initialVolume+inflow-pumped-overflow-volume};
+}
+
+function calculate(input) {
+  const p=validate(input), pump=pumps.find(x=>x.id===p.pumpId), profile=buildProfile(p);
+  const g=geometry(p,pump), sim=simulate(p,g,profile), checks=[];
+  const add=(status,title,detail)=>checks.push({status,title,detail});
+  add(g.fits?'pass':'fail','Akna és tárolótér',g.fits?'Az üzemi és a biztonsági tér elfér a befolyó alatt, a megadott tartalékkal.':'A szükséges tér vagy kapcsolási szintkülönbség nem fér el, illetve az átmérő kisebb az elrendezési minimumnál.');
+  add(sim.overflow<1e-7?'pass':'fail','Visszaduzzasztás a modellben',sim.overflow<1e-7?'A vízszint nem érte el a befolyó fenékszintjét a három vizsgált napon.':'A számítás elérte a befolyó szintjét. A túlfolyásként könyvelt térfogat valójában visszaduzzasztást vagy elöntést jelenthet.');
+  add(Math.max(...sim.rollingStarts)<=g.limit?'pass':'fail','Indítások szivattyúnként',`Gördülő 60 percben legfeljebb ${Math.max(...sim.rollingStarts)} indítás; alkalmazott korlát: ${g.limit}/h. A prospektus felső értéke ${pump.maxStarts}/h, a pontos motorra ellenőrizendő.`);
+  if (p.residenceLimit==='') add('pending','Tartózkodási idő: hiányzó határérték','A mellékelt FCSM-részlet nem közöl számszerű időkorlátot. Adj meg a projektre egyeztetett tervezői értéket.');
+  else if (sim.initialAtObservation>1e-7) add('pending','Tartózkodási idő: nem beállt modell','A kezdeti víz egy része a bemelegítés végén is megmaradt; hosszabb vizsgálat szükséges.');
+  else add(sim.fifoMaxMinutes<=p.residenceLimit && sim.hydraulicMinutes<=p.residenceLimit?'pass':'fail','Tartózkodási idő a felvett modellben','Az átlagos hidraulikai és az ideális FIFO szerinti legnagyobb érték összevetése a tervezői korláttal. A valós keveredés és holtterek külön vizsgálatot igényelnek.');
+  add('pending','Munkapont és minimális bemerülés','A típuscsalád prospektusa nem igazolja a megadott Q értéket, leállítási szintet vagy a beépíthetőséget. Pontos kivitel, Q–H jelleggörbe és telepítési adatlap szükséges.');
+  if(p.application==='workplace') add('pending','FCSM: műszakos telephely','A 2020-as részlet lakossági házi beemelőkről szól. A telephely tárolási idejét, tartalékát és alkalmazhatóságát külön egyeztetni kell.');
+  else add(g.active>=0.2 && g.reserve>=p.daily?'pass':'fail','FCSM: egylakásos, 4 fős eset','Legalább 0,2 m³ üzemi tér + legalább 1 napi kibocsátásnyi biztonsági tér a befolyó alatt. Kizárólag erre az esetre alkalmazva.');
+  return {parameters:p,pump,profile,geometry:g,simulation:sim,checks};
+}
+
+
+const $=selector=>document.querySelector(selector);
+const form=$('#parameters'), storageKey='atemelo-project-v1';
+const fmt=(n,d=2)=>Number(n).toLocaleString('hu-HU',{minimumFractionDigits:d,maximumFractionDigits:d});
+const esc=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let result=null, timer;
+$('#pump-select').innerHTML=pumps.map(p=>`<option value="${p.id}">${p.name} · ${p.power} kW</option>`).join('');
+$('#shift-rows').innerHTML=defaults.shifts.map((_,i)=>`<div class="shift-row" data-shift="${i}"><span>${String(i+1).padStart(2,'0')}</span><label><span class="sr-only">${i+1}. műszak kezdete, óra</span><input type="number" name="shift-${i}-start" min="0" max="23.75" step="0.25" aria-label="${i+1}. műszak kezdete, óra"></label><label><span class="sr-only">${i+1}. műszak hossza, óra</span><input type="number" name="shift-${i}-hours" min="0.25" max="24" step="0.25" aria-label="${i+1}. műszak hossza, óra"></label><label><span class="sr-only">${i+1}. műszak létszáma</span><input type="number" name="shift-${i}-people" min="0" max="100000" step="1" aria-label="${i+1}. műszak létszáma"></label></div>`).join('');
+$('#hourly-fields').innerHTML=defaults.hourly.map((_,h)=>`<label>${String(h).padStart(2,'0')}:00<input name="hour-${h}" type="number" min="0" max="100000" step="0.1" aria-label="${h}. óra relatív befolyási súlya"></label>`).join('');
+
+function fill(p) {
+  for(const [key,value] of Object.entries(p)) if(form.elements.namedItem(key)) form.elements.namedItem(key).value=value;
+  for(let i=0;i<3;i++) for(const key of ['start','hours','people']) form.elements.namedItem(`shift-${i}-${key}`).value=p.shifts[i]?.[key] ?? defaults.shifts[i][key];
+  p.hourly.forEach((v,h)=>form.elements.namedItem(`hour-${h}`).value=v);
+  sync();
+}
+function read() {
+  const data=Object.fromEntries(new FormData(form));
+  const p={};
+  for(const [key,value] of Object.entries(defaults)) {
+    if(key==='shifts' || key==='hourly') continue;
+    const raw=form.elements.namedItem(key)?.value ?? data[key] ?? value;
+    p[key]=typeof value==='number' ? (raw===''?'':Number(raw)) : raw;
+  }
+  p.shifts=Array.from({length:3},(_,i)=>Object.fromEntries(['start','hours','people'].map(key=>[key,data[`shift-${i}-${key}`]===''?'':Number(data[`shift-${i}-${key}`])])));
+  p.hourly=Array.from({length:24},(_,h)=>data[`hour-${h}`]===''?'':Number(data[`hour-${h}`]));
+  return p;
+}
+function sync() {
+  const house=form.elements.application.value==='house';
+  const custom=form.elements.profile.value==='custom';
+  $('#workplace-options').hidden=house; $('#house-note').hidden=!house;
+  $('#shift-options').hidden=custom; $('#custom-profile').hidden=!custom;
+  document.querySelectorAll('[data-shift]').forEach((row,i)=>row.hidden=i>=Number(form.elements.shiftCount.value));
+  form.elements.reserveHours.disabled=house;
+  form.elements.basePercent.disabled=house;
+  $('#reserve-hint').textContent=house?'FCSM-részlet, eredeti 22. oldal: ebben az esetben legalább 1 napi kibocsátásnyi biztonsági térrel számolunk, az üzemi téren felül.':'Tervezői felvétel: Qnapi / 24 × óra. A 2 óra nem FCSM-előírás, és nem igazolja a csúcsterhelés melletti hibaáthidalást.';
+  const pump=pumps.find(p=>p.id===form.elements.pumpId.value);
+  $('#pump-info').innerHTML=`<div><small>Motortartomány</small><strong>${pump.power} kW</strong></div><div><small>Nyomócsonk</small><strong>${pump.discharge} mm</strong></div><div><small>Prospektuskorlát</small><strong>≤ ${pump.maxStarts} ind./h</strong><br><a href="./docs/flygt-n-896876.pdf#page=${pump.page}" target="_blank" rel="noopener">PDF ${pump.page}. oldal ↗</a></div>`;
+}
+
+function well(g) {
+  const top=Math.max(g.reserveTop,g.alarm,g.start,g.stop,g.belowInlet/g.area)*1.1;
+  const y=h=>270-h/top*235;
+  const line=(h,label,color,dash='')=>`<line x1="66" x2="244" y1="${y(h)}" y2="${y(h)}" stroke="${color}" stroke-width="1.4" ${dash?'stroke-dasharray="4 3"':''}/><text x="251" y="${y(h)+4}" fill="${color}" font-size="10">${label}</text>`;
+  return `<svg viewBox="0 0 330 310" role="img" aria-label="Akna vázlata: leállítás, indítás, vészjelzés és biztonsági tárolószint"><defs><pattern id="hatch" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="6" stroke="#c2d4bc" stroke-width="2"/></pattern></defs>
+    <rect x="52" y="23" width="189" height="259" rx="4" fill="#eef2e9"/>
+    <rect x="64" y="28" width="165" height="242" fill="#fff"/>
+    <rect x="64" y="${y(g.reserveTop)}" width="165" height="${Math.max(0,y(g.start)-y(g.reserveTop))}" fill="url(#hatch)"/>
+    <rect x="64" y="${y(g.start)}" width="165" height="${y(g.stop)-y(g.start)}" fill="#bee2d7"/>
+    <rect x="64" y="${y(g.stop)}" width="165" height="${270-y(g.stop)}" fill="#dae7df"/>
+    <path d="M58 28V276H236V28" fill="none" stroke="#6b8272" stroke-width="2"/>
+    <path d="M15 ${y(g.belowInlet/g.area)}H64" fill="none" stroke="#526e5c" stroke-width="7"/>
+    ${line(g.belowInlet/g.area,'Befolyó','#607763')}${line(g.reserveTop,'Tartalék','#8c986f','dash')}${line(g.alarm,'Vészjelzés','#ac7e28','dash')}${line(g.start,'Indítás','#087c72','dash')}${line(g.stop,'Leállítás','#547e6b','dash')}
+    <path d="M103 262v-14a15 15 0 0 1 30 0v14Z" fill="#476b60"/><rect x="109" y="225" width="18" height="17" rx="3" fill="#718d7b"/><path d="M133 252h18V38h25" stroke="#7a9282" stroke-width="6" fill="none"/>
+    <line x1="64" x2="229" y1="294" y2="294" stroke="#7a9282"/><path d="m69 291-5 3 5 3m155-6 5 3-5 3" fill="none" stroke="#7a9282"/><text x="146" y="307" text-anchor="middle" fill="#607563" font-size="10">belső Ø ${fmt(g.diameter)} m</text></svg>`;
+}
+function chart(data,key,{height=160,color='#087c72',max,reference,unit}) {
+  const width=680,left=43,right=12,top=13,bottom=27,w=width-left-right,h=height-top-bottom;
+  max=Math.max(max||0,...data.map(d=>d[key]),reference||0,0.01)*1.12;
+  const x=t=>left+t/24*w,y=v=>top+h-v/max*h;
+  const path=data.map((d,i)=>`${i?'L':'M'}${x(Math.min(24,Math.max(0,d.hour))).toFixed(2)},${y(d[key]).toFixed(2)}`).join(' ');
+  const area=`${path} L${x(24)},${top+h} L${x(0)},${top+h} Z`;
+  return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${unit}: napi diagram 0 és 24 óra között">
+    ${[0,0.5,1].map(v=>`<line x1="${left}" x2="${width-right}" y1="${y(max*v)}" y2="${y(max*v)}" stroke="#e7ede4"/><text x="${left-9}" y="${y(max*v)+3}" text-anchor="end" font-size="9" fill="#7c897a">${fmt(max*v,1)}</text>`).join('')}
+    <path d="${area}" fill="${color}" opacity="0.09"/><path d="${path}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round"/>
+    ${reference===undefined?'':`<line x1="${left}" x2="${width-right}" y1="${y(reference)}" y2="${y(reference)}" stroke="#9baa99" stroke-dasharray="5 4"/>`}
+    ${[0,4,8,12,16,20,24].map(t=>`<text x="${x(t)}" y="${height-7}" text-anchor="middle" font-size="9" fill="#7c897a">${String(t).padStart(2,'0')}:00</text>`).join('')}
+  </svg>`;
+}
+function render(r) {
+  const {parameters:p,geometry:g,simulation:s,checks}=r;
+  $('#result-title').textContent=p.project || 'Névtelen projekt';
+  const fails=checks.filter(c=>c.status==='fail').length, pending=checks.filter(c=>c.status==='pending').length;
+  $('#result-summary').className=`result-summary${fails?' fail':''}`;
+  $('#result-summary').innerHTML=`<div class="summary-icon" aria-hidden="true">${fails?'!':'≋'}</div><div><strong>${fails?`${fails} számítási feltétel nem teljesül`:'Előméretezés elkészült'}</strong><p>${fails?'A javaslatot a jelzett korlátok miatt módosítani kell.':`A felvett modellben ${checks.filter(c=>c.status==='pass').length} ellenőrzés teljesül.`} ${pending} feltétel egyeztetésre vagy adatlapra vár. Ez nem végleges megfelelőségi igazolás.</p></div>`;
+  $('#metrics').innerHTML=[
+    ['Belső aknaátmérő',fmt(g.diameter),'m',p.diameter==='auto'?'Geometriai javaslat':'Rögzített átmérő'],
+    ['Hasznos kapcsolási tér',fmt(g.active),'m³',`Szintkülönbség: ${fmt(g.drawdown)} m`],
+    ['Biztonsági tárolótér',fmt(g.reserve),'m³',p.application==='house'?'FCSM · 1 napi mennyiség':`Tervezői igény: ${fmt(p.reserveHours,1)} átlaghozam-óra`],
+  ].map(([label,value,unit,sub])=>`<div class="metric"><span class="metric-label">${label}</span><div class="metric-value">${value}<small>${unit}</small></div><div class="metric-sub">${sub}</div></div>`).join('');
+  $('#well-diagram').innerHTML=well(g);
+  $('#level-table').innerHTML=[
+    ['Befolyócső fenékszintje',p.inletLevel,''],['Biztonsági tárolás felső szintje',g.reserveTop,''],
+    ['Vészvízszintjelzés',g.alarm,'alert'],['Üzemi indítás',g.start,'accent'],['Közös leállítás',g.stop,''],
+  ].map(([label,value,cls])=>`<div class="level-row ${cls}"><span>${label}</span><strong>+${fmt(value,3)} m</strong></div>`).join('')+`<div class="mini-volumes"><div><span>Leállítás alatti maradó víz</span><strong>${fmt(g.dead,3)} m³</strong></div><div><span>Befolyó alatti teljes aknatér</span><strong>${fmt(g.belowInlet,3)} m³</strong></div></div>`;
+  $('#level-chart').innerHTML=chart(s.series,'level',{height:185,max:g.start,reference:g.start,unit:'Vízszint, m a fenéktől'});
+  $('#flow-chart').innerHTML=chart(s.series,'inflow',{height:115,color:'#7c9dab',unit:'Befolyó vízhozam, m³/h'});
+  $('#operation-stats').innerHTML=[
+    ['Max. indítás / gép',`${fmt(Math.max(...s.rollingStarts),0)} /h`,`Gördülő 60 perc · korlát ${fmt(g.limit,0)}/h`],
+    ['Átlagos hidraulikai idő',`${fmt(s.hydraulicMinutes,0)} perc`,'τ = átlagos víztér / átlaghozam'],
+    ['Legnagyobb FIFO vízkor',`${fmt(s.fifoMaxMinutes,0)} perc`,p.residenceLimit===''?'Időkorlát még nincs megadva':`Tervezői korlát: ${fmt(p.residenceLimit,0)} perc`],
+  ].map(([label,value,sub])=>`<div class="operation-stat"><span>${label}</span><strong>${value}</strong><small>${sub}</small></div>`).join('');
+  $('#checks').innerHTML=checks.map(c=>`<div class="check ${c.status}"><span class="check-icon" aria-label="${{pass:'Teljesül',fail:'Nem teljesül',pending:'Egyeztetendő'}[c.status]}">${{pass:'✓',fail:'×',pending:'i'}[c.status]}</span><div><strong>${esc(c.title)}</strong><p>${esc(c.detail)}</p></div></div>`).join('');
+  $('#formula-output').innerHTML=[
+    ['Indítási minimum: V ≥ Qsz / (4 × Zmax)',`${fmt(g.byStarts,3)} m³`],
+    ['Futásidő minimum: V ≥ Qsz × tmin / 3600',`${fmt(g.byRun,3)} m³`],
+    ['Kapcsolási tér: a fenti és geometriai minimumok maximuma',`${fmt(g.active,3)} m³`],
+    ['Elméleti max. kapcsolási gyakoriság, egy gépre',`${fmt(g.theoreticalMaxStarts,1)} /h`],
+    ['Legrövidebb futás a térfogatból, nulla befolyásnál',`${fmt(g.worstRunSeconds,1)} s`],
+    ['Napi átlagos / legnagyobb befolyás',`${fmt(p.daily/24)} / ${fmt(Math.max(...r.profile))} m³/h`],
+    ['Napi átlagos szivattyúzott mennyiség a modellben',`${fmt(s.pumped/s.observationDays)} m³/nap`],
+    ['Vízszint minimuma / maximuma a vizsgált időben',`${fmt(s.minLevel)} / ${fmt(s.maxLevel)} m`],
+    ['Leghosszabb megfigyelt állásidő',`${fmt(s.maxOffMinutes,0)} perc`],
+    ['Beépített szivattyúk napi átlagos üzemideje',s.runningHours.map(h=>`${fmt(h/s.observationDays)} h`).join(' / ')],
+    ['Befolyószinten elszámolt túltöltés (3 nap)',`${fmt(s.overflow,3)} m³`],
+    ['Tömegmérleg eltérése (3 nap)',`${s.balanceError.toExponential(1)} m³`],
+  ].map(([label,value])=>`<div class="formula-row"><span>${label}</span><strong>${value}</strong></div>`).join('')+`<p class="model-note">${s.warmupDays} nap bemelegítés + ${s.observationDays} nap vizsgálat, naponta ismételt befolyással. A kapcsolási minimumot egyetlen üzemi gépre méretezzük; a váltott üzem indításszám-csökkentését nem használjuk térfogatcsökkentésre. A geometriai térfogatok a gépészet kiszorítását nem tartalmazzák. A modell időbeli közelítése a vízkorban legfeljebb kb. 1 perces lépésből eredő eltérést okozhat.</p>`;
+}
+
+function update() {
+  sync();
+  try {
+    const p=read(); result=calculate(p); render(result);
+    $('#error').hidden=true; $('#result-content').hidden=false;
+    $('#calc-state').innerHTML='<span class="dot"></span> Számítás frissítve';
+    try{localStorage.setItem(storageKey,JSON.stringify({version:1,parameters:p}));}catch{}
+  } catch(e) {
+    result=null; $('#error').textContent=e.message; $('#error').hidden=false;
+    $('#result-content').hidden=true; $('#calc-state').textContent='Adatok ellenőrzése szükséges';
+  }
+}
+form.addEventListener('submit',e=>e.preventDefault());
+form.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(update,180);});
+form.addEventListener('change',()=>{clearTimeout(timer);update();});
+$('#reset').addEventListener('click',()=>{fill(structuredClone(defaults));update();});
+$('#print').addEventListener('click',()=>window.print());
+let printDetails=[];
+window.addEventListener('beforeprint',()=>{
+  printDetails=[...document.querySelectorAll('details')].map(element=>({element,open:element.open}));
+  printDetails.forEach(({element})=>element.open=true);
+});
+window.addEventListener('afterprint',()=>printDetails.forEach(({element,open})=>element.open=open));
+function download(name,body,type) {
+  const url=URL.createObjectURL(new Blob([body],{type})),a=document.createElement('a');
+  a.href=url; a.download=name; a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+$('#export-json').addEventListener('click',()=>{
+  if(!result)return;
+  const {parameters,simulation,...summary}=result;
+  const {series,...simulationSummary}=simulation;
+  download('atemelo-projekt.json',JSON.stringify({version:1,createdAt:new Date().toISOString(),parameters,summary:{...summary,simulation:simulationSummary},sources:['FCSM VSZ-40/2020, 4.0, 2020.09.24., pp.22–27','Flygt 896876, 20240605, PDF pp.6,8,10'],notice:'Előméretezés. A munkapont, bemerülés és FCSM-alkalmazhatóság egyeztetendő.'},null,2),'application/json');
+});
+$('#export-csv').addEventListener('click',()=>{
+  if(!result)return;
+  const rows=['Idő [óra];Befolyás [m3/h];Vízszint [m];Működő szivattyú',...result.simulation.series.map(d=>[d.hour,d.inflow,d.level,d.on].map((v,i)=>i<3?Number(v).toFixed(4).replace('.',','):v).join(';'))];
+  download('atemelo-napi-uzem.csv','\ufeff'+rows.join('\r\n'),'text/csv;charset=utf-8');
+});
+$('#import-json').addEventListener('change',async e=>{
+  try {
+    const file=e.target.files[0];if(!file)return;
+    if(file.size>1000000)throw new Error('Legfeljebb 1 MB méretű projektfájl tölthető be.');
+    const data=JSON.parse(await file.text());
+    if(data.version!==1 || !data.parameters)throw new Error('Nem támogatott projektformátum.');
+    const candidate={...structuredClone(defaults),...data.parameters};
+    calculate(candidate); // Validate the complete calculation before replacing the current project.
+    fill(candidate);update();$('#file-status').textContent='A projekt betöltve; az eredményt újraszámoltuk.';
+  }catch(e){$('#file-status').textContent=`A projekt nem tölthető be: ${e.message}`;}
+  finally{e.target.value='';}
+});
+let initial=structuredClone(defaults);
+try{const saved=JSON.parse(localStorage.getItem(storageKey));if(saved?.version===1){const candidate={...initial,...saved.parameters};validate(candidate);initial=candidate;}}catch{}
+fill(initial);update();
+
+</script>
+</body>
+</html>

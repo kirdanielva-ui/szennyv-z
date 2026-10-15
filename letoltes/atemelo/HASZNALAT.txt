@@ -1,0 +1,20 @@
+ÁTEMELŐ – HASZNÁLATI ÚTMUTATÓ
+
+1. A teljes ZIP-fájlt csomagold ki egy mappába.
+2. Az atemelo mappában nyisd meg az index.html fájlt Chrome, Edge vagy Firefox böngészővel.
+3. Add meg a napi szennyvízmennyiséget, a műszakok kezdetét, hosszát és létszámát.
+4. Válaszd ki a Flygt típuscsaládot, és add meg a pontos munkaponti vízhozamot.
+5. Állítsd be az akna és a kapcsolás tervezői adatait. Az eredmény automatikusan frissül.
+6. A Projekt mentése gombbal JSON-fájlba menthetsz; ezt később visszatöltheted.
+   Biztos megőrzéshez használd ezt a mentést, mert a helyi böngészőtároló kezelése
+   fájlból nyitott oldalaknál böngészőnként eltérhet.
+7. A Nyomtatás / PDF gombbal jelentést készíthetsz.
+
+Nincs telepítés, szerver vagy internetkapcsolat a használathoz. A docs mappát
+tartsd az index.html mellett: ebben van a két hivatkozott forrás-PDF.
+
+Előméretező változat: a munkapont és a minimális bemerülés a pontos kivitel
+adatlapjából igazolandó. A mellékelt 2020-as FCSM-részlet nem közöl számszerű
+tartózkodásiidő-korlátot; a projektre egyeztetett értéket kell megadni.
+A FIFO-vízkor ideális modell, a kiviteli tervezést és üzemeltetői egyeztetést
+nem helyettesíti.

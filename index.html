@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#103b3d">
+  <meta name="description" content="Szennyvízátemelő előméretezés műszakrenddel, Flygt N típusválasztóval és dokumentált FCSM-forrásokkal.">
+  <title>Átemelő — szennyvízátemelő méretező</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/src/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a href="#" class="brand" aria-label="Átemelő kezdőlap"><span class="brand-mark" aria-hidden="true">≋</span><span>átemelő<span class="brand-caption">MÉRETEZŐ MŰHELY</span></span></a>
+    <nav aria-label="Oldalmenü"><a href="#calculator">Méretezés</a><a href="#method">Számítási háttér</a><a href="#sources">Források</a></nav>
+    <span class="version">ELŐMÉRETEZŐ <span>v0.1</span></span>
+  </header>
+  <main>
+    <section class="intro">
+      <div><div class="eyebrow"><span class="dot"></span> SZENNYVÍZTECHNIKA · FLYGT N SOROZAT</div><h1>A befolyástól<br>a kapcsolási szintig.</h1><p>Műszakrend, szivattyú és aknageometria egy számításban.<br class="wide-only"> Kövesd a napi üzemet, és lásd, hol vannak a korlátok.</p></div>
+      <div class="intro-note"><span class="note-icon">i</span><div><strong>Dokumentált alapok. Látható feltételezések.</strong><p>FCSM-részlet: 2020.09.24. · Flygt prospektus: 2024.06.05.<br>Az időkorlát és a pontos munkapont projektspecifikus adat.</p><a href="#sources">Mit tartalmaznak a mellékletek? <span aria-hidden="true">↗</span></a></div></div>
+    </section>
+
+    <div class="workspace" id="calculator">
+      <form id="parameters" class="inputs" novalidate>
+        <section class="panel">
+          <div class="panel-heading"><span class="step">01</span><h2>Terhelés és műszakrend</h2></div>
+          <label>Projekt neve<input name="project" type="text" maxlength="120"></label>
+          <label>Felhasználás<select name="application"><option value="workplace">Műszakos telephely</option><option value="house">Egylakásos lakóépület · 4 fő</option></select></label>
+          <div class="field-row"><label>Napi szennyvízmennyiség<div class="unit-field"><input name="daily" type="number" min="0.01" max="100000" step="0.1"><span>m³/nap</span></div></label><label>Folyamatos hányad<div class="unit-field"><input name="basePercent" type="number" min="0" max="100" step="1"><span>%</span></div></label></div>
+          <p class="hint">A napi összmennyiség már tartalmazza a dolgozói és technológiai szennyvizet. A létszám ennek időbeli elosztását súlyozza.</p>
+          <div id="workplace-options">
+            <label>Befolyási profil<select name="profile"><option value="shift">Műszakok létszáma alapján</option><option value="custom">Egyedi óránkénti súlyok</option></select></label>
+            <div id="shift-options"><label>Műszakok száma<select name="shiftCount"><option value="1">1 műszak</option><option value="2">2 műszak</option><option value="3">3 műszak</option></select></label>
+              <div class="shift-head"><span>Műszak</span><span>Kezdés</span><span>Hossz, óra</span><span>Létszám, fő</span></div><div id="shift-rows"></div>
+              <p class="hint">Éjfélen átnyúló és átfedő műszakok is megadhatók. Műszakon belül egyenletes befolyást feltételezünk.</p>
+            </div>
+            <div id="custom-profile" hidden><p class="hint">Relatív súlyok: a program a napi összmennyiség változó részére normálja őket. A 0 befolyásmentes órát jelent a folyamatos részen felül.</p><div id="hourly-fields" class="hourly-grid"></div></div>
+          </div>
+          <p id="house-note" class="hint" hidden>A 4 fős egylakásos esetben 24 órás egyenletes profillal számolunk. A napi mennyiség a megadott érték marad.</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading"><span class="step">02</span><h2>Szivattyú és üzem</h2><span class="small-tag">XYLEM / FLYGT</span></div>
+          <label>Típuscsalád<select name="pumpId" id="pump-select"></select></label>
+          <div id="pump-info" class="pump-info"></div>
+          <div class="field-row"><label>Munkaponti vízhozam<div class="unit-field"><input name="pumpFlow" type="number" min="0.01" max="10000" step="0.1"><span>m³/h</span></div></label><label>Beépített szivattyúk<select name="pumpCount"><option value="1">1 db üzemi</option><option value="2">1 üzemi + 1 tartalék</option></select></label></div>
+          <p class="hint emphasis">A 18 m³/h induló érték számítási példa, nem a kiválasztott típus igazolt adata. Két szivattyúnál váltott üzemet, egyidejűleg egy működő gépet modellezünk.</p>
+          <label>Munkapont / pontos kivitel hivatkozása<input name="dutyReference" type="text" maxlength="200" placeholder="Pl. adatlap azonosító, járókerék, Q és H"></label>
+          <div class="field-row"><label>Tervezett max. indítás<div class="unit-field"><input name="startsLimit" type="number" min="1" max="100" step="1"><span>1/h/gép</span></div></label><label>Minimum futásidő<div class="unit-field"><input name="minRunSeconds" type="number" min="0" max="3600" step="1"><span>s</span></div></label></div>
+          <p class="hint">A prospektus és a megadott indítási korlát közül a szigorúbb érvényesül. A futásidő tervezői feltétel, nem a mellékelt prospektus előírása.</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading"><span class="step">03</span><h2>Akna és határértékek</h2></div>
+          <div class="field-row"><label>Belső átmérő<select name="diameter"><option value="auto">Automatikus javaslat</option><option value="0.8">0,80 m</option><option value="1">1,00 m</option><option value="1.2">1,20 m</option><option value="1.5">1,50 m</option><option value="1.8">1,80 m</option><option value="2">2,00 m</option><option value="2.5">2,50 m</option><option value="3">3,00 m</option><option value="4">4,00 m</option></select></label><label>Elrendezési min. átmérő<div class="unit-field"><input name="minDiameter" type="number" min="0.5" max="10" step="0.1"><span>m</span></div></label></div>
+          <p class="hint">Az automatikus választás hengeres aknára vonatkozik. A szivattyúk, vezetősínek és úszók helyigényét a beépítési rajzból ellenőrizni kell.</p>
+          <div class="field-row"><label>Leállítási szint, fenéktől<div class="unit-field"><input name="stopLevel" type="number" min="0.01" max="10" step="0.05"><span>m</span></div></label><label>Befolyó fenékszintje<div class="unit-field"><input name="inletLevel" type="number" min="0.1" max="20" step="0.05"><span>m</span></div></label></div>
+          <p class="hint emphasis">A leállítási szint példaérték. A minimális bemerülést és a motor hűtését a pontos típus telepítési utasítása alapján kell megadni.</p>
+          <details><summary>Kapcsolási és biztonsági geometria</summary><div class="detail-fields">
+            <div class="field-row"><label>Min. kapcsolási különbség<div class="unit-field"><input name="minDrawdown" type="number" min="0.01" max="2" step="0.05"><span>m</span></div></label><label>Max. kapcsolási különbség<div class="unit-field"><input name="maxDrawdown" type="number" min="0.05" max="5" step="0.05"><span>m</span></div></label></div>
+            <div class="field-row"><label>Riasztás az indítás fölött<div class="unit-field"><input name="alarmGap" type="number" min="0.01" max="2" step="0.05"><span>m</span></div></label><label>Tartalék a befolyó alatt<div class="unit-field"><input name="inletClearance" type="number" min="0.01" max="2" step="0.05"><span>m</span></div></label></div>
+          </div></details>
+          <label class="spaced">Biztonsági tárolási igény<div class="unit-field"><input name="reserveHours" type="number" min="0" max="168" step="0.5"><span>átlaghozam-óra</span></div></label>
+          <p id="reserve-hint" class="hint">Tervezői felvétel: Qnapi / 24 × óra. A 2 óra nem FCSM-előírás, és nem igazolja a csúcsterhelés melletti hibaáthidalást.</p>
+          <label>Tervezői tartózkodásiidő-korlát<div class="unit-field"><input name="residenceLimit" type="number" min="1" max="10080" step="1" placeholder="Egyeztetendő"><span>perc</span></div></label>
+          <p class="hint emphasis">A mellékelt FCSM-részlet nem határoz meg számszerű időkorlátot. A mező szándékosan üres; a projektre egyeztetett értéket add meg.</p>
+        </section>
+        <button class="reset-button" type="button" id="reset">↺ Példaadatok visszaállítása</button>
+      </form>
+
+      <section class="results" aria-label="Méretezés eredménye">
+        <div class="results-header"><div><span class="eyebrow">SZÁMÍTÁSI EREDMÉNY</span><h2 id="result-title">Új szennyvízátemelő</h2></div><span class="live-label" id="calc-state"><span class="dot"></span> Automatikus számítás</span></div>
+        <div id="error" role="alert" hidden></div>
+        <div id="result-content">
+          <div class="result-summary" id="result-summary"></div>
+          <div class="metrics" id="metrics"></div>
+          <section class="panel well-panel"><div class="section-heading"><div><h3>Akna és kapcsolási szintek</h3><p>Minden magasság az akna belső fenéksíkjától értendő.</p></div><span class="small-tag">HENGERES AKNA</span></div><div class="well-layout"><div id="well-diagram" class="well-diagram"></div><div id="level-table"></div></div><p class="hint">A biztonsági tér az üzemi indítási szint fölött helyezkedik el. A vészjelzés önálló érzékelőt igényel. A vázlat nem beépítési rajz; a fedlap és a befolyó feletti aknarész nincs méretezve.</p></section>
+          <section class="panel"><div class="section-heading"><div><h3>Napi üzem, egy pillantásra</h3><p>Az utolsó szimulált nap · 1 perces lépés, pontos kapcsolási események</p></div></div><div class="chart-legend"><span><i class="teal"></i> Vízszint</span><span><i class="gray"></i> Indítási szint</span></div><div id="level-chart" class="chart"></div><div class="chart-legend"><span><i class="blue"></i> Befolyás</span><span class="unit-label">m³/h</span></div><div id="flow-chart" class="chart flow-chart"></div><div id="operation-stats" class="operation-stats"></div></section>
+          <section class="panel"><div class="section-heading"><div><h3>Ellenőrzések és nyitott feltételek</h3><p>A zöld jelölés csak az adott számítási feltétel teljesülését mutatja.</p></div></div><div id="checks" class="checks"></div></section>
+          <section class="panel" id="method"><div class="section-heading"><div><h3>Számítási háttér</h3><p>Visszakövethető térfogatok és modellhatárok</p></div></div><div id="formula-output"></div>
+            <details><summary>Tartózkodási idő: mit mutat a modell?</summary><p>Az átlagos hidraulikai tartózkodási idő: τ = átlagos víztérfogat / napi átlaghozam. A teljes víztérfogatot, így a leállítási szint alatti maradó vizet is figyelembe vesszük.</p><p>A FIFO-modell az előbb érkező víz előbbi kiszivattyúzását feltételezi. A jelzett legnagyobb kor az elszállított és az aknában még bent lévő víz modellezett korát is figyeli. Ez nem a valós, kevert akna garantált maximális tartózkodási ideje. A rövidzár, holttér, ülepedés és berothadás külön vizsgálat tárgya.</p><p>A program naponta ismétlődő profilt modellez; a hétvégi leállás, lökésszerű technológiai ürítés, nyomócsőben töltött idő, szivattyúhiba, változó munkapont és párhuzamos szivattyúzás nincs benne. Az egyeztetett időkorlát értelmezésének illeszkednie kell a választott mutatóhoz.</p></details>
+          </section>
+          <div class="export-bar"><p>A beállítások ebben a böngészőben megmaradnak.</p><div><button type="button" class="secondary-button" id="export-json">Projekt mentése</button><button type="button" class="secondary-button" id="export-csv">Napi adatok · CSV</button><button type="button" class="primary-button" id="print">Nyomtatás / PDF ↗</button></div></div>
+          <label class="import-label">Mentett projekt betöltése<input type="file" id="import-json" accept="application/json,.json"></label><p id="file-status" role="status"></p>
+        </div>
+      </section>
+    </div>
+
+    <section class="sources-section" id="sources"><div class="section-heading"><div><span class="eyebrow">FORRÁSOK ÉS ALKALMAZHATÓSÁG</span><h2>A mellékletek helye a méretezésben</h2></div></div><div class="source-grid">
+      <article class="source-card"><span class="document-tag">FCSM · 6 OLDALAS RÉSZLET</span><h3>Üzletszabályzat, VSZ-40/2020.</h3><p>4.0 kiadás · 2020.09.24. · eredeti 22–27. oldal</p><ul><li><strong>22. oldal:</strong> egylakásos, 4 fős eset: min. 0,2 m³ üzemi tér és ezen felül min. 1 napi kibocsátásnyi biztonsági tér, a befolyó alatt.</li><li><strong>24. oldal:</strong> a kapcsolási szintek csökkentsék az ülepedés és berothadás veszélyét; külön vészvízszintjelzés.</li><li><strong>Nincs számszerű tartózkodásiidő-korlát.</strong> A lakossági feltételek telephelyre való alkalmazása és a dokumentum jelenlegi érvényessége egyeztetendő.</li></ul><a href="/docs/fcsm-2020.pdf" target="_blank" rel="noopener">FCSM melléklet megnyitása <span aria-hidden="true">↗</span></a></article>
+      <article class="source-card"><span class="document-tag">XYLEM · FLYGT N · 50 HZ</span><h3>N-technology pump series</h3><p>896876 · dokumentumjelölés: 20240605</p><ul><li><strong>PDF 6. és 8. oldal:</strong> kis és közepes típuscsaládok, legfeljebb 30 indítás óránként.</li><li><strong>PDF 10. oldal:</strong> nagy típuscsaládok, legfeljebb 15 indítás óránként.</li><li>A katalógus teljesítménytartományai nem Q–H jelleggörbék. Az indítási korlátot, bemerülést és helyigényt a pontos motorra és kivitelre kell ellenőrizni.</li></ul><a href="/docs/flygt-n-896876.pdf" target="_blank" rel="noopener">Flygt prospektus megnyitása <span aria-hidden="true">↗</span></a></article>
+    </div></section>
+    <footer><span>≋ ÁTEMELŐ / MÉRETEZŐ MŰHELY</span><p>Előméretezés dokumentált feltételezésekkel. A kiviteli méretezéshez helyszíni adatok és üzemeltetői egyeztetés szükséges.</p></footer>
+  </main>
+</body>
+</html>
