@@ -1,12 +1,12 @@
-import {pumps} from './pumps.js';
+import {pumps,catalogueCurve} from './pumps.js';
 import {systemHead,parseCurve,operatingPoint,pumpHead} from './hydraulics.js';
 
 export const defaults={
   project:'Új szennyvízátemelő',application:'workplace',daily:12,shiftCount:2,
   shifts:[{start:6,hours:8,people:60},{start:14,hours:8,people:40},{start:22,hours:8,people:40}],
   profile:'shift',hourly:Array(24).fill(1),pumpId:'3085',workingCount:1,standbyCount:1,maxParallel:1,
-  flowMode:'manual',manualFlows:[18,'','','','','','',''],curveText:'',curveLabel:'',curveModelId:'3085',
-  startsLimit:12,utilityStartsLimit:'',minRunSeconds:30,
+  flowMode:'manual',manualFlows:[18,'','','','','','',''],curveText:'',curveLabel:'',curveModelId:'3085',curveSource:'manual',
+  startsLimit:12,utilityStartsLimit:'',manufacturerStartsLimit:'',minRunSeconds:30,
   inletElevation:103,outletElevation:108,pipeDiameter:150,pipeLength:100,
   roughnessMm:0.25,minorLossK:3,outletMode:'free',backpressureHead:0,
   diameter:'auto',minDiameter:1.2,stopLevel:0.4,maxDepthBelowInlet:3,
@@ -48,11 +48,13 @@ export function validate(input){
   for(const [key,name,min,max] of [['shiftCount','Műszakszám',1,3],['workingCount','Üzemképes szivattyúk száma',1,8],['standbyCount','Hidegtartalékok száma',0,8],['maxParallel','Max. egyidejű gépszám',1,p.workingCount]]){
     p[key]=number(p[key],name,min,max);if(!Number.isInteger(p[key]))throw new Error(`${name}: egész szám szükséges.`);
   }
-  for(const [key,name,max] of [['utilityStartsLimit','Áramszolgáltatói kapcsolásszám',100],['upstreamMinutes','Befolyás előtti hálózati idő',10080]])if(p[key]!=='')p[key]=number(p[key],name,0,max);
+  for(const [key,name,max] of [['utilityStartsLimit','Áramszolgáltatói kapcsolásszám',100],['manufacturerStartsLimit','Pontos gyártói kapcsolásszám',100],['upstreamMinutes','Befolyás előtti hálózati idő',10080]])if(p[key]!=='')p[key]=number(p[key],name,0,max);
   if(p.utilityStartsLimit===0)throw new Error('Az áramszolgáltatói kapcsolásszám legyen pozitív vagy hagyd üresen.');
+  if(p.manufacturerStartsLimit===0)throw new Error('A pontos gyártói kapcsolásszám legyen pozitív vagy hagyd üresen.');
   if(!['workplace','house'].includes(p.application))throw new Error('Ismeretlen felhasználási mód.');
   if(!['shift','custom'].includes(p.profile))throw new Error('Ismeretlen befolyási profil.');
   if(!['manual','curve'].includes(p.flowMode))throw new Error('Ismeretlen munkapont-meghatározás.');
+  if(!['manual','catalogue'].includes(p.curveSource))throw new Error('Ismeretlen görbeadatforrás.');
   if(!['free','reservoir'].includes(p.outletMode))throw new Error('Ismeretlen végponttípus.');
   if(!pumps.some(x=>x.id===p.pumpId))throw new Error('Válassz ismert Flygt típuscsaládot.');
   if(p.diameter!=='auto')p.diameter=number(p.diameter,'Belső aknaátmérő',0.5,10);
@@ -67,6 +69,11 @@ export function validate(input){
     for(let i=1;i<p.manualFlows.length;i++)if(p.manualFlows[i]<p.manualFlows[i-1])throw new Error('Több működő gép együttes Q-ja nem lehet kisebb az előző fokozaténál.');
   }else{
     if(p.curveModelId!==p.pumpId)throw new Error('A Q–H görbe más típuscsaládhoz tartozik. Adj meg az aktuális kivitelhez tartozó görbét.');
+    if(p.curveSource==='catalogue'){
+      const preset=catalogueCurve(p.pumpId);
+      if(!preset)throw new Error('Ehhez a típushoz nincs beépített Q–H pontsor. Egyedi kiviteladat szükséges.');
+      p.curveText=preset.text;p.curveLabel=preset.label;
+    }
     if(!String(p.curveLabel).trim())throw new Error('Add meg a Q–H görbe pontos szivattyúkivitelét és adatlap-hivatkozását.');
     parseCurve(p.curveText);
   }
@@ -86,7 +93,8 @@ export function buildProfile(p){
   return weights.map(w=>p.daily*w/weightHours);
 }
 export function geometry(p,pump,points=null){
-  const limit=Math.min(p.startsLimit,pump.maxStarts,p.utilityStartsLimit===''?Infinity:p.utilityStartsLimit);
+  const limits=[p.startsLimit,pump.maxStarts,p.utilityStartsLimit,p.manufacturerStartsLimit].filter(v=>typeof v==='number'&&v>0);
+  const limit=Math.min(...limits);
   const targetReserve=p.daily*(p.application==='house'?24:p.reserveHours)/24;
   const candidate=diameter=>{
     const area=Math.PI*diameter**2/4,reserve=Math.max(targetReserve,area*p.alarmGap);
@@ -191,6 +199,7 @@ export function calculate(input,simulationOptions={}){
   add('overflow',sim.overflow<1e-7?'pass':'fail','Visszaduzzasztás a modellben',sim.overflow<1e-7?'A szimuláció nem érte el a befolyó fenékszintjét.':'A víz elérte a befolyó szintjét; a túltöltés visszaduzzasztást vagy elöntést jelenthet.');
   add('capacity',operating.at(-1).flowLow>Math.max(...profile)?'pass':'fail','Kapacitás a csúcshozamhoz','MI 4.1.1.: az összes rendelkezésre álló kapacitás a legalsó üzemi vízszintnél is haladja meg a felvett csúcshozamot. Hidegtartalék nélkül számolva.');
   add('starts',Math.max(...sim.rollingStarts)<=g.limit?'pass':'fail','Kapcsolásszám gépenként',`Alkalmazott korlát: ${g.limit}/h; a tervezői, prospektus- és megadott áramszolgáltatói érték minimuma. MI 21. oldal: a gyakorlati tartomány 4–16/h, nem minden gépre kötelező rögzített korlát.`);
+  if(pump.maxStarts===null&&p.manufacturerStartsLimit==='')add('manufacturer-starts','pending','A típus gyártói indítási korlátja hiányzik','A táblázatos görbegyűjtemény nem ad ehhez indítási korlátot. Az N-sorozat 30/15 indítás/h adata nem vihető át erre a típusra. A számítás a megadott tervezői/villamos értékre készül, a pontos gyártói maximum külön megadandó.');
   if(p.utilityStartsLimit==='')add('utility','pending','Áramszolgáltatói és pontos motorkorlát','Az áramszolgáltató/kapcsolóberendezés korlátja nincs megadva. A prospektus helyett a pontos kivitel és indítási mód adatai irányadók.');
   const knownAge=sim.systemFifoMaxMinutes;
   if(sim.initialAtObservation>1e-7)add('residence','pending','Tartózkodási idő: nem beállt modell','A bemelegítés végére a kezdeti víz nem cserélődött ki teljesen; hosszabb vizsgálat szükséges.');
@@ -202,6 +211,8 @@ export function calculate(input,simulationOptions={}){
   if(p.application==='workplace')add('pipe-diameter',p.pipeDiameter>=150?'pass':'fail','MI hálózati nyomócső: legalább 150 mm','MI 4.2. hálózati előírás. Az FCSM lakossági bekötési szabálya eltérő esetkör; a konkrét telephelyre való alkalmazás egyeztetendő.');
   if(p.flowMode==='manual')add('duty','pending','Kézzel megadott fokozati vízhozamok','Ezekhez szükséges H-t és rendszerjelleggörbét számolunk. Automatikus munkapont csak pontos Q–H görbével adható; több gépnél sem feltételezünk N×Q szállítást.');
   else add('duty','pass','Q–H és rendszerjelleggörbe metszése','A megadott monoton Q–H görbe interpolációja és Colebrook–White veszteségszámítás. Azonos gépek közös nyomóvezetéken; az eltérő ágveszteségek nincsenek modellezve. A görbe eredetét a felhasználó igazolja.');
+  if(p.flowMode==='curve'&&p.curveSource==='catalogue')add('curve-source','pending','Újrarajzolt görbe: táblázatos másodlagos forrás','A feltöltött PDF numerikus Q–H táblázataiból, képi digitalizálás nélkül. 50 Hz; lineáris interpoláció. Nem eredeti gyártói görbeoldal és nem igazolt járókerék-/motorkivitel. A hivatkozott eredeti katalógus adataival külön összevetendő.');
+  if(pump.usage==='drainage')add('pump-application','pending','Szennyezettvíz-típus: szennyvízalkalmasság ellenőrizendő','Az SX/STA család alkalmazhatósága nyers, darabos szennyvízre a gyűjteményből nem igazolható. Ellenőrizd az átömlő keresztmetszetet, megengedett közeget és a gyártói alkalmazási korlátokat.');
   if(operating.some(o=>o.transition))add('transition','pending','Átmeneti Reynolds-tartomány','Re 2300–4000 között a lamináris és Colebrook-becslés közül a nagyobb ellenállást vesszük. Részletesebb ellenőrzés szükséges.');
   if(p.outletElevation+p.backpressureHead<=g.topElevation)add('siphon','pending','Gravitációs vagy szifonhatás lehetősége','A végpont piezometrikus szintje nem magasabb a felső üzemi vízszintnél. Hosszelvény és légtelenítés külön vizsgálandó; szivattyú nélküli szifonáramlást nem modellezünk.');
   add('installation','pending','Minimális bemerülés és beépíthetőség','A leállítási vízmélységet és az elrendezési minimumátmérőt a pontos kivitel rajza és hűtési követelménye igazolja. A gépészet kiszorított térfogatát nem vonjuk le.');
@@ -209,6 +220,7 @@ export function calculate(input,simulationOptions={}){
   const chartMax=points?points.at(-1).q*p.maxParallel:Math.max(...p.manualFlows)*1.3;
   const systemCurve=Array.from({length:81},(_,i)=>{const flow=chartMax*i/80;return {flow,head:systemHead(p,flow,operating[0].waterElevation).head};});
   const chartOperating=points?Array.from({length:p.maxParallel},(_,i)=>operatingPoint(p,points,i+1,operating[0].waterElevation)):[];
-  return {parameters:p,pump,profile,geometry:g,simulation:sim,checks,hydraulics:{operating,pipeVolume,points,systemCurve,
+  const curveProvenance=p.flowMode!=='curve'?null:p.curveSource==='catalogue'?catalogueCurve(p.pumpId).provenance:{verification:'user-entered',model:pump.name,label:p.curveLabel,originalCatalogueVerified:false,method:'user-supplied numeric points; piecewise-linear interpolation'};
+  return {parameters:p,pump,profile,geometry:g,simulation:sim,checks,hydraulics:{operating,pipeVolume,points,systemCurve,curveProvenance,
     chartOperating,pumpCurves:points?Array.from({length:p.maxParallel},(_,i)=>points.map(point=>({flow:point.q*(i+1),head:pumpHead(points,point.q)}))):[],referenceElevation:operating[0].waterElevation}};
 }

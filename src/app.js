@@ -1,12 +1,12 @@
 import {calculate,defaults,migrateProject} from './calculations.js';
-import {pumps} from './pumps.js';
+import {pumps,catalogueCurve} from './pumps.js';
 import {systemHead} from './hydraulics.js';
 
 const $=s=>document.querySelector(s),form=$('#parameters'),storageKey='atemelo-project-v2';
 const fmt=(n,d=2)=>Number(n).toLocaleString('hu-HU',{minimumFractionDigits:d,maximumFractionDigits:d});
 const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let result=null,timer,curveModelId=defaults.pumpId;
-$('#pump-select').innerHTML=pumps.map(p=>`<option value="${p.id}">${p.name} · ${p.power} kW</option>`).join('');
+$('#pump-select').innerHTML=[['catalogue','30 táblázatos típus · beépített Q–H görbe, 50 Hz'],['n','N 3000 típuscsaládok · egyedi görbe szükséges'],['missing','További családok · görbeadat szükséges']].map(([group,label])=>`<optgroup label="${label}">${pumps.filter(p=>p.group===group).map(p=>`<option value="${p.id}">${p.name}${p.power?` · ${p.power} kW`:''}${p.curve?' · Q–H':' · adat szükséges'}</option>`).join('')}</optgroup>`).join('');
 $('#shift-rows').innerHTML=defaults.shifts.map((_,i)=>`<div class="shift-row" data-shift="${i}"><span>${String(i+1).padStart(2,'0')}</span>${['start','hours','people'].map((key,j)=>`<label><span class="sr-only">${i+1}. műszak ${['kezdete, óra','hossza, óra','létszáma'][j]}</span><input name="shift-${i}-${key}" type="number" min="0" step="${key==='people'?1:0.25}" aria-label="${i+1}. műszak ${['kezdete, óra','hossza, óra','létszáma'][j]}"></label>`).join('')}</div>`).join('');
 $('#hourly-fields').innerHTML=defaults.hourly.map((_,h)=>`<label>${String(h).padStart(2,'0')}:00<input name="hour-${h}" type="number" min="0" max="100000" step="0.1" aria-label="${h}. óra befolyási súlya"></label>`).join('');
 $('#manual-flow-fields').innerHTML=Array.from({length:8},(_,i)=>`<label data-flow="${i}">${i+1} egyidejű gép összes vízhozama<div class="unit-field"><input name="manualFlow-${i}" type="number" min="0.01" max="10000" step="0.1" placeholder="Igazolt fokozati Q"><span>m³/h</span></div></label>`).join('')+'<p class="hint emphasis">A 18 m³/h kezdő érték példa, nem igazolt Flygt-munkapont. Minden fokozat összes Q-ját külön add meg: közös csövön két gép nem feltétlenül szállít kétszer annyit. Kézi módban a megadott Q a vízszinttől független felvett érték.</p>';
@@ -15,7 +15,18 @@ function fill(p){
   for(let i=0;i<3;i++)for(const key of ['start','hours','people'])form.elements.namedItem(`shift-${i}-${key}`).value=p.shifts[i]?.[key]??defaults.shifts[i][key];
   p.hourly.forEach((v,h)=>form.elements.namedItem(`hour-${h}`).value=v);
   for(let i=0;i<8;i++)form.elements.namedItem(`manualFlow-${i}`).value=p.manualFlows[i]??'';
-  curveModelId=p.curveModelId;sync();
+  curveModelId=p.curveModelId;
+  if(p.curveSource==='catalogue'){
+    const preset=catalogueCurve(p.pumpId);
+    if(preset){form.elements.curveText.value=preset.text;form.elements.curveLabel.value=preset.label;}
+  }
+  sync();
+}
+function useCatalogueCurve(){
+  const preset=catalogueCurve(form.elements.pumpId.value);if(!preset)return false;
+  form.elements.flowMode.value='curve';form.elements.curveSource.value='catalogue';
+  form.elements.curveText.value=preset.text;form.elements.curveLabel.value=preset.label;curveModelId=form.elements.pumpId.value;
+  return true;
 }
 function read(){
   const p={};
@@ -41,7 +52,15 @@ function sync(){
   $('#pump-arrangement').textContent=`${form.elements.workingCount.value} üzemképes + ${form.elements.standbyCount.value} hidegtartalék; legfeljebb ${form.elements.maxParallel.value} gép egyszerre. A hidegtartalék nem vesz részt a szimulációban.`;
   $('#reserve-hint').textContent=house?'FCSM, 22. oldal: legalább 1 napi kibocsátásnyi biztonsági tér az üzemi tér fölött.':'Tervezői tartalék: Qnapi / 24 × óra. Nem az MI által előírt tartózkodási idő, és csúcsterhelésnél nem garantál ugyanennyi hibaáthidalást.';
   const pump=pumps.find(p=>p.id===form.elements.pumpId.value);
-  $('#pump-info').innerHTML=`<div><small>Motortartomány</small><strong>${pump.power} kW</strong></div><div><small>Nyomócsonk</small><strong>${pump.discharge} mm</strong></div><div><small>Prospektuskorlát</small><strong>≤ ${pump.maxStarts} ind./h</strong><br><a href="/docs/flygt-n-896876.pdf#page=${pump.page}" target="_blank" rel="noopener">PDF ${pump.page}. oldal ↗</a></div>`;
+  if(!pump){$('#pump-info').textContent='Válassz szivattyútípust.';$('#catalogue-info').textContent='';return;}
+  $('#pump-info').innerHTML=`<div><small>${pump.curve?'P₂ a gyűjteményben':'Motortartomány'}</small><strong>${pump.power?`${pump.power} kW`:'Adat szükséges'}</strong></div><div><small>Nyomócsonk</small><strong>${pump.discharge?`${pump.discharge} mm`:'Adatlap kell'}</strong></div><div><small>Gyártói indítás</small><strong>${pump.maxStarts?`≤ ${pump.maxStarts} ind./h`:'Nincs megadva'}</strong>${pump.page?`<br><a href="/docs/flygt-n-896876.pdf#page=${pump.page}" target="_blank" rel="noopener">PDF ${pump.page}. oldal ↗</a>`:''}</div>`;
+  const preset=catalogueCurve(pump.id),builtIn=preset&&form.elements.curveSource.value==='catalogue';
+  form.elements.curveSource.querySelector('[value="catalogue"]').disabled=!preset;
+  form.elements.curveText.readOnly=Boolean(builtIn);form.elements.curveLabel.readOnly=Boolean(builtIn);
+  if(preset){
+    const c=pump.curve;
+    $('#catalogue-info').innerHTML=`<strong>Beépített táblázatos görbe · 50 Hz</strong><p>${c.points.length} eredeti táblázatpont · Q: ${fmt(c.points[0].q)}–${fmt(c.points.at(-1).q)} m³/h · H: ${fmt(c.headM.at(-1),1)}–${fmt(c.headM[0],1)} m.</p><p>Gyári táblázatokból újrarajzolt, másodlagos forrás. Numerikus pontok átvétele, képi digitalizálás nélkül; a pontok között lineáris közelítés. Az eredeti gyári katalógussal külön ellenőrizendő.</p><a href="/docs/flygt-szennyviz-szivattyugorbek.pdf#page=${c.pdfPage}" target="_blank" rel="noopener">Feltöltött PDF ${c.pdfPage}. oldal ↗</a>${!curve||!builtIn?'<button type="button" data-use-curve>Beépített görbe használata</button>':''}${pump.usage==='drainage'?'<p class="hint emphasis">Szennyezettvíz-típus: nyers szennyvízre való alkalmassága külön ellenőrizendő.</p>':''}`;
+  }else $('#catalogue-info').innerHTML='<strong>Görbeadat szükséges</strong><p>Az N 3000, C, F és Concertor családok pontos járókerék-/motorváltozataihoz a melléklet nem ad pontsort. Egyedi görbét vagy igazolt fokozati Q-t adj meg.</p>';
 }
 function well(g){
   const top=g.inletDepth*1.12,y=h=>272-h/top*235;
@@ -80,6 +99,7 @@ function render(r){
   $('#duty-table').innerHTML=`<table><thead><tr><th>Fokozat</th><th>Összes Q</th><th>H-igény</th><th>Sebesség</th><th>Q-tartomány</th></tr></thead><tbody>${h.operating.map(o=>`<tr><td>${o.count} gép</td><td>${fmt(o.flow)} m³/h</td><td>${fmt(o.head)} m</td><td>${fmt(o.velocity)} m/s</td><td>${fmt(o.flowLow)}–${fmt(o.flowHigh)} m³/h</td></tr>`).join('')}</tbody></table>`;
   $('#hydraulic-chart').innerHTML=hydraulicChart(r);
   $('#hydraulic-note').textContent=`A diagram minden görbéje azonos, ${fmt(h.referenceElevation,3)} mBf szívóoldali vízszintre vonatkozik. A táblázat fokozatonként a saját indítás és leállítás középvízszintjén számol; a Q-tartomány a közös leállítás és az utolsó indítás között értendő. ${p.flowMode==='manual'?'Kézi módban a pontok csak a szükséges H-t jelölik, nem igazolt gyártói görbemetszések.':'A szimuláció a vízszinttel változó munkapontot számolja, azonos fordulatszámú és jelleggörbéjű gépekre.'}`;
+  if(h.curveProvenance?.pdfPage)$('#hydraulic-note').textContent+=` Forrás: újrarajzolt táblázatos gyűjtemény, ${h.curveProvenance.pdfPage}. oldal; eredeti katalógus-ellenőrzés szükséges. A táblázat közölt tartományán kívül nem extrapolálunk.`;
   $('#level-chart').innerHTML=timeChart(s.series,'level',{height:185,references:g.startLevels.map(l=>g.floorElevation+l),min:g.floorElevation+g.stop-0.05,unit:'Vízszint mBf'});
   $('#flow-chart').innerHTML=timeChart(s.series,'inflow',{height:115,color:'#7c9dab',unit:'Befolyás m³/h'});
   $('#operation-stats').innerHTML=[['Max. indítás / üzemképes gép',`${Math.max(...s.rollingStarts)} /h`,`Gépenként: ${s.rollingStarts.join(' / ')} · korlát ${fmt(g.limit,0)}/h`],['Akna + nyomócső max. FIFO-kor',`${fmt(s.systemFifoMaxMinutes,0)} perc`,'A telt vezetékben álló víz idejével együtt'],['Teljes modellezett idő',s.totalFifoMinutes===null?'Előzmény hiányzik':`${fmt(s.totalFifoMinutes,0)} perc`,`Felvett MI-időkeret: ${fmt(p.residenceLimit,0)} perc`]].map(([label,value,sub])=>`<div class="operation-stat"><span>${label}</span><strong>${value}</strong><small>${sub}</small></div>`).join('');
@@ -95,9 +115,14 @@ form.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(update,2
 form.addEventListener('change',e=>{
   clearTimeout(timer);
   if(e.target.name==='workingCount')form.elements.maxParallel.value=form.elements.workingCount.value;
-  if(e.target.name==='pumpId'){curveModelId=e.target.value;form.elements.curveText.value='';form.elements.curveLabel.value='';}
+  if(e.target.name==='pumpId'){
+    curveModelId=e.target.value;form.elements.manufacturerStartsLimit.value='';
+    if(!useCatalogueCurve()){form.elements.curveSource.value='manual';form.elements.curveText.value='';form.elements.curveLabel.value='';form.elements.flowMode.value='curve';}
+  }
+  if(e.target.name==='curveSource'&&e.target.value==='catalogue')useCatalogueCurve();
   update();
 });
+$('#catalogue-info').addEventListener('click',e=>{if(e.target.closest('[data-use-curve]')){useCatalogueCurve();update();}});
 $('#reset').addEventListener('click',()=>{fill(structuredClone(defaults));update();});
 $('#print').addEventListener('click',()=>window.print());
 let printDetails=[];window.addEventListener('beforeprint',()=>{printDetails=[...document.querySelectorAll('details')].map(element=>({element,open:element.open}));printDetails.forEach(({element})=>element.open=true);});
@@ -105,7 +130,7 @@ window.addEventListener('afterprint',()=>printDetails.forEach(({element,open})=>
 function download(name,body,type){const url=URL.createObjectURL(new Blob([body],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 $('#export-json').addEventListener('click',()=>{
   if(!result)return;const {parameters,simulation,...summary}=result;const {series,...simulationSummary}=simulation;
-  download('atemelo-projekt.json',JSON.stringify({version:2,createdAt:new Date().toISOString(),parameters,summary:{...summary,simulation:simulationSummary},sources:['MI-10-167/3–87, pp.3,8–10,21,23','FCSM VSZ-40/2020, 4.0, pp.22–27','Flygt 896876, 20240605, PDF pp.6,8,10'],notice:'Előméretezés: a gyártói görbe, bemerülés és az irányelv alkalmazhatósága külön igazolandó.'},null,2),'application/json');
+  download('atemelo-projekt.json',JSON.stringify({version:2,createdAt:new Date().toISOString(),parameters,summary:{...summary,simulation:simulationSummary},sources:['MI-10-167/3–87, pp.3,8–10,21,23','FCSM VSZ-40/2020, 4.0, pp.22–27','Flygt 896876, 20240605, PDF pp.6,8,10','Flygt_szennyviz_szivattyugorbek.pdf — feltöltött, újrarajzolt táblázatos gyűjtemény'],notice:'Előméretezés: a gyártói görbe, bemerülés és az irányelv alkalmazhatósága külön igazolandó. A beépített táblázatok nem eredeti gyártói görbeoldalak.'},null,2),'application/json');
 });
 $('#export-csv').addEventListener('click',()=>{
   if(!result)return;const rows=['Idő [óra];Befolyás [m3/h];Vízszint [mBf];Működő gépek száma;Összes szivattyú-Q [m3/h]',...result.simulation.series.map(d=>[d.hour,d.inflow,d.level,d.on,d.pumpFlow].map((v,i)=>i===3?v:Number(v).toFixed(4).replace('.',',')).join(';'))];
@@ -120,7 +145,7 @@ $('#import-json').addEventListener('change',async e=>{
   }catch(e){$('#file-status').textContent=`A projekt nem tölthető be: ${e.message}`;}finally{e.target.value='';}
 });
 $('#import-curve').addEventListener('change',async e=>{
-  try{const file=e.target.files[0];if(!file)return;if(file.size>50000)throw new Error('Legfeljebb 50 kB-os görbefájl tölthető be.');form.elements.curveText.value=await file.text();curveModelId=form.elements.pumpId.value;update();}
+  try{const file=e.target.files[0];if(!file)return;if(file.size>50000)throw new Error('Legfeljebb 50 kB-os görbefájl tölthető be.');form.elements.curveSource.value='manual';form.elements.curveText.value=await file.text();curveModelId=form.elements.pumpId.value;update();}
   catch(e){$('#file-status').textContent=e.message;}finally{e.target.value='';}
 });
 let initial=structuredClone(defaults);

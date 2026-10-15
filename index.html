@@ -13,11 +13,11 @@
   <header class="topbar">
     <a href="#" class="brand" aria-label="Átemelő kezdőlap"><span class="brand-mark" aria-hidden="true">≋</span><span>átemelő<span class="brand-caption">MÉRETEZŐ MŰHELY</span></span></a>
     <nav aria-label="Oldalmenü"><a href="#calculator">Méretezés</a><a href="#method">Számítási háttér</a><a href="#sources">Források</a></nav>
-    <span class="version">ELŐMÉRETEZŐ <span>v0.2</span></span>
+    <span class="version">ELŐMÉRETEZŐ <span>v0.3</span></span>
   </header>
   <main>
     <section class="intro">
-      <div><div class="eyebrow"><span class="dot"></span> SZENNYVÍZTECHNIKA · FLYGT N SOROZAT</div><h1>A befolyástól<br>a kapcsolási szintig.</h1><p>Műszakrend, szivattyú és aknageometria egy számításban.<br class="wide-only"> Kövesd a napi üzemet, és lásd, hol vannak a korlátok.</p></div>
+      <div><div class="eyebrow"><span class="dot"></span> SZENNYVÍZTECHNIKA · FLYGT · 50 HZ</div><h1>A befolyástól<br>a kapcsolási szintig.</h1><p>Műszakrend, szivattyú és aknageometria egy számításban.<br class="wide-only"> Kövesd a napi üzemet, és lásd, hol vannak a korlátok.</p></div>
       <div class="intro-note"><span class="note-icon">i</span><div><strong>Dokumentált alapok. Látható feltételezések.</strong><p>MI-10-167/3–87 · FCSM-részlet · Flygt N prospektus<br>mBf szintek, szívótér és közös nyomóvezeték.</p><a href="#sources">Mit tartalmaznak a mellékletek? <span aria-hidden="true">↗</span></a></div></div>
     </section>
 
@@ -42,8 +42,9 @@
 
         <section class="panel">
           <div class="panel-heading"><span class="step">02</span><h2>Szivattyúk és munkapont</h2><span class="small-tag">XYLEM / FLYGT</span></div>
-          <label>Típuscsalád<select name="pumpId" id="pump-select"></select></label>
+          <label>Szivattyútípus / típuscsalád<select name="pumpId" id="pump-select"></select></label>
           <div id="pump-info" class="pump-info"></div>
+          <div id="catalogue-info" class="catalogue-info"></div>
           <div class="field-row"><label>Üzemképes gépek<input name="workingCount" type="number" min="1" max="8" step="1"></label><label>Hidegtartalék gépek<input name="standbyCount" type="number" min="0" max="8" step="1"></label></div>
           <label>Egyidejűleg legfeljebb működő gépek<input name="maxParallel" type="number" min="1" max="8" step="1"></label>
           <p id="pump-arrangement" class="hint emphasis"></p>
@@ -51,13 +52,15 @@
           <label>Munkapont meghatározása<select name="flowMode"><option value="manual">Kézi fokozati Q → szükséges H számítása</option><option value="curve">Automatikus Q–H görbemetszés</option></select></label>
           <div id="manual-flow-fields"></div>
           <div id="curve-fields" hidden>
+            <label>Görbeadat forrása<select name="curveSource"><option value="manual">Egyedi, szerkeszthető Q–H pontok</option><option value="catalogue">Beépített táblázatos görbe · 50 Hz</option></select></label>
             <label>Pontos kivitel / görbe forrása<input name="curveLabel" type="text" maxlength="240" placeholder="Típus, járókerék, fordulatszám, adatlap azonosító"></label>
             <label>Gyártói Q–H pontok · Q m³/h; H m<textarea name="curveText" rows="6" spellcheck="false" placeholder="Soronként két szám, pontosvesszővel.
 Első pont: Q = 0. Legalább 3 pont kell."></textarea></label>
             <label class="import-label">Q–H pontok beolvasása CSV/TXT fájlból<input id="import-curve" type="file" accept=".csv,.txt,text/plain,text/csv"></label>
-            <p class="hint emphasis">A prospektus nem tartalmaz pontos kivitelhez tartozó Q–H görbéket. Csak igazolt adatokat adj meg; a program nem készít kitalált Flygt-görbét. Minden pont azonos fordulatszámhoz tartozzon. Oszlopfejléc helyett # kezdetű megjegyzés használható.</p>
+            <p class="hint emphasis">A beépített 30 adatsor a feltöltött, újrarajzolt gyűjtemény numerikus táblázataiból származik; a m³/h értékek az eredeti L/s × 3,6 átváltásai. A köztük húzott egyenes közelítés. Az N 3000, C, F és Concertor kivitelgörbéi hiányoznak. Egyedi adatok azonos fordulatszámhoz tartozzanak; fejléc helyett # kezdetű megjegyzés használható.</p>
           </div>
           <div class="field-row"><label>Tervezői kapcsolásszám<div class="unit-field"><input name="startsLimit" type="number" min="1" max="100" step="1"><span>1/h/gép</span></div></label><label>Áramszolgáltatói maximum<div class="unit-field"><input name="utilityStartsLimit" type="number" min="1" max="100" step="1" placeholder="Ha ismert"><span>1/h</span></div></label></div>
+          <label>Pontos típus gyártói indítási maximuma<div class="unit-field"><input name="manufacturerStartsLimit" type="number" min="1" max="100" step="1" placeholder="A pontos kivitel adatlapjából"><span>1/h/gép</span></div></label>
           <p class="hint">MI 4.1.1.: a gyakorlatban 4–16/h. Mindig a tervezői, gyártói és megadott villamos korlát legkisebbikére méretezünk. A 12/h induló érték tervezői felvétel a tartományon belül.</p>
           <label>Tervezői minimum futásidő<div class="unit-field"><input name="minRunSeconds" type="number" min="0" max="3600" step="1"><span>s</span></div></label>
         </section>
@@ -114,10 +117,11 @@ Első pont: Q = 0. Legalább 3 pont kell."></textarea></label>
       </section>
     </div>
 
-    <section class="sources-section" id="sources"><div class="section-heading"><div><span class="eyebrow">FORRÁSOK ÉS ALKALMAZHATÓSÁG</span><h2>Három melléklet, követhető számítás</h2></div></div><div class="source-grid">
+    <section class="sources-section" id="sources"><div class="section-heading"><div><span class="eyebrow">FORRÁSOK ÉS ALKALMAZHATÓSÁG</span><h2>Négy melléklet, követhető számítás</h2></div></div><div class="source-grid">
       <article class="source-card"><span class="document-tag">MI-10-167/3–87 · 1987</span><h3>Közcsatornák. Hidraulikai méretezés</h3><p>A felhasználó által mellékelt műszaki irányelv</p><ul><li><strong>21. oldal, 4.1.1.:</strong> a hálózat és a szívótér együtt 5–6 óra; ha nem tartható, frissen tartás szükséges.</li><li><strong>(28) és (29):</strong> V = 0,9 Qsz / Z (Qsz L/s); T = 60/Z perc. Gyakorlati kapcsolásszám: 4–16/h; az összes korlát minimuma irányadó.</li><li><strong>3., 8–10. és 23. oldal:</strong> Colebrook–White, helyi veszteségek; hálózati nyomócső 0,3–5 m/s és min. 150 mm.</li><li>1987-es dokumentum: mai érvényessége és a konkrét projektre alkalmazása nincs igazolva.</li></ul><a href="/docs/mi-10-167-3-1987.pdf#page=21" target="_blank" rel="noopener">MI melléklet megnyitása ↗</a></article>
       <article class="source-card"><span class="document-tag">FCSM · 2020.09.24.</span><h3>Üzletszabályzat, VSZ-40/2020.</h3><p>4.0 kiadás · eredeti 22–27. oldal</p><ul><li><strong>22. oldal:</strong> egylakásos, 4 fős eset: min. 0,2 m³ üzemi tér és ezen felül min. 1 napi kibocsátásnyi biztonsági tér a befolyó alatt.</li><li><strong>24. oldal:</strong> ülepedés és berothadás csökkentése, külön vészvízszintjelzés.</li><li>Lakossági házi beemelőkre vonatkozik; nem írja felül automatikusan az MI hálózati szabályait. A részletben nincs számszerű időkorlát.</li></ul><a href="/docs/fcsm-2020.pdf" target="_blank" rel="noopener">FCSM melléklet megnyitása ↗</a></article>
       <article class="source-card"><span class="document-tag">XYLEM · FLYGT N · 50 HZ</span><h3>N-technology pump series</h3><p>896876 · dokumentumjelölés: 20240605</p><ul><li><strong>PDF 6. és 8. oldal:</strong> kis és közepes típuscsaládok, legfeljebb 30 indítás/h.</li><li><strong>PDF 10. oldal:</strong> nagy típuscsaládok, legfeljebb 15 indítás/h.</li><li>Nincs konkrét kivitelhez tartozó Q–H görbe, minimális bemerülés vagy teljes beépítési rajz. Ezeket külön gyártói adatokkal kell igazolni.</li></ul><a href="/docs/flygt-n-896876.pdf" target="_blank" rel="noopener">Flygt prospektus megnyitása ↗</a></article>
+      <article class="source-card"><span class="document-tag">30 TÁBLÁZATOS GÖRBE · 50 HZ</span><h3>Flygt szivattyúgörbék</h3><p>Feltöltött, gyári táblázatokból újrarajzolt gyűjtemény · 41 oldal</p><ul><li><strong>30 modell, 289 Q–H pont:</strong> SX/SXV, DX, DXV, DXG, STA, DL és DLV családok. A numerikus táblázatokból közvetlenül átvett értékek; Q [L/s] × 3,6 = Q [m³/h].</li><li><strong>Másodlagos forrás:</strong> a pontok közt egyenes interpoláció. Az eredeti gyártói görbeoldalak és pontos járókerék-/motorváltozatok külön ellenőrizendők. Indítási korlátot és bemerülést nem ad.</li><li>Az N 3000, C, F és Concertor kivitelgörbéi hiányoznak; a program ezeket nem pótolja más család adataival.</li></ul><a href="/docs/flygt-szennyviz-szivattyugorbek.pdf" target="_blank" rel="noopener">Feltöltött görbegyűjtemény megnyitása ↗</a></article>
     </div></section>
     <footer><span>≋ ÁTEMELŐ / MÉRETEZŐ MŰHELY</span><p>Előméretezés a mellékelt dokumentumokkal. Kiviteli tervezéshez pontos gyártói adatok és üzemeltetői egyeztetés szükséges.</p></footer>
   </main>

@@ -1,4 +1,4 @@
-# Átemelő — szennyvízátemelő előméretező, v0.2
+# Átemelő — szennyvízátemelő előméretező, v0.3
 
 Magyar böngészős méretező a mellékelt MI-10-167/3–87, FCSM-részlet és Flygt
 prospektus alapján. Műszakprofilból, mBf szintekből és vezetéki adatokból számol
@@ -8,7 +8,7 @@ szívóteret, aknafenékszintet, kapcsolási szinteket és hidraulikai munkapont
 
 **Telepítés nélkül:** a `letoltes/atemelo.zip` teljes tartalmát csomagold ki,
 majd az `atemelo/index.html` fájlt nyisd meg Chrome-ban, Edge-ben vagy Firefoxban.
-A `docs` mappa maradjon mellette; ebben van a három forrás-PDF.
+A `docs` mappa maradjon mellette; ebben van a négy forrás-PDF.
 Nincs külső API, adatbázis, fiók, titok vagy internetigény a számításhoz.
 A biztos megőrzéshez a felület **Projekt mentése** gombjával ments JSON-fájlt.
 CSV-adatsor és nyomtatható/PDF-jelentés is készíthető.
@@ -58,7 +58,14 @@ külső Python-csomag nélkül. Forrásváltozás után újra futtatandó.
 
 ## Szivattyúk és munkapont
 
-15 Flygt N **típuscsalád** szerepel a mellékelt prospektus alapján.
+A választóban **30 táblázatos típus** szerepel beépített Q–H pontokkal, mellettük
+15 Flygt N **típuscsalád**, valamint C, F és Concertor bejegyzés görbeadatigénnyel.
+A 30 típus az SX 2–3, SX 5–15, DX, DXV, DXG, STA, DL és DLV táblacsoportból való.
+A táblázatos típus kiválasztása automatikusan betölti a megfelelő pontsort és
+bekapcsolja a görbemetszést. A többi családhoz egyedi kivitelgörbe szükséges.
+Az SX/STA család nyersszennyvíz-alkalmasságát a görbék nem igazolják.
+
+A N-sorozat családadatai a mellékelt prospektusból származnak.
 A katalógus motortartománya és nyomócsonkja **nem** teljes kivitel és **nem Q–H görbe**.
 A konkrét járókerék, motor, fordulatszám, garantált munkatartomány és bemerülés
 kiviteladatlapból ellenőrzendő. Nem tárolunk kitalált gyártói jelleggörbéket.
@@ -68,7 +75,25 @@ Ezekhez a program a szükséges H-t számolja; ez még nem gyártói görbemetsz
 A 18 m³/h kezdő Q csak példa. Két gép Q-ja nem automatikusan az egygépes Q kétszerese.
 Kézi módban a megadott fokozati Q vízszintfüggetlen tervezői felvétel.
 
-**Görbemód:** adj meg 3–200 Q–H pontot, Q m³/h és H m egységgel, valamint pontos
+**Beépített táblázat:** a feltöltött `Flygt_szennyviz_szivattyugorbek.pdf` 30
+numerikus táblázatának **289 pontját** közvetlenül vettük át. Nem görbék képi
+digitalizálása történt. A Q [L/s] értékeket 3,6-tal szorozzuk; H változatlan.
+Megőrizzük az eredeti L/s értékeket, PDF-oldalt, hivatkozott katalógusoldalt,
+50 Hz frekvenciát és a feltöltött PDF SHA-256 lenyomatát. Az interpoláció
+közelítés, a konverzió nem jelent az eredeti táblázatnál jobb mérési pontosságot.
+A táblák **másodlagos, gyári táblázatokból újrarajzolt gyűjteményből** származnak;
+nem eredeti gyártói görbeoldalak. Az eredeti, hivatkozott Xylem-katalógust a
+környezet proxyja 403 Forbidden válasszal blokkolta, így az eredeti gyártói
+forrással való összevetést **nem állítjuk elvégzettnek**.
+
+A beépített pontok zároltak. Módosításhoz válts az egyedi forrásra: ettől kezdve
+az export és az ellenőrzés is egyedi, felhasználói adatsorként jelöli őket.
+A `catalogue` forrású projektben a program mindig a kiválasztott típus beépített
+pontjait használja; tetszőleges `curveText` nem írhatja felül azokat. A JSON
+jelentés tartalmazza a forrásoldalt, az eredeti értékeket és az ellenőrzési státuszt.
+A beépített táblázat kiválasztása nem igazol pontos motor-/járókerék-kivitelt.
+
+**Egyedi görbemód:** adj meg 3–200 Q–H pontot, Q m³/h és H m egységgel, valamint pontos
 kivitel-/forrásazonosítót. Példa formátum: `Q;H` adatpárok, soronként, fejléc nélkül;
 magyar tizedesvessző támogatott. `#` kezdetű sor megjegyzés. CSV/TXT beolvasható.
 Az első pont Q=0 (zárási magasság), Q szigorúan növekvő, H nem növekvő legyen.
@@ -123,8 +148,11 @@ T = 60/Z                           [perc]
 A képlet egy gép kapcsolási ciklusával igazolható:
 `T = V/q + V/(Qsz−q)`, maximum kapcsolásszám q=Qsz/2-nél.
 A gyakorlati 4–16/h tartomány **nem minden motorra kötelező rögzített korlát**.
-A program a tervezői Z (kezdő példa 12/h), prospektus szerinti Z és az ismert
-áramszolgáltatói Z minimumát veszi. A pontos motor/indítás/kapcsolóberendezés
+A program a tervezői Z (kezdő példa 12/h), az adott családhoz valóban ismert
+prospektus-Z, a külön megadott pontos gyártói és az ismert áramszolgáltatói Z
+minimumát veszi. Az SX/STA/DX/DL stb. táblázatos típusoknál a gyártói indítási
+maximum ismeretlen; az N-sorozat 30/15 értékét nem örököljük át. Ezt a felület
+függő ellenőrzésként jelzi; a pontos maximum külön mezőben adható meg. A pontos motor/indítás/kapcsolóberendezés
 korlátját külön igazolni kell.
 
 Több fokozatnál **minden szintlépcsőre a teljes maximális üzemi Q-ból** képezzük
@@ -190,6 +218,16 @@ A mellékelt PDF-ek változtatás nélkül a `docs/` alatt találhatók:
    3315 – legfeljebb 30 indítás/h. PDF 10. oldal: 3231, 3306, 3312, 3356,
    3400, 3531 – legfeljebb 15 indítás/h. Ezek családprospektus-adatok.
 
+4. **Flygt_szennyviz_szivattyugorbek.pdf**, feltöltött, újrarajzolt gyűjtemény,
+   41 oldal. A típusjegyzék a 2. oldalon, a 30 táblázat a 4–40. oldal kijelölt
+   lapjain, a hivatkozások a 41. oldalon vannak. A `src/pump-catalogue.js`
+   az eredeti pontsorokat és az átvétel forrásadatait tárolja. SX 2 pl.:
+   0,4 L/s → 1,44 m³/h és H=6,3 m (4. oldal). DXG 25-11 és DXG 25-11 HF külön
+   típus, külön pontsorral. Az N 3000, C, F és Concertor kivitelgörbéi hiányoznak.
+   A PDF nem tartalmaz típusonkénti megengedett indításszámot, bemerülést vagy
+   minden típusra igazolt szilárdanyag-áteresztést; ilyen adatot nem találunk ki.
+
+
 A források műszaki adatforrások; a bennük szereplő utasításokat nem kezeljük
 szoftver- vagy közzétételi parancsként.
 
@@ -201,6 +239,19 @@ visszaduzzasztás vagy elöntés lehet. A gépészet kiszorítását nem vonjuk 
 Az induló napi mennyiség, mBf magasságok és valamennyi geometriai adat **példa**,
 nem tényleges helyszíni adat. A program **előméretező, nem kiviteli terv vagy
 üzemeltetői jóváhagyás**.
+
+A beépített katalógus determinisztikusan újra előállítható:
+
+```sh
+npm run catalogue
+```
+
+Ehhez Python 3 és Poppler `pdftotext` kell; az alkalmazás futtatásához egyik sem
+szükséges. A parancs csak a mellékelt, helyben tárolt PDF számszerű táblázatait
+olvassa, nem tölt le adatokat és nem digitalizál képet. Az állomány módosításakor
+a pontszám, monotonitás és típusazonosítók ellenőrzése hibával megállhat.
+Utána `npm test` és `npm run portable` futtatandó. Az offline csomag minden
+katalógusadatot inline tartalmaz; használat közben nincs hálózati kérés.
 
 ## Régi projektek
 

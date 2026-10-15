@@ -6,8 +6,11 @@
 4. Add meg a befolyó és a nyomócső végpontjának mBf magasságát, a nyomócső belső
    átmérőjét és hosszát. A program származtatja az akna fenékszintjét.
 5. Válaszd ki a Flygt típust és az üzemképes/hidegtartalék gépek számát.
-   Automatikus munkaponthoz pontos gyártói Q–H pontsor és kivitelazonosító kell.
-   Enélkül fokozatonként megadhatod az összes Q-t; a program a szükséges H-t számítja.
+   A 30 táblázatos típus kiválasztása automatikusan betölti a Q–H adatokat.
+   Ezek a mellékelt, gyári táblázatokból újrarajzolt gyűjtemény számszerű pontjai;
+   az eredeti gyártói kiviteladatokkal még összevetendők. Az N 3000, C, F és
+   Concertor pontos görbéihez egyedi pontsor szükséges. Görbe nélkül fokozatonként
+   megadhatod az összes Q-t; a program a szükséges H-t számítja.
    A hidegtartalék nem indul automatikusan. A több üzemképes gép váltott és
    párhuzamos üzemben is modellezhető, az egyidejű gépszám megadásával.
 6. A Projekt mentése gombbal JSON-fájlba menthetsz; ezt később visszatöltheted.
@@ -16,7 +19,7 @@
 7. A Nyomtatás / PDF gombbal jelentést készíthetsz.
 
 Nincs telepítés, szerver vagy internetkapcsolat a használathoz. A docs mappát
-tartsd az index.html mellett: ebben van a három hivatkozott forrás-PDF.
+tartsd az index.html mellett: ebben van a négy hivatkozott forrás-PDF.
 
 Előméretező változat: a munkapont és a minimális bemerülés a pontos kivitel
 adatlapjából igazolandó. Az MI-10-167/3–87 a hálózat és a szívótér együttes

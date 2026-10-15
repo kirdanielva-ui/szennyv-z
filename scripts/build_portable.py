@@ -10,7 +10,7 @@ APP.mkdir(parents=True, exist_ok=True)
 
 css = (ROOT / "styles.css").read_text(encoding="utf-8")
 modules = []
-for name in ("pumps.js", "hydraulics.js", "calculations.js", "app.js"):
+for name in ("pump-catalogue.js", "pumps.js", "hydraulics.js", "calculations.js", "app.js"):
     source = (ROOT / "src" / name).read_text(encoding="utf-8")
     source = re.sub(r"^import [^\n]+\n", "", source, flags=re.MULTILINE)
     source = re.sub(r"^export ", "", source, flags=re.MULTILINE)
@@ -32,8 +32,11 @@ instructions = """ÁTEMELŐ – HASZNÁLATI ÚTMUTATÓ
 4. Add meg a befolyó és a nyomócső végpontjának mBf magasságát, a nyomócső belső
    átmérőjét és hosszát. A program származtatja az akna fenékszintjét.
 5. Válaszd ki a Flygt típust és az üzemképes/hidegtartalék gépek számát.
-   Automatikus munkaponthoz pontos gyártói Q–H pontsor és kivitelazonosító kell.
-   Enélkül fokozatonként megadhatod az összes Q-t; a program a szükséges H-t számítja.
+   A 30 táblázatos típus kiválasztása automatikusan betölti a Q–H adatokat.
+   Ezek a mellékelt, gyári táblázatokból újrarajzolt gyűjtemény számszerű pontjai;
+   az eredeti gyártói kiviteladatokkal még összevetendők. Az N 3000, C, F és
+   Concertor pontos görbéihez egyedi pontsor szükséges. Görbe nélkül fokozatonként
+   megadhatod az összes Q-t; a program a szükséges H-t számítja.
    A hidegtartalék nem indul automatikusan. A több üzemképes gép váltott és
    párhuzamos üzemben is modellezhető, az egyidejű gépszám megadásával.
 6. A Projekt mentése gombbal JSON-fájlba menthetsz; ezt később visszatöltheted.
@@ -42,7 +45,7 @@ instructions = """ÁTEMELŐ – HASZNÁLATI ÚTMUTATÓ
 7. A Nyomtatás / PDF gombbal jelentést készíthetsz.
 
 Nincs telepítés, szerver vagy internetkapcsolat a használathoz. A docs mappát
-tartsd az index.html mellett: ebben van a három hivatkozott forrás-PDF.
+tartsd az index.html mellett: ebben van a négy hivatkozott forrás-PDF.
 
 Előméretező változat: a munkapont és a minimális bemerülés a pontos kivitel
 adatlapjából igazolandó. Az MI-10-167/3–87 a hálózat és a szívótér együttes
@@ -53,7 +56,7 @@ nem helyettesíti.
 """
 (APP / "HASZNALAT.txt").write_text(instructions, encoding="utf-8")
 files = [APP / "index.html", APP / "HASZNALAT.txt"]
-for name in ("fcsm-2020.pdf", "flygt-n-896876.pdf", "mi-10-167-3-1987.pdf"):
+for name in ("fcsm-2020.pdf", "flygt-n-896876.pdf", "mi-10-167-3-1987.pdf", "flygt-szennyviz-szivattyugorbek.pdf"):
     target = APP / "docs" / name
     target.parent.mkdir(exist_ok=True)
     target.write_bytes((ROOT / "docs" / name).read_bytes())
